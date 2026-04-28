@@ -21,6 +21,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'avatar_url',
+        'email_verified_at',
         'password',
     ];
 
@@ -42,4 +44,58 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Get the courses instructed by the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function instructedCourses()
+    {
+        return $this->hasMany(Course::class, 'instructor_id');
+    }
+
+    /**
+     * Get the enrollments of the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function enrollments()
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
+    /**
+     * Get the courses enrolled by the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function enrolledCourses()
+    {
+        return $this->belongsToMany(Course::class, 'enrollments')
+            ->withPivot(['status', 'enrolled_at', 'completed_at'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the classes taught by the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function teachingClasses()
+    {
+        return $this->hasMany(CourseClass::class, 'instructor_id');
+    }
+
+    /**
+     * Get the classes assigned to the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function assignedClasses()
+    {
+        return $this->belongsToMany(CourseClass::class, 'course_class_user')
+            ->withPivot(['status', 'assigned_at'])
+            ->withTimestamps();
+    }
 }
