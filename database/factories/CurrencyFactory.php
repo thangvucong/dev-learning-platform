@@ -13,7 +13,7 @@ class CurrencyFactory extends Factory
     {
         $currencies = [
             ['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$', 'decimal_places' => 2],
-            ['code' => 'VND', 'name' => 'Vietnamese Dong', 'symbol' => 'd', 'decimal_places' => 0],
+            ['code' => 'VND', 'name' => 'Vietnamese Dong', 'symbol' => 'đ', 'decimal_places' => 0],
             ['code' => 'EUR', 'name' => 'Euro', 'symbol' => 'EUR', 'decimal_places' => 2],
         ];
 

@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             CurrencySeeder::class,
             CoursePriceSeeder::class,
             UserSeeder::class,
+            PostSeeder::class,
             OrderSeeder::class,
             OrderItemSeeder::class,
         ]);
