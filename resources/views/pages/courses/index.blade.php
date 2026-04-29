@@ -1,0 +1,377 @@
+@extends('layouts.app')
+
+@section('title', 'Courses')
+
+@section('content')
+    <div class="ml-[96px] flex-1 pr-8 pl-[10px]">
+        <div class="mx-auto px-11 mt-6 pb-16 grid grid-cols-1 xl:grid-cols-12 gap-8 xl:gap-10 items-start">
+            <div class="min-w-0 xl:col-span-8">
+                <h1 class="text-[32px] font-bold text-[#242424] leading-[1.4] mb-4">
+                    {{ $courseDetailData['course']['title'] }}
+                </h1>
+                <div class="mb-6 flex items-center gap-3 rounded-lg border border-[#ebebeb] bg-white px-4 py-3">
+                    <img alt="{{ $courseDetailData['course']['instructor']['name'] ?? 'Unknown Teacher' }}"
+                        class="h-11 w-11 rounded-full object-cover"
+                        src="{{ $courseDetailData['course']['instructor']['avatar_url'] ?? 'https://files.f8.edu.vn/f8-prod/avatars/699286a5e7330.png' }}">
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-[#666]">Giảng viên</p>
+                        <p class="truncate text-[15px] font-semibold text-[#242424]">
+                            {{ $courseDetailData['course']['instructor']['name'] ?? 'Chưa cập nhật' }}
+                        </p>
+                        <p class="truncate text-sm text-[#666]">
+                            {{ $courseDetailData['course']['instructor']['email'] ?? 'Chưa có email hiển thị' }}
+                        </p>
+                    </div>
+                </div>
+                <p class="text-[15px] text-[#444] leading-[1.6] mb-10 max-w-[700px]">
+                    {{ $courseDetailData['course']['description'] }}
+                </p>
+                <section class="mb-10">
+                    <h2 class="text-[20px] font-bold text-[#242424] mb-5">Bạn sẽ học được gì?</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                        @foreach ($courseDetailData['benefits'] as $benefit)
+                            <div class="flex items-start gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="16"
+                                    height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round"
+                                    class="lucide lucide-check text-[#f05123] shrink-0 mt-[3px]" aria-hidden="true">
+                                    <path d="M20 6 9 17l-5-5"></path>
+                                </svg><span class="text-[15px] text-[#444] leading-[1.6]">{{ $benefit['content'] }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </section>
+                <div class="mb-6 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-[20px] font-bold text-[#242424] mb-2">Nội dung khóa học</h2>
+                        <div class="flex items-center text-sm text-[#444]">
+                            <span
+                                class="font-semibold">{{ $courseDetailData['summary']['chapters_count'] }}</span>&nbsp;chương
+                            <span class="mx-2 text-[20px] leading-none text-gray-300">•</span>
+                            <span class="font-semibold">{{ $courseDetailData['summary']['lessons_count'] }}</span>&nbsp;bài
+                            học
+                        </div>
+                    </div><button id="toggle-all-tracks" class="text-[#f05123] font-semibold text-sm hover:underline">Mở
+                        rộng tất cả</button>
+                </div>
+                <div class="flex flex-col gap-[10px]">
+                    @foreach ($courseDetailData['tracks'] as $index => $track)
+                        @php
+                            $isOpen = $loop->first;
+                        @endphp
+                        <div class="border border-[#ebebeb] rounded-lg bg-[#f5f5f5] overflow-hidden">
+                            <button
+                                class="w-full flex items-center justify-between p-3 lg:p-4 hover:bg-[#ebebeb] transition-colors course-track-toggle"
+                                type="button" data-target="track-panel-{{ $track['id'] }}"
+                                aria-expanded="{{ $isOpen ? 'true' : 'false' }}">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-5 flex justify-center text-[#f05123]" style="transform: none;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide {{ $isOpen ? 'lucide-minus' : 'lucide-plus' }} track-toggle-icon"
+                                            aria-hidden="true">
+                                            <path d="M5 12h14"></path>
+                                            @if (!$isOpen)
+                                                <path d="M12 5v14"></path>
+                                            @endif
+                                        </svg>
+                                    </div>
+                                    <h3 class="font-semibold text-[15px] text-[#333]">
+                                        {{ $index + 1 }}. {{ $track['title'] }}
+                                    </h3>
+                                </div><span class="text-sm text-[#444]">{{ $track['children']->count() }} bài học</span>
+                            </button>
+                            @if ($track['children']->count())
+                                <div id="track-panel-{{ $track['id'] }}"
+                                    class="bg-white border-t border-[#ebebeb] {{ $isOpen ? '' : 'hidden' }}">
+                                    @foreach ($track['children'] as $child)
+                                        <div
+                                            class="flex items-center justify-between p-3 lg:py-[14px] lg:px-8 border-b border-[#f5f5f5] hover:bg-[#f5f5f5] cursor-pointer last:border-0 transition-colors">
+                                            <div class="flex items-center gap-3"><svg xmlns="http://www.w3.org/2000/svg"
+                                                    width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    class="lucide lucide-circle-play text-[#f05123] shrink-0"
+                                                    aria-hidden="true">
+                                                    <path
+                                                        d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z">
+                                                    </path>
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                </svg><span class="text-sm text-[#333] leading-relaxed">
+                                                    {{ $index + 1 }}.{{ $loop->iteration }} {{ $child['title'] }}
+                                                </span></div>
+                                            <span class="text-sm text-[#444] min-w-[45px] text-right">--:--</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+                <section class="mt-10">
+                    <h2 class="text-[20px] font-bold text-[#242424] mb-5">Yêu cầu</h2>
+                    <ul class="flex flex-col gap-4">
+                        @foreach ($courseDetailData['requirements'] as $requirement)
+                            <li class="flex items-start gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="16"
+                                    height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round"
+                                    class="lucide lucide-check text-[#f05123] shrink-0 mt-[3px]" aria-hidden="true">
+                                    <path d="M20 6 9 17l-5-5"></path>
+                                </svg><span
+                                    class="text-[15px] text-[#444] leading-[1.6]">{{ $requirement['content'] }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+            </div>
+            <div class="w-full xl:col-span-4">
+                <div class="xl:sticky xl:top-[98px] flex flex-col items-center">
+                    @php
+                        $courseTitle = $courseDetailData['course']['title'] ?? 'Giới thiệu khóa học';
+                        $thumbnailUrl =
+                            $courseDetailData['course']['thumbnail_url'] ??
+                            'https://files.f8.edu.vn/f8-prod/courses/15/62f13d2424a47.png';
+                        $introVideoUrl = $courseDetailData['course']['intro_video_url'] ?? null;
+                        $youtubeVideoId = null;
+
+                        if (
+                            !empty($introVideoUrl) &&
+                            preg_match(
+                                '~(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/)([A-Za-z0-9_-]{11})~',
+                                $introVideoUrl,
+                                $matches,
+                            )
+                        ) {
+                            $youtubeVideoId = $matches[1];
+                        }
+                    @endphp
+                    <div
+                        class="w-full relative rounded-xl overflow-hidden mb-5 group shadow-[0_4px_10px_rgba(0,0,0,0.1)] course-preview-card">
+                        <div class="aspect-video relative flex items-center justify-center bg-[#111]">
+                            <img src="{{ $thumbnailUrl }}" alt="{{ $courseTitle }}"
+                                class="absolute inset-0 h-full w-full object-cover course-preview-thumbnail">
+                            <div
+                                class="absolute inset-0 bg-black/20 flex flex-col items-center justify-center group-hover:bg-black/40 transition-colors course-preview-overlay">
+                                <button type="button"
+                                    class="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center mb-4 cursor-pointer scale-100 group-hover:scale-110 transition-transform course-preview-play-button"
+                                    aria-label="Phát video giới thiệu">
+                                    <svg data-prefix="fas" data-icon="circle-play"
+                                        class="svg-inline--fa fa-circle-play CourseDetail-module__icon___smpaJ"
+                                        role="img" viewBox="0 0 512 512" aria-hidden="true">
+                                        <path fill="currentColor"
+                                            d="M0 256a256 256 0 1 1 512 0 256 256 0 1 1 -512 0zM188.3 147.1c-7.6 4.2-12.3 12.3-12.3 20.9l0 176c0 8.7 4.7 16.7 12.3 20.9s16.8 4.1 24.3-.5l144-88c7.1-4.4 11.5-12.1 11.5-20.5s-4.4-16.1-11.5-20.5l-144-88c-7.4-4.5-16.7-4.7-24.3-.5z">
+                                        </path>
+                                    </svg>
+                                </button><span class="text-white font-semibold text-base">Xem giới thiệu khóa
+                                    học</span>
+                            </div>
+                            <div class="absolute inset-0 hidden bg-black course-preview-player">
+                                @if ($youtubeVideoId)
+                                    <iframe id="course-preview-youtube" class="h-full w-full"
+                                        data-src="https://www.youtube.com/embed/{{ $youtubeVideoId }}?autoplay=1&rel=0&modestbranding=1"
+                                        src="" title="{{ $courseTitle }}" frameborder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allowfullscreen></iframe>
+                                @elseif ($introVideoUrl)
+                                    <video id="course-preview-video" class="h-full w-full" controls playsinline
+                                        preload="metadata" src="{{ $introVideoUrl }}"
+                                        poster="{{ $thumbnailUrl }}"></video>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4 flex flex-col items-center gap-1">
+                        @if ($courseDetailData['course']['is_free'])
+                            <h2 class="text-[32px] font-normal text-[#22a06b]">Miễn phí</h2>
+                        @else
+                            @php
+                                $currentPrice = (float) ($courseDetailData['course']['price'] ?? 0);
+                                $oldPrice = (float) ($courseDetailData['course']['old_price'] ?? 0);
+                                $hasDiscount = $oldPrice > $currentPrice && $currentPrice > 0;
+                                $discountPercent = $hasDiscount
+                                    ? round((($oldPrice - $currentPrice) / $oldPrice) * 100)
+                                    : 0;
+                            @endphp
+
+                            @if ($hasDiscount)
+                                <div class="flex items-center gap-2 text-sm text-[#666]">
+                                    <span class="line-through">
+                                        {{ format_price($oldPrice, $courseDetailData['course']['currency_symbol'] ?? 'đ') }}
+                                    </span>
+                                    <span class="rounded bg-[#fef3f0] px-2 py-0.5 text-xs font-semibold text-[#f05123]">
+                                        -{{ $discountPercent }}%
+                                    </span>
+                                </div>
+                            @endif
+                            <h2 class="text-[36px] font-semibold text-[#f05123] leading-tight">
+                                {{ format_price($currentPrice, $courseDetailData['course']['currency_symbol'] ?? 'đ') }}
+                            </h2>
+                        @endif
+                    </div><button
+                        class="w-[200px] bg-[#1473e6] hover:bg-[#105cba] text-white font-semibold py-[10px] px-4 rounded-full mb-6 transition-colors shadow-[0_4px_10px_rgba(20,115,230,0.3)]">ĐĂNG
+                        KÝ HỌC</button>
+                    <ul class="flex flex-col gap-3 px-2">
+                        <li class="flex items-center gap-3 text-[#444] text-[15px]"><svg
+                                xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-battery-medium" aria-hidden="true">
+                                <path d="M10 14v-4"></path>
+                                <path d="M22 14v-4"></path>
+                                <path d="M6 14v-4"></path>
+                                <rect x="2" y="6" width="16" height="12" rx="2"></rect>
+                            </svg><span>{{ $courseDetailData['course']['level']['name'] ?? 'Trình độ cơ bản' }}</span></li>
+                        <li class="flex items-center gap-3 text-[#444] text-[15px]"><svg
+                                xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-film" aria-hidden="true">
+                                <rect width="18" height="18" x="3" y="3" rx="2"></rect>
+                                <path d="M7 3v18"></path>
+                                <path d="M3 7.5h4"></path>
+                                <path d="M3 12h18"></path>
+                                <path d="M3 16.5h4"></path>
+                                <path d="M17 3v18"></path>
+                                <path d="M17 7.5h4"></path>
+                                <path d="M17 16.5h4"></path>
+                            </svg><span>Tổng số <strong>{{ $courseDetailData['summary']['lessons_count'] }}</strong> bài
+                                học</span></li>
+                        <li class="flex items-center gap-3 text-[#444] text-[15px]"><svg
+                                xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-clock" aria-hidden="true">
+                                <path d="M12 6v6l4 2"></path>
+                                <circle cx="12" cy="12" r="10"></circle>
+                            </svg><span>Khai giảng
+                                <strong>
+                                    {{ $courseDetailData['course']['next_opening_at'] ? \Carbon\Carbon::parse($courseDetailData['course']['next_opening_at'])->format('d/m/Y') : 'Chưa có lịch' }}
+                                </strong>
+                            </span></li>
+                        <li class="flex items-center gap-3 text-[#444] text-[15px]"><svg
+                                xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-smartphone" aria-hidden="true">
+                                <rect width="14" height="20" x="5" y="2" rx="2" ry="2">
+                                </rect>
+                                <path d="M12 18h.01"></path>
+                            </svg><span>Học mọi lúc, mọi nơi</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const toggles = document.querySelectorAll('.course-track-toggle');
+                const toggleAllButton = document.getElementById('toggle-all-tracks');
+                const previewPlayButton = document.querySelector('.course-preview-play-button');
+                const previewOverlay = document.querySelector('.course-preview-overlay');
+                const previewThumbnail = document.querySelector('.course-preview-thumbnail');
+                const previewPlayer = document.querySelector('.course-preview-player');
+                const previewYoutube = document.getElementById('course-preview-youtube');
+                const previewVideo = document.getElementById('course-preview-video');
+
+                const setTrackExpandedState = function(toggle, expanded) {
+                    const targetId = toggle.getAttribute('data-target');
+                    const panel = document.getElementById(targetId);
+
+                    if (!panel) {
+                        return;
+                    }
+
+                    toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                    panel.classList.toggle('hidden', !expanded);
+
+                    const icon = toggle.querySelector('.track-toggle-icon');
+
+                    if (!icon) {
+                        return;
+                    }
+
+                    icon.classList.toggle('lucide-plus', !expanded);
+                    icon.classList.toggle('lucide-minus', expanded);
+
+                    const plusPath = icon.querySelector('path:nth-child(2)');
+
+                    if (!expanded && !plusPath) {
+                        const newPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        newPath.setAttribute('d', 'M12 5v14');
+                        icon.appendChild(newPath);
+                    }
+
+                    if (expanded && plusPath) {
+                        plusPath.remove();
+                    }
+                };
+
+                const updateToggleAllLabel = function() {
+                    if (!toggleAllButton) {
+                        return;
+                    }
+
+                    const allExpanded = Array.from(toggles).every(function(toggle) {
+                        return toggle.getAttribute('aria-expanded') === 'true';
+                    });
+
+                    toggleAllButton.textContent = allExpanded ? 'Thu gọn tất cả' : 'Mở rộng tất cả';
+                };
+
+                toggles.forEach(function(toggle) {
+                    toggle.addEventListener('click', function() {
+                        const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                        setTrackExpandedState(this, !isExpanded);
+                        updateToggleAllLabel();
+                    });
+                });
+
+                if (toggleAllButton) {
+                    toggleAllButton.addEventListener('click', function() {
+                        const shouldExpandAll = this.textContent.trim() === 'Mở rộng tất cả';
+
+                        toggles.forEach(function(toggle) {
+                            setTrackExpandedState(toggle, shouldExpandAll);
+                        });
+
+                        updateToggleAllLabel();
+                    });
+                }
+
+                const playPreviewInline = function() {
+                    if (!previewPlayer) {
+                        return;
+                    }
+
+                    previewPlayer.classList.remove('hidden');
+
+                    if (previewOverlay) {
+                        previewOverlay.classList.add('hidden');
+                    }
+
+                    if (previewThumbnail) {
+                        previewThumbnail.classList.add('hidden');
+                    }
+
+                    if (previewYoutube && !previewYoutube.getAttribute('src')) {
+                        previewYoutube.setAttribute('src', previewYoutube.getAttribute('data-src') || '');
+                    }
+
+                    if (previewVideo) {
+                        previewVideo.play().catch(function() {
+                            // Ignore autoplay rejection; user can press native play.
+                        });
+                    }
+                };
+
+                if (previewPlayButton) {
+                    previewPlayButton.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        playPreviewInline();
+                    });
+                }
+
+                updateToggleAllLabel();
+            });
+        </script>
+    @endpush
+@endsection

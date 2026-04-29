@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CourseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,24 +16,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-
-Route::get('/courses/{slug}', function ($slug) {
-    return view('pages.courses.index');
-});
-
-Route::get('/articles', function () {
-    return view('pages.articles.index');
-});
-
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth'])->name('dashboard');
-
-Route::get('/test-auth', function () {
-    return [
-        'check' => auth()->check(),
-        'user' => auth()->user(),
-    ];
-});
+Route::get('/courses/{slug}', [CourseController::class, 'show'])->name('courses.show');
 
 require __DIR__.'/auth.php';
