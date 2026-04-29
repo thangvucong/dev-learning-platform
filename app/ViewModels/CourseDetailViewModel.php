@@ -98,7 +98,18 @@ class CourseDetailViewModel
      */
     protected function resolveNearestOpeningClass($classes)
     {
-        return $classes->first();
+        $nearestUpcomingClass = $classes
+            ->filter(function ($courseClass) {
+                return !empty($courseClass->start_at) && $courseClass->start_at->greaterThanOrEqualTo(now());
+            })
+            ->sortBy('start_at')
+            ->first();
+
+        if ($nearestUpcomingClass) {
+            return $nearestUpcomingClass;
+        }
+
+        return null;
     }
 
     /**

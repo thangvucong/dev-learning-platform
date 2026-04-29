@@ -16,10 +16,12 @@ class CourseRepository
      */
     public function getPublishedCourses(int $limit): Collection
     {
+        $now = now();
+
         return Course::query()
             ->with([
                 'instructor:id,name,email,avatar_url',
-                'classes' => function ($query) {
+                'classes' => function ($query) use ($now) {
                     $query->select([
                         'id',
                         'course_id',
@@ -32,12 +34,10 @@ class CourseRepository
                         'location',
                     ])
                         ->whereNotNull('start_at')
-                        ->where('start_at', '>=', now())
+                        ->where('start_at', '>=', $now)
                         ->orderBy('start_at');
                 },
-                'prices' => function ($query) {
-                    $now = now();
-
+                'prices' => function ($query) use ($now) {
                     $query->select([
                         'id',
                         'course_id',
@@ -63,6 +63,7 @@ class CourseRepository
             ])
             ->where('status', 1)
             ->whereNotNull('published_at')
+            ->where('published_at', '<=', $now)
             ->orderByDesc('published_at')
             ->limit($limit)
             ->get();
@@ -157,6 +158,7 @@ class CourseRepository
             ->where('slug', $slug)
             ->where('status', 1)
             ->whereNotNull('published_at')
+            ->where('published_at', '<=', $now)
             ->first();
 
         if (!$course) {
