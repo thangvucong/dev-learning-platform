@@ -3,6 +3,8 @@
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CourseController;
+use  App\Http\Controllers\Admin\AdminCourseController;
+use App\Http\Controllers\Admin\AdminDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,7 +23,7 @@ Route::get('/courses/{slug}', [CourseController::class, 'show'])->name('courses.
 
 Route::middleware(['auth'])->group(function () {
 
-    // Nhóm các Route dành riêng cho Admin
+    //  Route dành cho Admin
     Route::middleware(['role:admin'])
         ->prefix('admin')
         ->name('admin.') 
@@ -32,13 +34,14 @@ Route::middleware(['auth'])->group(function () {
                 return view('components.admin.dashboard');
             })->name('dashboard');
 
-         
-            
+        
+
+
             // Quản lý người dùng 
             // Route::get('/users', [UserController::class, 'index'])->name('users.index');
             
             // Quản lý khóa học 
-            // Route::resource('courses', AdminCourseController::class);
+            Route::resource('courses', AdminCourseController::class);
         });
 });
 require __DIR__.'/auth.php';
