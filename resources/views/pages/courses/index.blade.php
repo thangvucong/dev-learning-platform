@@ -207,9 +207,9 @@
                                 {{ format_price($currentPrice, $courseDetailData['course']['currency_symbol'] ?? 'đ') }}
                             </h2>
                         @endif
-                    </div><button
-                        class="w-[200px] bg-[#1473e6] hover:bg-[#105cba] text-white font-semibold py-[10px] px-4 rounded-full mb-6 transition-colors shadow-[0_4px_10px_rgba(20,115,230,0.3)]">ĐĂNG
-                        KÝ HỌC</button>
+                    </div><a href="{{ route('checkout', ['course_id' => $courseDetailData['course']['id']]) }}"
+                        class="w-[200px] bg-[#1473e6] hover:bg-[#105cba] text-white text-center font-semibold py-[10px] px-4 rounded-full mb-6 transition-colors shadow-[0_4px_10px_rgba(20,115,230,0.3)]">ĐĂNG
+                        KÝ HỌC</a>
                     <ul class="flex flex-col gap-3 px-2">
                         <li class="flex items-center gap-3 text-[#444] text-[15px]"><svg
                                 xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"

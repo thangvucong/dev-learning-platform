@@ -2,7 +2,7 @@
     <div style="opacity: 1; transform: none;">
         <h2 class="text-[20px] font-bold text-[#242424] mb-1">Xin chào!</h2>
         <p class="text-sm text-[#808080] mb-5">Đăng nhập để tiếp tục học tập tại F8.</p>
-        <div class="flex flex-col gap-2 mb-5"><button
+        <div class="flex flex-col gap-2 mb-5"><a href="{{ route('auth.google.redirect', ['continue' => request()->fullUrl()]) }}"
                 class="w-full flex items-center justify-center gap-3 py-[10px] px-4 rounded-xl text-sm font-medium transition-all bg-white hover:bg-gray-50 border border-[#e0e0e0] text-[#3c3c3c]"><span
                     class="shrink-0"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
                         <path fill="#EA4335"
@@ -18,7 +18,7 @@
                             d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z">
                         </path>
                         <path fill="none" d="M0 0h48v48H0z"></path>
-                    </svg></span><span>Tiếp tục với Google</span></button><button
+                    </svg></span><span>Tiếp tục với Google</span></a><button
                 class="w-full flex items-center justify-center gap-3 py-[10px] px-4 rounded-xl text-sm font-medium transition-all bg-[#1877f2] hover:bg-[#166fe5]  text-white"><span
                     class="shrink-0"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"
                         aria-hidden="true">
@@ -55,7 +55,8 @@
                     class="text-sm font-semibold text-[#333]">Email</label><input id="login-email" name="email"
                     placeholder="Nhập địa chỉ email"
                     class="w-full px-4 py-[10px] rounded-xl border text-sm text-[#292929] placeholder-[#b0b0b0] outline-none transition-all focus:ring-2 focus:ring-[#f05123]/20 focus:border-[#f05123] {{ old('_auth_form') === 'login' && $errors->has('email') ? 'border-red-400' : 'border-[#e0e0e0]' }} bg-white hover:border-[#c0c0c0]"
-                    type="email" value="{{ old('_auth_form') === 'login' ? old('email') : '' }}" required autofocus></div>
+                    type="email" value="{{ old('_auth_form') === 'login' ? old('email') : '' }}" required autofocus>
+            </div>
             <div class="flex flex-col gap-1">
                 <div class="flex items-center justify-between"><label for="login-password"
                         class="text-sm font-semibold text-[#333]">Mật khẩu</label><button type="button"
@@ -77,6 +78,7 @@
                     nhập</span></button>
         </form>
         <p class="text-center text-sm text-[#808080] mt-5"><span>Chưa có tài khoản? </span><button type="button"
-                class="text-[#f05123] font-semibold hover:underline" data-auth-switch="register">Đăng ký ngay</button></p>
+                class="text-[#f05123] font-semibold hover:underline" data-auth-switch="register">Đăng ký ngay</button>
+        </p>
     </div>
 </div>

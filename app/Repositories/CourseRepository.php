@@ -172,9 +172,62 @@ class CourseRepository implements CourseRepositoryInterface
     {
         return Course::count();
     }
+
     public function getRecentCourses($limit)
     {
         // Giả sử lấy các khóa học mới nhất nếu Interface yêu cầu cho Course
         return Course::latest()->take($limit)->get();
+    }
+    
+    /**
+     * Find a published course by id for checkout (active price window, currency).
+     *
+     * @param  int  $courseId
+     * @return \App\Models\Course
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function findPublishedCourseForCheckout(int $courseId): Course
+    {
+        $now = now();
+
+        return Course::query()
+            ->select([
+                'id',
+                'title',
+                'slug',
+                'thumbnail_url',
+                'is_free',
+            ])
+            ->with([
+                'prices' => function ($query) use ($now) {
+                    $query->select([
+                        'id',
+                        'course_id',
+                        'currency_id',
+                        'price',
+                        'compare_price',
+                        'starts_at',
+                        'ends_at',
+                        'is_active',
+                    ])
+                        ->where('is_active', true)
+                        ->where(function ($subQuery) use ($now) {
+                            $subQuery->whereNull('starts_at')
+                                ->orWhere('starts_at', '<=', $now);
+                        })
+                        ->where(function ($subQuery) use ($now) {
+                            $subQuery->whereNull('ends_at')
+                                ->orWhere('ends_at', '>=', $now);
+                        })
+                        ->orderByDesc('starts_at');
+                },
+                'prices.currency:id,symbol',
+            ])
+            ->whereKey($courseId)
+            ->where('status', 1)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', $now)
+            ->firstOrFail();
     }
 }
