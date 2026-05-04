@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* Đảm bảo sidebar không bị đè */
+       
         .sidebar-scroll { height: calc(100vh - 100px); overflow-y: auto; }
     </style>
 </head>
@@ -37,7 +37,7 @@
                             <a href="#" class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
                                 Quản lý người dùng
                             </a>
-                            <a href="#" class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                            <a href="{{ route('admin.courses.managerCourses') }}" class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
                                 Quản lý khóa học
                             </a>
                         </div>
@@ -114,47 +114,117 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-           
-            fetch('/api/admin/dashboard-stats') 
-                .then(response => response.json())
-                .then(res => {
-                    if(res.success) {
-                        const data = res.data;
-                        
-                        document.getElementById('total-users').innerText = data.total_users.toLocaleString();
-                        document.getElementById('total-courses').innerText = data.total_courses.toLocaleString();
-                        document.getElementById('online-users').innerText = data.online_users.toLocaleString();
+       document.addEventListener('DOMContentLoaded', function() {
+   
+    const API_URL = '/admin/courses/api/list';
 
-                        const tableBody = document.getElementById('user-table-body');
-                        tableBody.innerHTML = data.recent_users.map(user => `
+    function loadCourses(url) {
+        const tableBody = document.getElementById('course-table-body');
+        const paginationInfo = document.getElementById('pagination-info');
+
+
+        tableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500 italic animate-pulse">Đang đồng bộ dữ liệu khóa học...</td></tr>';
+
+        fetch(url)
+            .then(response => response.json())
+            .then(res => {
+                
+                if (res.data && res.data.length > 0) {
+                    tableBody.innerHTML = ''; 
+                    
+                    res.data.forEach(course => {
+                        // Logic xử lý màu sắc cho Level
+                        let levelColor = "text-slate-300";
+                        if (course.level === "Advanced") levelColor = "text-orange-400";
+                        if (course.level === "Intermediate") levelColor = "text-blue-400";
+                        if (course.level === "Beginner") levelColor = "text-emerald-400";
+
+                        const row = `
                             <tr class="hover:bg-slate-800/40 transition-colors group">
-                                <td class="px-6 py-4 flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-sm font-bold border border-emerald-500/20">
-                                        ${user.name.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div class="min-w-0">
-                                        <p class="text-sm font-semibold text-slate-200">${user.name}</p>
-                                        <p class="text-xs text-slate-500 truncate">${user.email}</p>
+                                <td class="px-6 py-4 text-sm font-medium text-slate-500">#${course.id}</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-[11px] font-bold border border-emerald-500/20">
+                                            ${course.instructor ? course.instructor.split(' ').map(n => n[0]).join('') : '??'}
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-semibold text-slate-200">${course.name || 'Chưa đặt tên'}</p>
+                                            <p class="text-[10px] text-slate-500">${course.instructor}</p>
+                                        </div>
                                     </div>
                                 </td>
+                                <td class="px-6 py-4 text-sm ${levelColor} font-medium">${course.level}</td>
+                                <td class="px-6 py-4 text-center text-sm text-slate-300">${course.class_count} lớp</td>
+                                <td class="px-6 py-4 text-sm font-bold text-white">${course.price}</td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="px-2.5 py-0.5 bg-slate-700/50 text-slate-300 rounded text-[10px] font-bold uppercase tracking-tight border border-slate-600/50">
-                                        ${user.role}
+                                    <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded text-[10px] font-bold uppercase border border-emerald-500/20">
+                                        ${course.status}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-slate-400 text-right font-medium">
-                                    ${new Date(user.created_at).toLocaleDateString('vi-VN')}
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-all">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                        <button class="p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-500 transition-all">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
-                        `).join('');
-                    }
-                })
-                .catch(error => {
-                    console.error('Lỗi:', error);
-                    document.getElementById('user-table-body').innerHTML = '<tr><td colspan="3" class="px-6 py-10 text-center text-red-400 font-medium">Lỗi kết nối máy chủ!</td></tr>';
-                });
+                        `;
+                        tableBody.insertAdjacentHTML('beforeend', row);
+                    });
+
+                  
+                    renderPagination(res);
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500">Không tìm thấy khóa học nào.</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi:', error);
+                tableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-10 text-center text-red-400 font-medium">Lỗi kết nối API!</td></tr>';
+            });
+    }
+
+    function renderPagination(res) {
+        const paginationInfo = document.getElementById('pagination-info');
+        
+       
+        let buttonsHtml = '';
+        res.links.forEach(link => {
+            const isActive = link.active ? 'bg-emerald-500 text-white font-bold' : 'bg-slate-800 text-slate-400 hover:bg-slate-700';
+            const isDisabled = link.url === null ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer';
+            
+            
+            let label = link.label;
+            if(label.includes('Previous')) label = 'Trước';
+            if(label.includes('Next')) label = 'Sau';
+
+            buttonsHtml += `
+                <button 
+                    ${link.url ? `onclick="window.loadCourses('${link.url}')"` : ''} 
+                    class="px-3 py-1.5 rounded-lg text-[11px] transition-all border border-slate-700 ${isActive} ${isDisabled}">
+                    ${label}
+                </button>
+            `;
         });
+
+        paginationInfo.innerHTML = `
+            <span class="text-slate-500">Hiển thị từ <b>${res.from || 0}</b> đến <b>${res.to || 0}</b> trong tổng số <b>${res.total}</b> khóa học</span>
+            <div class="flex gap-1.5">
+                ${buttonsHtml}
+            </div>
+        `;
+    }
+    window.loadCourses = loadCourses;
+    loadCourses(API_URL);
+});
     </script>
 </body>
 </html>

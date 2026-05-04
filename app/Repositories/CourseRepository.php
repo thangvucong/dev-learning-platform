@@ -6,10 +6,36 @@ use App\Models\Course;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Repositories\Interfaces\CourseRepositoryInterface;
+use Illuminate\Pagination\LengthAwarePaginator;
+
 class CourseRepository implements CourseRepositoryInterface
 {
     /**
-     * Get published courses sorted by latest published date.
+     * Lấy danh sách khóa học phân trang cho Admin.
+     * 
+     * @param int $perPage
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getAllCoursesPaginated(int $perPage = 10): LengthAwarePaginator
+    {
+       return Course::query()
+        ->with([
+            'instructor:id,name', 
+            'level:id,name',
+       
+            'prices' => function($q) {
+                $q->where('is_active', 1);
+            },
+          
+            'classes:id,course_id,name,mode,status,start_at',
+            'attributes:id,course_id,type,content'
+        ])
+        ->latest()
+        ->paginate($perPage);
+    }
+
+    /**
+     * Get published courses sorted by latest published date (Dành cho Client).
      *
      * @param  int  $limit
      * @return \Illuminate\Database\Eloquent\Collection
@@ -23,15 +49,8 @@ class CourseRepository implements CourseRepositoryInterface
                 'instructor:id,name,email,avatar_url',
                 'classes' => function ($query) use ($now) {
                     $query->select([
-                        'id',
-                        'course_id',
-                        'instructor_id',
-                        'name',
-                        'mode',
-                        'status',
-                        'start_at',
-                        'end_at',
-                        'location',
+                        'id', 'course_id', 'instructor_id', 'name', 
+                        'mode', 'status', 'start_at', 'end_at', 'location',
                     ])
                         ->whereNotNull('start_at')
                         ->where('start_at', '>=', $now)
@@ -39,14 +58,8 @@ class CourseRepository implements CourseRepositoryInterface
                 },
                 'prices' => function ($query) use ($now) {
                     $query->select([
-                        'id',
-                        'course_id',
-                        'currency_id',
-                        'price',
-                        'compare_price',
-                        'starts_at',
-                        'ends_at',
-                        'is_active',
+                        'id', 'course_id', 'currency_id', 'price', 
+                        'compare_price', 'starts_at', 'ends_at', 'is_active',
                     ])
                         ->where('is_active', true)
                         ->where(function ($subQuery) use ($now) {
@@ -74,7 +87,6 @@ class CourseRepository implements CourseRepositoryInterface
      *
      * @param  string  $slug
      * @return \App\Models\Course
-     *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
     public function findPublishedCourseDetailBySlug(string $slug): Course
@@ -87,31 +99,16 @@ class CourseRepository implements CourseRepositoryInterface
                 'instructor:id,name,email,avatar_url',
                 'classes' => function ($query) use ($now) {
                     $query->select([
-                        'id',
-                        'course_id',
-                        'instructor_id',
-                        'name',
-                        'code',
-                        'mode',
-                        'status',
-                        'capacity',
-                        'start_at',
-                        'end_at',
-                        'location',
+                        'id', 'course_id', 'instructor_id', 'name', 'code',
+                        'mode', 'status', 'capacity', 'start_at', 'end_at', 'location',
                     ])
                         ->orderByRaw('CASE WHEN start_at >= ? THEN 0 ELSE 1 END', [$now])
                         ->orderBy('start_at');
                 },
                 'prices' => function ($query) use ($now) {
                     $query->select([
-                        'id',
-                        'course_id',
-                        'currency_id',
-                        'price',
-                        'compare_price',
-                        'starts_at',
-                        'ends_at',
-                        'is_active',
+                        'id', 'course_id', 'currency_id', 'price', 
+                        'compare_price', 'starts_at', 'ends_at', 'is_active',
                     ])
                         ->where('is_active', true)
                         ->where(function ($subQuery) use ($now) {
@@ -126,33 +123,16 @@ class CourseRepository implements CourseRepositoryInterface
                 },
                 'prices.currency:id,symbol',
                 'attributes' => function ($query) {
-                    $query->select([
-                        'id',
-                        'course_id',
-                        'type',
-                        'content',
-                        'position',
-                    ])->orderBy('position');
+                    $query->select(['id', 'course_id', 'type', 'content', 'position'])
+                        ->orderBy('position');
                 },
                 'tracks' => function ($query) {
-                    $query->select([
-                        'id',
-                        'course_id',
-                        'parent_id',
-                        'title',
-                        'description',
-                        'position',
-                    ])->orderBy('position');
+                    $query->select(['id', 'course_id', 'parent_id', 'title', 'description', 'position'])
+                        ->orderBy('position');
                 },
                 'tracks.children' => function ($query) {
-                    $query->select([
-                        'id',
-                        'course_id',
-                        'parent_id',
-                        'title',
-                        'description',
-                        'position',
-                    ])->orderBy('position');
+                    $query->select(['id', 'course_id', 'parent_id', 'title', 'description', 'position'])
+                        ->orderBy('position');
                 },
             ])
             ->where('slug', $slug)
@@ -168,13 +148,25 @@ class CourseRepository implements CourseRepositoryInterface
         return $course;
     }
 
-    public function countAll()
+    /**
+     * Đếm tổng số khóa học cho Dashboard.
+     */
+    public function countAll(): int
     {
         return Course::count();
     }
-    public function getRecentCourses($limit)
+
+    /**
+     * Lấy các khóa học mới nhất (Cho Dashboard Admin).
+     */
+    public function getRecentCourses(int $limit): Collection
     {
-        // Giả sử lấy các khóa học mới nhất nếu Interface yêu cầu cho Course
-        return Course::latest()->take($limit)->get();
+        return Course::query()
+            ->with(['instructor:id,name'])
+            ->latest()
+            ->take($limit)
+            ->get();
     }
+
+    
 }

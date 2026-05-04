@@ -41,7 +41,12 @@ Route::middleware(['auth'])->group(function () {
             // Route::get('/users', [UserController::class, 'index'])->name('users.index');
             
             // Quản lý khóa học 
-            Route::resource('courses', AdminCourseController::class);
+        Route::group(['prefix' => 'courses'], function () {
+              
+                Route::get('/', [AdminCourseController::class, 'index'])->name('courses.managerCourses');
+                Route::get('/api/list', [AdminCourseController::class, 'getListData'])->name('courses.api.list');
+                // Route::delete('/api/delete/{id}', [AdminCourseController::class, 'destroy'])->name('courses.api.delete');
+            });
         });
 });
 require __DIR__.'/auth.php';
