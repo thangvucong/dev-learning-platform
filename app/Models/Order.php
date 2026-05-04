@@ -16,6 +16,7 @@ class Order extends Model
         'status',
         'payment_method',
         'note',
+        'payment_reference',
         'paid_at',
     ];
 
