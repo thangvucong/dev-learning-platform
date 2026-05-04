@@ -3,11 +3,6 @@
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CourseController;
-use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\OrderStatusController;
-use App\Http\Controllers\PaymentWebhookController;
-use App\Http\Controllers\Auth\EmailOtpAuthController;
-use App\Http\Controllers\Auth\GoogleAuthController;
 use  App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\CheckoutController;
