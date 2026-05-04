@@ -5,8 +5,8 @@ namespace App\Repositories;
 use App\Models\Course;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-
-class CourseRepository
+use App\Repositories\Interfaces\CourseRepositoryInterface;
+class CourseRepository implements CourseRepositoryInterface
 {
     /**
      * Get published courses sorted by latest published date.
@@ -166,5 +166,15 @@ class CourseRepository
         }
 
         return $course;
+    }
+
+    public function countAll()
+    {
+        return Course::count();
+    }
+    public function getRecentCourses($limit)
+    {
+        // Giả sử lấy các khóa học mới nhất nếu Interface yêu cầu cho Course
+        return Course::latest()->take($limit)->get();
     }
 }

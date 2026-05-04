@@ -64,10 +64,10 @@
                         class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm text-[#333] hover:bg-[#f6f6f6]">
                         Trang cá nhân
                     </a>
-                    <a href="{{ url('/dashboard') }}"
-                        class="flex items-center rounded-lg px-3 py-2 text-sm text-[#333] hover:bg-[#f6f6f6]">
-                        Dashboard
-                    </a>
+                   <a href="{{ route('admin.dashboard') }}"
+   class="flex items-center rounded-lg px-3 py-2 text-sm text-[#333] hover:bg-[#f6f6f6]">
+    Dashboard
+</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit"
