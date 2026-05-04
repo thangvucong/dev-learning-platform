@@ -1,16 +1,25 @@
 <header
     class="fixed top-0 left-0 right-0 h-[66px] bg-white border-b border-gray-200 z-50 flex items-center justify-between px-6">
-    <div class="flex items-center gap-4">
+    <a href="{{ url('/') }}" class="flex items-center gap-4">
         <div
             class="w-[38px] h-[38px] bg-[#f05123] rounded-lg text-white font-bold flex items-center justify-center text-sm">
-            F8</div><button
-            class="flex items-center text-[#808080] hover:text-[#292929] text-sm font-semibold transition-colors"><svg
-                xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-chevron-left mr-1" aria-hidden="true">
-                <path d="m15 18-6-6 6-6"></path>
-            </svg>QUAY LẠI</button>
-    </div>
+            CST
+        </div>
+        @if (request()->is('/'))
+            <span class="flex items-center text-[#808080] hover:text-[#292929] text-lg font-bold transition-colors">
+                HỌC ĐỂ ĐI LÀM
+            </span>
+        @else
+            <button
+                class="flex items-center text-[#808080] hover:text-[#292929] text-sm font-semibold transition-colors"><svg
+                    xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-chevron-left mr-1" aria-hidden="true">
+                    <path d="m15 18-6-6 6-6"></path>
+                </svg>QUAY LẠI</button>
+        @endif
+
+    </a>
     <div class="flex-1 max-w-[420px] mx-8">
         <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><svg
@@ -41,8 +50,8 @@
             <button type="button"
                 class="w-9 h-9 rounded-full flex items-center justify-center text-[#666] hover:bg-[#f4f4f4] hover:text-[#242424] transition-colors"
                 aria-label="Thông báo">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"
-                    class="text-current" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                    fill="currentColor" class="text-current" aria-hidden="true">
                     <path
                         d="M12 22a2.3 2.3 0 0 0 2.3-2.3h-4.6A2.3 2.3 0 0 0 12 22Zm7.2-6.1-1.3-1.3v-4.2a5.9 5.9 0 0 0-4.8-5.8V3.8a1.1 1.1 0 1 0-2.2 0v.8a5.9 5.9 0 0 0-4.8 5.8v4.2l-1.3 1.3a.9.9 0 0 0 .6 1.5h13.2a.9.9 0 0 0 .6-1.5Z" />
                 </svg>

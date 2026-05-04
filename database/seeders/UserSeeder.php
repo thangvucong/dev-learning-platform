@@ -18,6 +18,7 @@ class UserSeeder extends Seeder
     {
         Role::query()->firstOrCreate(['name' => 'student']);
         Role::query()->firstOrCreate(['name' => 'teacher']);
+        Role::query()->firstOrCreate(['name' => 'admin']);
 
         User::factory()->count(3)->create();
 
@@ -37,6 +38,11 @@ class UserSeeder extends Seeder
                 'email' => 'teacher3@example.com',
                 'avatar_url' => 'https://i.pravatar.cc/150?img=13',
             ],
+            [
+                'name' => 'Admin',
+                'email' => 'admin@example.com',
+                'avatar_url' => 'https://i.pravatar.cc/150?img=14',
+            ],
         ];
 
         foreach ($teachers as $teacherData) {
@@ -51,6 +57,28 @@ class UserSeeder extends Seeder
             );
 
             $teacher->syncRoles(['teacher']);
+        }
+        
+        $admins = [
+            [
+                'name' => 'Admin',
+                'email' => 'admin@example.com',
+                'avatar_url' => 'https://i.pravatar.cc/150?img=14',
+            ],
+        ];
+
+        foreach ($admins as $adminData) {
+            $admin = User::query()->updateOrCreate(
+                ['email' => $adminData['email']],
+                [
+                    'name' => $adminData['name'],
+                    'avatar_url' => $adminData['avatar_url'],
+                    'password' => Hash::make('12345678'),
+                    'email_verified_at' => now(),
+                ]
+            );
+
+            $admin->syncRoles(['admin']);
         }
 
         $students = [
