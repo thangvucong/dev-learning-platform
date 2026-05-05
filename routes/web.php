@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CourseController;
 use  App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminClassController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderStatusController;
 use App\Http\Controllers\PaymentWebhookController;
@@ -63,14 +64,23 @@ Route::middleware(['auth'])->group(function () {
                 return view('components.admin.dashboard');
             })->name('dashboard');
 
-        
+        Route::get('/api/dashboard-stats', [AdminDashboardController::class, 'getStats'])->name('api.stats');
 
-
+   Route::group(['prefix' => 'classes'], function () {
+    Route::get('/', [AdminClassController::class, 'index'])->name('classes.managerClasses');
+    Route::get('/api/list', [AdminClassController::class, 'getListData'])->name('classes.api.list');
+});
             // Quản lý người dùng 
             // Route::get('/users', [UserController::class, 'index'])->name('users.index');
             
             // Quản lý khóa học 
-            Route::resource('courses', AdminCourseController::class);
+        Route::group(['prefix' => 'courses'], function () {
+              
+                Route::get('/', [AdminCourseController::class, 'index'])->name('courses.managerCourses');
+                Route::get('/api/list', [AdminCourseController::class, 'getListData'])->name('courses.api.list');
+                // Route::delete('/api/delete/{id}', [AdminCourseController::class, 'destroy'])->name('courses.api.delete');
+            });
         });
+     
 });
 require __DIR__.'/auth.php';
