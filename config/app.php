@@ -58,6 +58,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Force HTTPS for generated URLs
+    |--------------------------------------------------------------------------
+    |
+    | Khi true: route(), url(), ... luôn dùng scheme https (tránh mixed content
+    | khi người dùng mở site bằng HTTPS nhưng APP_URL vẫn là http).
+    |
+    */
+
+    'force_https' => (bool) env('FORCE_HTTPS', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

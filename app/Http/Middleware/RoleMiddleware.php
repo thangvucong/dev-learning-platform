@@ -28,13 +28,18 @@ class RoleMiddleware
         }
 
         $roles = collect($roles)
-            ->flatMap(fn ($role) => explode('|', $role))
-            ->map(fn ($role) => trim($role))
-            ->filter();
+            ->flatMap(function ($role) {
+                return explode('|', $role);
+            })
+            ->map(function ($role) {
+                return trim($role);
+            })
+            ->filter()
+            ->values()
+            ->toArray();
 
-        $hasRole = method_exists($user, 'hasAnyRole')
-            ? $user->hasAnyRole($roles->toArray())
-            : in_array($user->role ?? null, $roles->toArray());
+        $userRole = $user->role ?? null;
+        $hasRole = $userRole !== null && $userRole !== '' && in_array($userRole, $roles, true);
 
         if (!$hasRole) {
             abort(403, 'Forbidden - Insufficient role');

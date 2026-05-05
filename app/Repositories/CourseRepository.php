@@ -20,14 +20,12 @@ class CourseRepository implements CourseRepositoryInterface
     {
        return Course::query()
         ->with([
-            'instructor:id,name', 
-            'level:id,name',
-       
+        'instructor:id,name', 
             'prices' => function($q) {
                 $q->where('is_active', 1);
             },
           
-            'classes:id,course_id,name,mode,status,start_at',
+            'classes:id,course_id,name,status,start_at',
             'attributes:id,course_id,type,content'
         ])
         ->latest()
@@ -49,8 +47,8 @@ class CourseRepository implements CourseRepositoryInterface
                 'instructor:id,name,email,avatar_url',
                 'classes' => function ($query) use ($now) {
                     $query->select([
-                        'id', 'course_id', 'instructor_id', 'name', 
-                        'mode', 'status', 'start_at', 'end_at', 'location',
+                        'id', 'course_id', 'name', 
+                        'status', 'start_at', 'end_at', 'location',
                         'id',
                         'course_id',
                         'name',
@@ -105,8 +103,8 @@ class CourseRepository implements CourseRepositoryInterface
                 'instructor:id,name,email,avatar_url',
                 'classes' => function ($query) use ($now) {
                     $query->select([
-                        'id', 'course_id', 'instructor_id', 'name', 'code',
-                        'mode', 'status', 'capacity', 'start_at', 'end_at', 'location',
+                        'id', 'course_id', 'name', 'code',
+                        'status', 'start_at', 'end_at', 'location',
                         'id',
                         'course_id',
                         'name',

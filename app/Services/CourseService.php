@@ -57,7 +57,6 @@ class CourseService
             'id'            => $course->id,
             'name'          => $course->name,
             'instructor'    => $course->instructor->name ?? 'N/A',
-            'level'         => $course->level->name ?? 'N/A',
             'price'         => $activePrice 
                                 ? number_format($activePrice->price, 0, ',', '.') . 'đ' 
                                 : 'Liên hệ',

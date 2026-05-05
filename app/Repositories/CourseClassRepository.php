@@ -8,7 +8,7 @@ class CourseClassRepository
     public function getAllClassesPaginated($perPage = 10)
     {
       
-        return CourseClass::with(['course', 'instructor'])
+        return CourseClass::with(['course'])
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }
