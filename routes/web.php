@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CourseController;
 use  App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminClassController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,7 +37,10 @@ Route::middleware(['auth'])->group(function () {
 
         
 
-
+   Route::group(['prefix' => 'classes'], function () {
+    Route::get('/', [AdminClassController::class, 'index'])->name('classes.managerClasses');
+    Route::get('/api/list', [AdminClassController::class, 'getListData'])->name('classes.api.list');
+});
             // Quản lý người dùng 
             // Route::get('/users', [UserController::class, 'index'])->name('users.index');
             
@@ -48,5 +52,6 @@ Route::middleware(['auth'])->group(function () {
                 // Route::delete('/api/delete/{id}', [AdminCourseController::class, 'destroy'])->name('courses.api.delete');
             });
         });
+     
 });
 require __DIR__.'/auth.php';

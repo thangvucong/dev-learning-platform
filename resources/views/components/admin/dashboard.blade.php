@@ -33,14 +33,23 @@
                     
                     <div>
                         <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-4">Quản lý</p>
-                        <div class="space-y-1">
-                            <a href="#" class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
-                                Quản lý người dùng
-                            </a>
-                            <a href="{{ route('admin.courses.managerCourses') }}" class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
-                                Quản lý khóa học
-                            </a>
-                        </div>
+                     <div class="space-y-1">
+  
+    <a href="#" class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+        Quản lý người dùng
+    </a>
+
+   
+    <a href="{{ route('admin.courses.managerCourses') }}" class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+        Quản lý khóa học
+    </a>
+
+   
+    <a href="{{ Route::has('admin.classes.managerClasses') ? route('admin.classes.managerClasses') : '#' }}" 
+       class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+        Quản lý lớp học
+    </a>
+</div>
                     </div>
                 </nav>
             </div>
