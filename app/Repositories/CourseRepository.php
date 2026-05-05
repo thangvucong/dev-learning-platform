@@ -35,53 +35,30 @@ class CourseRepository implements CourseRepositoryInterface
     /**
      * Get published courses sorted by latest published date (Dành cho Client).
      *
-     * @param  int  $limit
+     * @param int $limit
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getPublishedCourses(int $limit): Collection
     {
-        $now = now();
-
         return Course::query()
+            ->select([
+                'id', 'title', 'slug', 'thumbnail_url', 'price', 'published_at', 'instructor_id'
+            ])
             ->with([
                 'instructor:id,name,email,avatar_url',
-                'classes' => function ($query) use ($now) {
+                'classes' => function ($query) {
                     $query->select([
-                        'id', 'course_id', 'name', 
-                        'status', 'start_at', 'end_at', 'location',
-                        'id',
-                        'course_id',
-                        'name',
-                        'status',
-                        'start_at',
-                        'end_at',
-                        'location',
+                        'id', 'course_id', 'name', 'status', 'start_at', 'end_at', 'location'
                     ])
-                        ->whereNotNull('start_at')
-                        ->where('start_at', '>=', $now)
-                        ->orderBy('start_at');
-                },
-                'prices' => function ($query) use ($now) {
-                    $query->select([
-                        'id', 'course_id', 'currency_id', 'price', 
-                        'compare_price', 'starts_at', 'ends_at', 'is_active',
-                    ])
-                        ->where('is_active', true)
-                        ->where(function ($subQuery) use ($now) {
-                            $subQuery->whereNull('starts_at')
-                                ->orWhere('starts_at', '<=', $now);
-                        })
-                        ->where(function ($subQuery) use ($now) {
-                            $subQuery->whereNull('ends_at')
-                                ->orWhere('ends_at', '>=', $now);
-                        })
-                        ->orderByDesc('starts_at');
-                },
-                'prices.currency:id,symbol',
+                    ->whereNotNull('start_at')
+                    ->where('start_at', '>=', now())
+                    ->orderBy('start_at')
+                    ->limit(3);
+                }
             ])
             ->where('status', 1)
             ->whereNotNull('published_at')
-            ->where('published_at', '<=', $now)
+            ->where('published_at', '<=', now())
             ->orderByDesc('published_at')
             ->limit($limit)
             ->get();
