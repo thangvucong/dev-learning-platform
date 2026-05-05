@@ -11,8 +11,8 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'course_id',
         'total_amount',
-        'currency_id',
         'status',
         'payment_method',
         'note',
@@ -22,6 +22,7 @@ class Order extends Model
 
     protected $casts = [
         'paid_at' => 'datetime',
+        'total_amount' => 'decimal:2',
     ];
 
     public function user()
@@ -29,9 +30,14 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function currency()
+    /**
+     * Khóa học chính của đơn (backfill từ order_items; có thể null với đơn cũ).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function course()
     {
-        return $this->belongsTo(Currency::class);
+        return $this->belongsTo(Course::class);
     }
 
     public function items()

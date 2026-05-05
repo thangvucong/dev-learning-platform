@@ -14,6 +14,7 @@ class CourseDetailViewModel
     {
         $course = $sourceData['course'];
         $activePrice = $sourceData['prices']->first();
+        $isFree = !$activePrice || (float) ($activePrice->price ?? 0) <= 0;
         $nearestOpeningClass = $this->resolveNearestOpeningClass($sourceData['classes']);
         $tracks = $sourceData['tracks']
             ->whereNull('parent_id')
@@ -46,12 +47,11 @@ class CourseDetailViewModel
                 'description' => $course->description,
                 'thumbnail_url' => $course->thumbnail_url,
                 'intro_video_url' => $course->intro_video_url,
-                'duration' => $course->duration,
-                'is_free' => $course->is_free,
                 'published_at' => optional($course->published_at)->toDateTimeString(),
                 'price' => optional($activePrice)->price,
                 'old_price' => optional($activePrice)->compare_price,
                 'currency_symbol' => optional(optional($activePrice)->currency)->symbol,
+                'is_free' => $isFree,
                 'level' => $sourceData['level'] ? [
                     'id' => $sourceData['level']->id,
                     'name' => $sourceData['level']->name,
@@ -68,9 +68,7 @@ class CourseDetailViewModel
                     'id' => $nearestOpeningClass->id,
                     'name' => $nearestOpeningClass->name,
                     'code' => $nearestOpeningClass->code,
-                    'mode' => $nearestOpeningClass->mode,
                     'status' => $nearestOpeningClass->status,
-                    'capacity' => $nearestOpeningClass->capacity,
                     'start_at' => optional($nearestOpeningClass->start_at)->toDateTimeString(),
                     'end_at' => optional($nearestOpeningClass->end_at)->toDateTimeString(),
                     'location' => $nearestOpeningClass->location,
@@ -81,7 +79,6 @@ class CourseDetailViewModel
                 'lessons_count' => $tracks->sum(function ($track) {
                     return $track['children']->count();
                 }),
-                'duration_human' => $this->formatDurationMinutes((int) $course->duration),
             ],
             'tracks' => $tracks,
             'requirements' => $this->mapAttributesByType($sourceData['attributes'], 'requirement'),
@@ -131,31 +128,5 @@ class CourseDetailViewModel
                     'position' => $attribute->position,
                 ];
             });
-    }
-
-    /**
-     * Format duration from minutes to "X giờ Y phút".
-     *
-     * @param  int  $minutes
-     * @return string
-     */
-    protected function formatDurationMinutes(int $minutes): string
-    {
-        if ($minutes <= 0) {
-            return '0 phút';
-        }
-
-        $hours = intdiv($minutes, 60);
-        $remainingMinutes = $minutes % 60;
-
-        if ($hours <= 0) {
-            return $remainingMinutes . ' phút';
-        }
-
-        if ($remainingMinutes <= 0) {
-            return $hours . ' giờ';
-        }
-
-        return $hours . ' giờ ' . $remainingMinutes . ' phút';
     }
 }

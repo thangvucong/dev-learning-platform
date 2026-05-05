@@ -74,13 +74,17 @@ class CheckoutService
             }
         }
 
-        $isFree = (bool) $course->is_free;
         $saleAmount = 0.0;
         $listAmount = 0.0;
         $hasDiscount = false;
         $discountPercent = null;
         $currencyId = null;
         $amountVnd = 0;
+
+        $coursePriceBase = $course->price !== null ? (float) $course->price : null;
+        $isFree = ($coursePriceBase !== null && $coursePriceBase <= 0)
+            || !$activePrice
+            || (float) $activePrice->price <= 0;
 
         if (!$isFree && $activePrice) {
             $saleAmount = (float) $activePrice->price;

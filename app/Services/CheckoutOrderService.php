@@ -45,7 +45,7 @@ class CheckoutOrderService
             return null;
         }
 
-        if (empty($checkout['currency_id']) || (int) $checkout['amount_vnd'] <= 0) {
+        if ((int) $checkout['amount_vnd'] <= 0) {
             return null;
         }
 
@@ -66,7 +66,6 @@ class CheckoutOrderService
         if ($order === null) {
             $order = $this->orderRepository->createPendingSepayOrderWithCourse(
                 $user->id,
-                (int) $checkout['currency_id'],
                 $saleAmount,
                 $course->id,
                 $saleAmount

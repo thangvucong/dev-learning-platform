@@ -36,7 +36,7 @@ class CourseService
 
         return [
             'course' => $course,
-            'level' => $course->level,
+            'level' => null,
             'instructor' => $course->instructor,
             'prices' => $course->prices,
             'classes' => $course->classes,

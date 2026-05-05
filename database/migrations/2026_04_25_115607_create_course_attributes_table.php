@@ -22,8 +22,6 @@ class CreateCourseAttributesTable extends Migration
                 'target'
             ]);
             $table->text('content');
-            $table->integer('position')->default(0);
-        
             $table->timestamps();
         });
     }

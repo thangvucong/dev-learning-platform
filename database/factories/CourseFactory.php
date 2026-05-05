@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Course;
-use App\Models\Level;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -27,15 +27,13 @@ class CourseFactory extends Factory
         ]);
 
         return [
-            'level_id' => Level::factory(),
+            'instructor_id' => User::factory(),
             'title' => $title,
             'slug' => Str::slug($title) . '-' . Str::lower(Str::random(6)),
             'description' => $this->faker->paragraph(4),
             'thumbnail_url' => $this->faker->imageUrl(640, 360, 'education', true),
             'intro_video_url' => 'https://cdn.example.com/videos/' . Str::slug($title) . '.mp4',
-            'duration' => $this->faker->numberBetween(90, 1800),
             'status' => $this->faker->randomElement([0, 1]),
-            'is_free' => false,
             'published_at' => $this->faker->dateTimeBetween('-6 months', 'now'),
         ];
     }
@@ -54,7 +52,7 @@ class CourseFactory extends Factory
     {
         return $this->state(function () {
             return [
-                'is_free' => true,
+                'price' => 0,
             ];
         });
     }

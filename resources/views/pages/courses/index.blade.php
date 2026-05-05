@@ -219,7 +219,7 @@
                                 <path d="M22 14v-4"></path>
                                 <path d="M6 14v-4"></path>
                                 <rect x="2" y="6" width="16" height="12" rx="2"></rect>
-                            </svg><span>{{ $courseDetailData['course']['level']['name'] ?? 'Trình độ cơ bản' }}</span></li>
+                            </svg><span>{{ data_get($courseDetailData['course'], 'level.name', 'Trình độ cơ bản') }}</span></li>
                         <li class="flex items-center gap-3 text-[#444] text-[15px]"><svg
                                 xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"

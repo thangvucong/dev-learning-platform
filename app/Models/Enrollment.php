@@ -9,6 +9,13 @@ class Enrollment extends Model
 {
     use HasFactory;
 
+    /**
+     * Bảng many-to-many course–user theo schema (đổi tên từ enrollments).
+     *
+     * @var string
+     */
+    protected $table = 'course_user';
+
     protected $fillable = [
         'course_id',
         'user_id',

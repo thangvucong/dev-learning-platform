@@ -20,8 +20,8 @@ class CreateOrdersTable extends Migration
             $table->foreignId('currency_id')->constrained()->cascadeOnDelete();
             $table->string('status');
             $table->string('payment_method');
-            $table->string('payment_reference', 64)->nullable()->unique()->after('note');
             $table->text('note')->nullable();
+            $table->string('payment_reference', 64)->nullable()->unique()->after('note');
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();
         });

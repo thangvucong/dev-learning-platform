@@ -51,6 +51,13 @@ class CourseRepository implements CourseRepositoryInterface
                     $query->select([
                         'id', 'course_id', 'instructor_id', 'name', 
                         'mode', 'status', 'start_at', 'end_at', 'location',
+                        'id',
+                        'course_id',
+                        'name',
+                        'status',
+                        'start_at',
+                        'end_at',
+                        'location',
                     ])
                         ->whereNotNull('start_at')
                         ->where('start_at', '>=', $now)
@@ -95,12 +102,19 @@ class CourseRepository implements CourseRepositoryInterface
 
         $course = Course::query()
             ->with([
-                'level:id,name,description',
                 'instructor:id,name,email,avatar_url',
                 'classes' => function ($query) use ($now) {
                     $query->select([
                         'id', 'course_id', 'instructor_id', 'name', 'code',
                         'mode', 'status', 'capacity', 'start_at', 'end_at', 'location',
+                        'id',
+                        'course_id',
+                        'name',
+                        'code',
+                        'status',
+                        'start_at',
+                        'end_at',
+                        'location',
                     ])
                         ->orderByRaw('CASE WHEN start_at >= ? THEN 0 ELSE 1 END', [$now])
                         ->orderBy('start_at');
@@ -186,7 +200,7 @@ class CourseRepository implements CourseRepositoryInterface
                 'title',
                 'slug',
                 'thumbnail_url',
-                'is_free',
+                'price',
             ])
             ->with([
                 'prices' => function ($query) use ($now) {

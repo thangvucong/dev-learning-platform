@@ -21,8 +21,11 @@ class OrderRepository
             ->where('user_id', $userId)
             ->where('status', 'pending')
             ->where('payment_method', 'sepay_qr')
-            ->whereHas('items', function ($query) use ($courseId) {
-                $query->where('course_id', $courseId);
+            ->where(function ($query) use ($courseId) {
+                $query->where('course_id', $courseId)
+                    ->orWhereHas('items', function ($sub) use ($courseId) {
+                        $sub->where('course_id', $courseId);
+                    });
             })
             ->orderByDesc('id')
             ->first();
@@ -32,7 +35,6 @@ class OrderRepository
      * Create pending order with one course line and set payment_reference to ORDER_{id}.
      *
      * @param  int  $userId
-     * @param  int  $currencyId
      * @param  float  $totalAmount
      * @param  int  $courseId
      * @param  float  $linePrice
@@ -40,16 +42,15 @@ class OrderRepository
      */
     public function createPendingSepayOrderWithCourse(
         int $userId,
-        int $currencyId,
         float $totalAmount,
         int $courseId,
         float $linePrice
     ): Order {
-        return DB::transaction(function () use ($userId, $currencyId, $totalAmount, $courseId, $linePrice) {
+        return DB::transaction(function () use ($userId, $totalAmount, $courseId, $linePrice) {
             $order = Order::query()->create([
                 'user_id' => $userId,
+                'course_id' => $courseId,
                 'total_amount' => $totalAmount,
-                'currency_id' => $currencyId,
                 'status' => 'pending',
                 'payment_method' => 'sepay_qr',
                 'note' => null,

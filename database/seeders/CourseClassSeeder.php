@@ -23,19 +23,14 @@ class CourseClassSeeder extends Seeder
 
             for ($iteration = 1; $iteration <= $classCount; $iteration++) {
                 $startAt = now()->addDays(($index + 1) * 7 + ($iteration * 3))->startOfDay()->addHours(19);
-                $mode = $iteration % 2 === 0 ? 'offline' : 'zoom';
-
                 CourseClass::query()->create([
                     'course_id' => $course->id,
-                    'instructor_id' => $course->instructor_id,
                     'name' => sprintf('%s - Cohort %02d', $course->title, $iteration),
                     'code' => strtoupper(Str::random(3)) . '-' . $course->id . $iteration,
-                    'mode' => $mode,
                     'status' => 'upcoming',
-                    'capacity' => $mode === 'offline' ? 25 : 50,
                     'start_at' => $startAt,
                     'end_at' => (clone $startAt)->addWeeks(10),
-                    'location' => $mode === 'offline' ? 'Ho Chi Minh City Campus' : 'Zoom Room A',
+                    'location' => $iteration % 2 === 0 ? 'Ho Chi Minh City Campus' : 'Zoom Room A',
                 ]);
             }
         });

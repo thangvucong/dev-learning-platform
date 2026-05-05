@@ -20,11 +20,10 @@ class UserSeeder extends Seeder
         Role::query()->firstOrCreate(['name' => 'admin']);
         Role::query()->firstOrCreate(['name' => 'student']);
         Role::query()->firstOrCreate(['name' => 'teacher']);
-        Role::query()->firstOrCreate(['name' => 'admin']);
 
         User::factory()->count(3)->create();
 
-$admin = User::query()->updateOrCreate(
+        $admin = User::query()->updateOrCreate(
             ['email' => 'admin@example.com'],
             [
                 'name' => 'Nguyễn Tiến Quang Admin',

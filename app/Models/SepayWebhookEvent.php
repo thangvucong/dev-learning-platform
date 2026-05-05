@@ -14,6 +14,7 @@ class SepayWebhookEvent extends Model
         'sepay_transaction_id',
         'order_id',
         'payload',
+        'status',
     ];
 
     /**
