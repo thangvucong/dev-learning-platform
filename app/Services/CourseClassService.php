@@ -25,6 +25,7 @@ class CourseClassService
                 'course'     => $class->course->name ?? 'N/A',
                 'instructor' => $class->instructor->name ?? 'N/A',
                 'mode'       => $class->mode, 
+                'capicity'   => $class->capicity,
                 'status'     => $class->status, 
                 'capacity'   => $class->capacity,
                 'start_at'   => $class->start_at ? date('d/m/Y H:i', strtotime($class->start_at)) : null,
