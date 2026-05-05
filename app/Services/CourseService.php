@@ -9,11 +9,6 @@ class CourseService
 {
     protected CourseRepository $courseRepository;
 
-    /**
-     * Create a new service instance.
-     *
-     * @param  \App\Repositories\CourseRepository  $courseRepository
-     */
     public function __construct(CourseRepository $courseRepository)
     {
         
@@ -44,28 +39,45 @@ class CourseService
 
     public function getManagerListData(int $perPage = 10)
     {
-        /** @var \Illuminate\Pagination\LengthAwarePaginator $courses */
-        $courses = $this->courseRepository->getAllCoursesPaginated($perPage);
+        try {
+            /** @var \Illuminate\Pagination\LengthAwarePaginator $courses */
+          
+            $courses = $this->courseRepo->getAllCoursesPaginated($perPage);
 
-        $items = $courses->getCollection()->map(function ($course) {
-            $activePrice = $course->prices->first();
-            
+         $items = $courses->getCollection()->map(function ($course) {
+    // Lấy giá đầu tiên đang active
+    $activePrice = $course->prices->first();
+    $priceValue = $activePrice ? $activePrice->price : ($course->price ?? 0);
+
+    return [
+        'id'          => $course->id,
+        'name'        => $course->title, 
+        'instructor'  => $course->instructor->name ?? 'N/A',
+        'price'       => number_format($priceValue, 0, ',', '.') . 'đ',
+        'class_count' => $course->classes->count(),
+        'status'      => $course->status == 1 ? 'Hiển thị' : 'Ẩn',
+        
+        'classes'     => $course->classes->map(function($class) {
             return [
-                'id'            => $course->id,
-                'name'          => $course->name,
-                'instructor'    => $course->instructor->name ?? 'N/A',
-                'price'         => $activePrice 
-                                    ? number_format($activePrice->price, 0, ',', '.') . 'đ' 
-                                    : 'Liên hệ',
-                'class_count'   => $course->classes->count(),
-                'status'        => $course->status == 1 ? 'Hiển thị' : 'Ẩn',
-                'created_at'    => $course->created_at->format('d/m/Y'),
+                'code'             => $class->code ?? 'N/A',
+                'name'             => $class->name,
+                'status'           => $class->status,
+                'capacity'         => $class->capacity ?? 0,
+                'current_students' => $class->users_count ?? 0, 
+                'location'         => $class->location ?? 'Chưa xác định',
+                'start_date'       => $class->start_at ? date('d/m/Y', strtotime($class->start_at)) : 'N/A',
             ];
-        });
+        }),
+    ];
+});
 
-    
-        $courses->setCollection($items);
+            $courses->setCollection($items);
+            return $courses;
 
-        return $courses;
+        } catch (\Exception $e) {
+           
+            Log::error("Lỗi tại CourseService@getManagerListData: " . $e->getMessage());
+            throw $e; 
+        }
     }
 }

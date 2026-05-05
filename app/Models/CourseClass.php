@@ -46,7 +46,7 @@ class CourseClass extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function students()
+    public function users()
     {
         return $this->belongsToMany(User::class, 'class_user', 'class_id', 'user_id')
             ->withPivot(['status', 'assigned_at'])

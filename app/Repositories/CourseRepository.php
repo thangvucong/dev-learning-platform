@@ -16,21 +16,25 @@ class CourseRepository implements CourseRepositoryInterface
      * @param int $perPage
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function getAllCoursesPaginated(int $perPage = 10): LengthAwarePaginator
-    {
-       return Course::query()
-        ->with([
+ public function getAllCoursesPaginated(int $perPage = 10): LengthAwarePaginator
+{
+   return Course::query()
+    ->with([
         'instructor:id,name', 
-            'prices' => function($q) {
-                $q->where('is_active', 1);
-            },
-          
-            'classes:id,course_id,name,status,start_at',
-            'attributes:id,course_id,type,content'
-        ])
-        ->latest()
-        ->paginate($perPage);
-    }
+        'prices' => function($q) { 
+            $q->where('is_active', 1); 
+        },
+        'classes' => function($q) {
+            // Thêm 'location' vào đây vì Service đang dùng, nếu thiếu sẽ bị null
+            $q->select(['id', 'course_id', 'name', 'status', 'start_at', 'code', 'capacity', 'location'])
+              ->withCount('users'); 
+        },
+        'attributes:id,course_id,type,content'
+    ])
+    ->latest()
+    // Đảm bảo lấy các cột cần thiết từ bảng courses
+    ->paginate($perPage);
+}
 
     /**
      * Get published courses sorted by latest published date (Dành cho Client).
