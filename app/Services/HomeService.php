@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Repositories\CourseRepository;
 use App\Repositories\PostRepository;
+use Illuminate\Support\Facades\Log;
 
 class HomeService
 {
@@ -32,13 +33,25 @@ class HomeService
     /**
      * Get the source data for the home page.
      *
-     * @return array<string, \Illuminate\Database\Eloquent\Collection>
+     * @return array<string, \Illuminate\Database\Eloquent\Collection>|null
      */
-    public function getHomePageSourceData(): array
+    public function getHomePageSourceData(): array|null
     {
-        return [
-            'courses' => $this->courseRepository->getPublishedCourses(self::COURSE_LIMIT),
-            'posts' => $this->postRepository->getPublishedPosts(self::POST_LIMIT),
-        ];
+        try {
+            $courses = $this->courseRepository->getPublishedCourses(self::COURSE_LIMIT);
+            $posts = $this->postRepository->getPublishedPosts(self::POST_LIMIT);
+
+            return [
+                'courses' => $courses,
+                'posts' => $posts,
+            ];
+        } catch (\Throwable $th) {
+            Log::error('Error getting home page source data: ' . $th->getMessage());
+
+            return [
+                'courses' => [],
+                'posts' => [],
+            ];
+        }
     }
 }

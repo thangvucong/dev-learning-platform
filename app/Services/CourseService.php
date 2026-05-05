@@ -7,28 +7,34 @@ use Illuminate\Support\Facades\Log;
 
 class CourseService
 {
-    protected $courseRepo;
     protected CourseRepository $courseRepository;
 
     public function __construct(CourseRepository $courseRepository)
     {
-        $this->courseRepository = $courseRepository;
-        $this->courseRepo = $courseRepository; 
+        
+        $this->courseRepository = $courseRepository; 
     }
 
-    public function getCourseDetailSourceData(string $slug): array
+    /**
+     * Get source data for the course detail page.
+     *
+     * @param  string  $slug
+     * @return array<string, mixed>
+     */
+    public function getCourseDetailSourceData(string $slug): array|null
     {
-        $course = $this->courseRepository->findPublishedCourseDetailBySlug($slug);
+        try {
+            $course = $this->courseRepository->findPublishedCourseDetailBySlug($slug);
 
-        return [
-            'course' => $course,
-            'level' => null,
-            'instructor' => $course->instructor,
-            'prices' => $course->prices,
-            'classes' => $course->classes,
-            'tracks' => $course->tracks,
-            'attributes' => $course->attributes,
-        ];
+            return [
+                'course' => $course,
+                'instructor' => $course->instructor,
+                'classes' => $course->classes ?? [],
+            ];
+        } catch (\Throwable $th) {
+            Log::error('Error getting course detail source data: ' . $th->getMessage());
+            return [];
+        }
     }
 
     public function getManagerListData(int $perPage = 10)

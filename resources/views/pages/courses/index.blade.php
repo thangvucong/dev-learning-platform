@@ -7,29 +7,28 @@
         <div class="mx-auto px-11 mt-6 pb-16 grid grid-cols-1 xl:grid-cols-12 gap-8 xl:gap-10 items-start">
             <div class="min-w-0 xl:col-span-8">
                 <h1 class="text-[32px] font-bold text-[#242424] leading-[1.4] mb-4">
-                    {{ $courseDetailData['course']['title'] }}
+                    {{ $course['title'] }}
                 </h1>
                 <div class="mb-6 flex items-center gap-3 rounded-lg border border-[#ebebeb] bg-white px-4 py-3">
-                    <img alt="{{ $courseDetailData['course']['instructor']['name'] ?? 'Unknown Teacher' }}"
-                        class="h-11 w-11 rounded-full object-cover"
-                        src="{{ $courseDetailData['course']['instructor']['avatar_url'] ?? 'https://files.f8.edu.vn/f8-prod/avatars/699286a5e7330.png' }}">
+                    <img alt="{{ $instructor['name'] ?? 'Unknown Teacher' }}" class="h-11 w-11 rounded-full object-cover"
+                        src="{{ $instructor['avatar_url'] ?? 'https://files.f8.edu.vn/f8-prod/avatars/699286a5e7330.png' }}">
                     <div class="min-w-0">
                         <p class="text-xs font-semibold uppercase tracking-wide text-[#666]">Giảng viên</p>
                         <p class="truncate text-[15px] font-semibold text-[#242424]">
-                            {{ $courseDetailData['course']['instructor']['name'] ?? 'Chưa cập nhật' }}
+                            {{ $instructor['name'] ?? 'Chưa cập nhật' }}
                         </p>
                         <p class="truncate text-sm text-[#666]">
-                            {{ $courseDetailData['course']['instructor']['email'] ?? 'Chưa có email hiển thị' }}
+                            {{ $instructor['email'] ?? 'Chưa có email hiển thị' }}
                         </p>
                     </div>
                 </div>
                 <p class="text-[15px] text-[#444] leading-[1.6] mb-10 max-w-[700px]">
-                    {{ $courseDetailData['course']['description'] }}
+                    {{ $course['description'] }}
                 </p>
-                <section class="mb-10">
+                {{-- <section class="mb-10">
                     <h2 class="text-[20px] font-bold text-[#242424] mb-5">Bạn sẽ học được gì?</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                        @foreach ($courseDetailData['benefits'] as $benefit)
+                        @foreach ($course['benefits'] as $benefit)
                             <div class="flex items-start gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="16"
                                     height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                     stroke-linecap="round" stroke-linejoin="round"
@@ -45,16 +44,16 @@
                         <h2 class="text-[20px] font-bold text-[#242424] mb-2">Nội dung khóa học</h2>
                         <div class="flex items-center text-sm text-[#444]">
                             <span
-                                class="font-semibold">{{ $courseDetailData['summary']['chapters_count'] }}</span>&nbsp;chương
+                                class="font-semibold">{{ $course['chapters_count'] }}</span>&nbsp;chương
                             <span class="mx-2 text-[20px] leading-none text-gray-300">•</span>
-                            <span class="font-semibold">{{ $courseDetailData['summary']['lessons_count'] }}</span>&nbsp;bài
+                            <span class="font-semibold">{{ $course['lessons_count'] }}</span>&nbsp;bài
                             học
                         </div>
                     </div><button id="toggle-all-tracks" class="text-[#f05123] font-semibold text-sm hover:underline">Mở
                         rộng tất cả</button>
                 </div>
                 <div class="flex flex-col gap-[10px]">
-                    @foreach ($courseDetailData['tracks'] as $index => $track)
+                    @foreach ($classes as $index => $track)
                         @php
                             $isOpen = $loop->first;
                         @endphp
@@ -111,7 +110,7 @@
                 <section class="mt-10">
                     <h2 class="text-[20px] font-bold text-[#242424] mb-5">Yêu cầu</h2>
                     <ul class="flex flex-col gap-4">
-                        @foreach ($courseDetailData['requirements'] as $requirement)
+                        @foreach ($course['requirements'] as $requirement)
                             <li class="flex items-start gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="16"
                                     height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                     stroke-linecap="round" stroke-linejoin="round"
@@ -122,16 +121,15 @@
                             </li>
                         @endforeach
                     </ul>
-                </section>
+                </section> --}}
             </div>
             <div class="w-full xl:col-span-4">
                 <div class="xl:sticky xl:top-[98px] flex flex-col items-center">
                     @php
-                        $courseTitle = $courseDetailData['course']['title'] ?? 'Giới thiệu khóa học';
+                        $courseTitle = $course['title'] ?? 'Giới thiệu khóa học';
                         $thumbnailUrl =
-                            $courseDetailData['course']['thumbnail_url'] ??
-                            'https://files.f8.edu.vn/f8-prod/courses/15/62f13d2424a47.png';
-                        $introVideoUrl = $courseDetailData['course']['intro_video_url'] ?? null;
+                            $course['thumbnail_url'] ?? 'https://files.f8.edu.vn/f8-prod/courses/15/62f13d2424a47.png';
+                        $introVideoUrl = $course['intro_video_url'] ?? null;
                         $youtubeVideoId = null;
 
                         if (
@@ -181,49 +179,28 @@
                         </div>
                     </div>
                     <div class="mb-4 flex flex-col items-center gap-1">
-                        @if ($courseDetailData['course']['is_free'])
-                            <h2 class="text-[32px] font-normal text-[#22a06b]">Miễn phí</h2>
-                        @else
-                            @php
-                                $currentPrice = (float) ($courseDetailData['course']['price'] ?? 0);
-                                $oldPrice = (float) ($courseDetailData['course']['old_price'] ?? 0);
-                                $hasDiscount = $oldPrice > $currentPrice && $currentPrice > 0;
-                                $discountPercent = $hasDiscount
-                                    ? round((($oldPrice - $currentPrice) / $oldPrice) * 100)
-                                    : 0;
-                            @endphp
 
-                            @if ($hasDiscount)
-                                <div class="flex items-center gap-2 text-sm text-[#666]">
-                                    <span class="line-through">
-                                        {{ format_price($oldPrice, $courseDetailData['course']['currency_symbol'] ?? 'đ') }}
-                                    </span>
-                                    <span class="rounded bg-[#fef3f0] px-2 py-0.5 text-xs font-semibold text-[#f05123]">
-                                        -{{ $discountPercent }}%
-                                    </span>
-                                </div>
-                            @endif
-                            <h2 class="text-[36px] font-semibold text-[#f05123] leading-tight">
-                                {{ format_price($currentPrice, $courseDetailData['course']['currency_symbol'] ?? 'đ') }}
-                            </h2>
-                        @endif
-                    </div><a href="{{ route('checkout', ['course_id' => $courseDetailData['course']['id']]) }}"
+                        <h2 class="text-[36px] font-semibold text-[#f05123] leading-tight">
+                            {{ format_price($course['price'], 'đ') }}
+                        </h2>
+                    </div><a href="{{ route('checkout', ['course_id' => $course['id']]) }}"
                         class="w-[200px] bg-[#1473e6] hover:bg-[#105cba] text-white text-center font-semibold py-[10px] px-4 rounded-full mb-6 transition-colors shadow-[0_4px_10px_rgba(20,115,230,0.3)]">ĐĂNG
                         KÝ HỌC</a>
                     <ul class="flex flex-col gap-3 px-2">
-                        <li class="flex items-center gap-3 text-[#444] text-[15px]"><svg
-                                xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="lucide lucide-battery-medium" aria-hidden="true">
+                        <li class="flex items-center gap-3 text-[#444] text-[15px]"><svg xmlns="http://www.w3.org/2000/svg"
+                                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                class="lucide lucide-battery-medium" aria-hidden="true">
                                 <path d="M10 14v-4"></path>
                                 <path d="M22 14v-4"></path>
                                 <path d="M6 14v-4"></path>
                                 <rect x="2" y="6" width="16" height="12" rx="2"></rect>
-                            </svg><span>{{ data_get($courseDetailData['course'], 'level.name', 'Trình độ cơ bản') }}</span></li>
-                        <li class="flex items-center gap-3 text-[#444] text-[15px]"><svg
-                                xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="lucide lucide-film" aria-hidden="true">
+                            </svg><span>{{ data_get($course, 'level.name', 'Trình độ cơ bản') }}</span>
+                        </li>
+                        <li class="flex items-center gap-3 text-[#444] text-[15px]"><svg xmlns="http://www.w3.org/2000/svg"
+                                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-film"
+                                aria-hidden="true">
                                 <rect width="18" height="18" x="3" y="3" rx="2"></rect>
                                 <path d="M7 3v18"></path>
                                 <path d="M3 7.5h4"></path>
@@ -232,23 +209,23 @@
                                 <path d="M17 3v18"></path>
                                 <path d="M17 7.5h4"></path>
                                 <path d="M17 16.5h4"></path>
-                            </svg><span>Tổng số <strong>{{ $courseDetailData['summary']['lessons_count'] }}</strong> bài
+                            </svg><span>Tổng số <strong>{{ $course['lessons_count'] }}</strong> bài
                                 học</span></li>
-                        <li class="flex items-center gap-3 text-[#444] text-[15px]"><svg
-                                xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="lucide lucide-clock" aria-hidden="true">
+                        <li class="flex items-center gap-3 text-[#444] text-[15px]"><svg xmlns="http://www.w3.org/2000/svg"
+                                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock"
+                                aria-hidden="true">
                                 <path d="M12 6v6l4 2"></path>
                                 <circle cx="12" cy="12" r="10"></circle>
                             </svg><span>Khai giảng
                                 <strong>
-                                    {{ $courseDetailData['course']['next_opening_at'] ? \Carbon\Carbon::parse($courseDetailData['course']['next_opening_at'])->format('d/m/Y') : 'Chưa có lịch' }}
+                                    {{ $classes->first()->start_at ? \Carbon\Carbon::parse($classes->first()->start_at)->format('d/m/Y') : 'Chưa có lịch' }}
                                 </strong>
                             </span></li>
-                        <li class="flex items-center gap-3 text-[#444] text-[15px]"><svg
-                                xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="lucide lucide-smartphone" aria-hidden="true">
+                        <li class="flex items-center gap-3 text-[#444] text-[15px]"><svg xmlns="http://www.w3.org/2000/svg"
+                                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                class="lucide lucide-smartphone" aria-hidden="true">
                                 <rect width="14" height="20" x="5" y="2" rx="2" ry="2">
                                 </rect>
                                 <path d="M12 18h.01"></path>
