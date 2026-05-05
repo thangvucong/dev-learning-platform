@@ -42,7 +42,7 @@ class CourseService
         try {
             /** @var \Illuminate\Pagination\LengthAwarePaginator $courses */
           
-            $courses = $this->courseRepo->getAllCoursesPaginated($perPage);
+            $courses = $this->courseRepository->getAllCoursesPaginated($perPage);
 
          $items = $courses->getCollection()->map(function ($course) {
     // Lấy giá đầu tiên đang active
@@ -53,7 +53,7 @@ class CourseService
         'id'          => $course->id,
         'name'        => $course->title, 
         'instructor'  => $course->instructor->name ?? 'N/A',
-        'price'       => number_format($priceValue, 0, ',', '.') . 'đ',
+        'price'       => number_format($course->price, 0, ',', '.') . 'đ',
         'class_count' => $course->classes->count(),
         'status'      => $course->status == 1 ? 'Hiển thị' : 'Ẩn',
         
