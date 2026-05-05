@@ -3,28 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Services\CourseService;
-use App\ViewModels\CourseDetailViewModel;
-use Illuminate\Http\Request;
 
 class CourseController extends Controller
 {
     protected CourseService $courseService;
 
-    protected CourseDetailViewModel $courseDetailViewModel;
-
     /**
      * Create a new controller instance.
      *
      * @param  \App\Services\CourseService  $courseService
-     * @param  \App\ViewModels\CourseDetailViewModel  $courseDetailViewModel
      */
-    public function __construct(
-        CourseService $courseService,
-        CourseDetailViewModel $courseDetailViewModel
-    )
+    public function __construct( CourseService $courseService) 
     {
         $this->courseService = $courseService;
-        $this->courseDetailViewModel = $courseDetailViewModel;
     }
 
     /**
@@ -35,13 +26,12 @@ class CourseController extends Controller
      */
     public function show($slug)
     {
-        $courseDetailSourceData = $this->courseService->getCourseDetailSourceData($slug);
-        $courseDetailViewData = $this->courseDetailViewModel->build($courseDetailSourceData);
-
-        // dd($courseDetailViewData);
+        $courseDetailData = $this->courseService->getCourseDetailSourceData($slug);
 
         return view('pages.courses.index', [
-            'courseDetailData' => $courseDetailViewData,
+            'course' => $courseDetailData['course'],
+            'instructor' => $courseDetailData['instructor'],
+            'classes' => $courseDetailData['classes'],
         ]);
     }
 }
