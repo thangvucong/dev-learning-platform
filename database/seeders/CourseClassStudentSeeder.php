@@ -31,7 +31,7 @@ class CourseClassStudentSeeder extends Seeder
      */
     public function run()
     {
-        DB::table('course_class_user')->delete();
+        DB::table('class_user')->delete();
 
         $enrollments = Enrollment::query()
             ->with('course.classes')

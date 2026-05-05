@@ -22,9 +22,7 @@ class CreateCoursesTable extends Migration
             $table->text('description')->nullable();
             $table->string('thumbnail_url')->nullable();
             $table->string('intro_video_url')->nullable();
-            $table->integer('duration')->default(0);
             $table->tinyInteger('status')->default(0);
-            $table->boolean('is_free')->default(false);
             $table->timestamp('published_at')->nullable();
             $table->softDeletes();
             $table->timestamps();

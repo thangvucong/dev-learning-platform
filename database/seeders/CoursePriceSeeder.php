@@ -19,26 +19,34 @@ class CoursePriceSeeder extends Seeder
             $activeCurrency = Currency::query()->where('is_active', true)->first();
         }
 
-        Course::query()->each(function (Course $course) use ($activeCurrency) {
+        if (!$activeCurrency) {
+            throw new \RuntimeException(
+                'CoursePriceSeeder: không tìm thấy currency (VND hoặc is_active). Chạy CurrencySeeder trước.'
+            );
+        }
+
+        $courses = Course::query()->orderBy('id')->get();
+
+        foreach ($courses->values() as $index => $course) {
+            $isFree = $index < 2;
+            $price = $isFree ? 0 : random_int(149000, 2999000);
+            $compare = $isFree ? 0 : $price + random_int(50000, 300000);
+
             CoursePrice::factory()
                 ->active()
-                ->state(function () use ($course, $activeCurrency) {
-                    return [
-                        'course_id' => $course->id,
-                        'currency_id' => $activeCurrency->id,
-                    ];
-                })
-                ->create();
+                ->create([
+                    'course_id' => $course->id,
+                    'currency_id' => $activeCurrency->id,
+                    'price' => $price,
+                    'compare_price' => $compare,
+                ]);
 
             CoursePrice::factory()
                 ->inactive()
-                ->state(function () use ($course, $activeCurrency) {
-                    return [
-                        'course_id' => $course->id,
-                        'currency_id' => $activeCurrency->id,
-                    ];
-                })
-                ->create();
-        });
+                ->create([
+                    'course_id' => $course->id,
+                    'currency_id' => $activeCurrency->id,
+                ]);
+        }
     }
 }

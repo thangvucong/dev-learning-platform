@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\Course;
 use App\Models\CoursePrice;
-use App\Models\Currency;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
@@ -17,10 +16,21 @@ class OrderFactory extends Factory
     public function configure()
     {
         return $this->afterCreating(function (Order $order) {
-            $total = $order->items()->sum('price');
+            $order->load('items');
+            $total = $order->items->sum('price');
+            $updates = [];
 
             if ($total > 0) {
-                $order->update(['total_amount' => $total]);
+                $updates['total_amount'] = $total;
+            }
+
+            $firstCourseId = $order->items->first()->course_id ?? null;
+            if ($firstCourseId !== null) {
+                $updates['course_id'] = $firstCourseId;
+            }
+
+            if ($updates !== []) {
+                $order->update($updates);
             }
         });
     }
@@ -30,7 +40,6 @@ class OrderFactory extends Factory
         return [
             'user_id' => User::factory(),
             'total_amount' => 0,
-            'currency_id' => Currency::factory(),
             'status' => $this->faker->randomElement(['pending', 'paid', 'cancelled']),
             'payment_method' => $this->faker->randomElement(['credit_card', 'bank_transfer', 'momo']),
             'note' => $this->faker->optional()->sentence(),
@@ -58,16 +67,8 @@ class OrderFactory extends Factory
 
                     $coursePrice = CoursePrice::query()
                         ->where('course_id', $course->id)
-                        ->where('currency_id', $order->currency_id)
                         ->where('is_active', true)
                         ->first();
-
-                    if (!$coursePrice) {
-                        $coursePrice = CoursePrice::query()
-                            ->where('course_id', $course->id)
-                            ->where('is_active', true)
-                            ->first();
-                    }
 
                     return [
                         'course_id' => $course->id,

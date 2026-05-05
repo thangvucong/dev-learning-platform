@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Course;
-use App\Models\Level;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -18,8 +17,12 @@ class CourseSeeder extends Seeder
     {
         Course::query()->delete();
 
-        $levelIds = Level::query()->pluck('id')->all();
         $teacherIds = User::role('teacher')->pluck('id')->all();
+        if ($teacherIds === []) {
+            throw new \RuntimeException(
+                'CourseSeeder: không có user role teacher. Chạy UserSeeder trước và đảm bảo có ít nhất một teacher.'
+            );
+        }
 
         $courses = [
             'JavaScript Fundamentals for Beginners',
@@ -34,16 +37,14 @@ class CourseSeeder extends Seeder
             'Secure Laravel Authentication and Authorization',
         ];
 
-        foreach ($courses as $index => $title) {
+        foreach ($courses as $title) {
             Course::factory()
                 ->published()
-                ->state(function () use ($title, $levelIds, $teacherIds, $index) {
+                ->state(function () use ($title, $teacherIds) {
                     return [
                         'title' => $title,
-                        'level_id' => $levelIds[array_rand($levelIds)],
                         'instructor_id' => $teacherIds[array_rand($teacherIds)],
                         'status' => 1,
-                        'is_free' => $index < 2,
                     ];
                 })
                 ->create();

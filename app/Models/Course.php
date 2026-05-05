@@ -4,40 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Course extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
-        'level_id',
         'instructor_id',
         'title',
         'slug',
         'description',
         'thumbnail_url',
         'intro_video_url',
-        'duration',
+        'price',
         'status',
-        'is_free',
         'published_at',
     ];
 
     protected $casts = [
-        'is_free' => 'boolean',
         'published_at' => 'datetime',
+        'price' => 'decimal:2',
     ];
-
-    /**
-     * Get the level of the course.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function level()
-    {
-        return $this->belongsTo(Level::class);
-    }
 
     /**
      * Get the instructor of the course.
@@ -66,7 +53,7 @@ class Course extends Model
      */
     public function students()
     {
-        return $this->belongsToMany(User::class, 'enrollments')
+        return $this->belongsToMany(User::class, 'course_user')
             ->withPivot(['status', 'enrolled_at', 'completed_at'])
             ->withTimestamps();
     }

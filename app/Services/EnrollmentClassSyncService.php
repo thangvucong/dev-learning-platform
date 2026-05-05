@@ -41,13 +41,13 @@ class EnrollmentClassSyncService
     {
         $status = $enrollment->status === 'active' ? 'active' : 'inactive';
 
-        DB::table('course_class_user')
-            ->join('course_classes', 'course_classes.id', '=', 'course_class_user.course_class_id')
-            ->where('course_classes.course_id', $enrollment->course_id)
-            ->where('course_class_user.user_id', $enrollment->user_id)
+        DB::table('class_user')
+            ->join('classes', 'classes.id', '=', 'class_user.class_id')
+            ->where('classes.course_id', $enrollment->course_id)
+            ->where('class_user.user_id', $enrollment->user_id)
             ->update([
-                'course_class_user.status' => $status,
-                'course_class_user.updated_at' => now(),
+                'class_user.status' => $status,
+                'class_user.updated_at' => now(),
             ]);
     }
 
@@ -67,7 +67,7 @@ class EnrollmentClassSyncService
             ->where('course_id', $enrollment->course_id)
             ->whereHas('students', function ($query) use ($enrollment) {
                 $query->where('users.id', $enrollment->user_id)
-                    ->where('course_class_user.status', 'active');
+                    ->where('class_user.status', 'active');
             })
             ->orderBy('start_at')
             ->first();
@@ -79,8 +79,6 @@ class EnrollmentClassSyncService
         $candidateClass = CourseClass::query()
             ->where('course_id', $enrollment->course_id)
             ->whereIn('status', ['upcoming', 'active'])
-            ->withCount('students')
-            ->havingRaw('students_count < capacity')
             ->orderByRaw('CASE WHEN start_at IS NULL THEN 1 ELSE 0 END')
             ->orderBy('start_at')
             ->orderBy('id')

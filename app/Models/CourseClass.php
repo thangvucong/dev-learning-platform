@@ -9,14 +9,18 @@ class CourseClass extends Model
 {
     use HasFactory;
 
+    /**
+     * Classes table
+     *
+     * @var string
+     */
+    protected $table = 'classes';
+
     protected $fillable = [
         'course_id',
-        'instructor_id',
         'name',
         'code',
-        'mode',
         'status',
-        'capacity',
         'start_at',
         'end_at',
         'location',
@@ -38,23 +42,13 @@ class CourseClass extends Model
     }
 
     /**
-     * Get the instructor of the class.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function instructor()
-    {
-        return $this->belongsTo(User::class, 'instructor_id');
-    }
-
-    /**
      * Get the students assigned to the class.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function students()
     {
-        return $this->belongsToMany(User::class, 'course_class_user')
+        return $this->belongsToMany(User::class, 'class_user', 'class_id', 'user_id')
             ->withPivot(['status', 'assigned_at'])
             ->withTimestamps();
     }

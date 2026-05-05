@@ -25,16 +25,8 @@ class OrderItemSeeder extends Seeder
             foreach ($courseIds as $courseId) {
                 $coursePrice = CoursePrice::query()
                     ->where('course_id', $courseId)
-                    ->where('currency_id', $order->currency_id)
                     ->where('is_active', true)
                     ->first();
-
-                if (!$coursePrice) {
-                    $coursePrice = CoursePrice::query()
-                        ->where('course_id', $courseId)
-                        ->where('is_active', true)
-                        ->first();
-                }
 
                 OrderItem::factory()
                     ->state(function () use ($order, $courseId, $coursePrice) {

@@ -73,19 +73,9 @@ class User extends Authenticatable
      */
     public function enrolledCourses()
     {
-        return $this->belongsToMany(Course::class, 'enrollments')
+        return $this->belongsToMany(Course::class, 'course_user')
             ->withPivot(['status', 'enrolled_at', 'completed_at'])
             ->withTimestamps();
-    }
-
-    /**
-     * Get the classes taught by the user.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function teachingClasses()
-    {
-        return $this->hasMany(CourseClass::class, 'instructor_id');
     }
 
     /**
@@ -95,7 +85,7 @@ class User extends Authenticatable
      */
     public function assignedClasses()
     {
-        return $this->belongsToMany(CourseClass::class, 'course_class_user')
+        return $this->belongsToMany(CourseClass::class, 'class_user', 'user_id', 'class_id')
             ->withPivot(['status', 'assigned_at'])
             ->withTimestamps();
     }

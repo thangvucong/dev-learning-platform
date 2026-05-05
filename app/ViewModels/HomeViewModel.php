@@ -42,7 +42,6 @@ class HomeViewModel
             'price' => optional($activePrice)->price,
             'old_price' => optional($activePrice)->compare_price,
             'currency_symbol' => optional(optional($activePrice)->currency)->symbol,
-            'duration' => $course->duration,
             'published_at' => optional($course->published_at)->toDateTimeString(),
             'next_opening_at' => optional(optional($nearestOpeningClass)->start_at)->toDateTimeString(),
             'user' => $course->instructor ? [
