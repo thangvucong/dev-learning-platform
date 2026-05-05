@@ -64,7 +64,7 @@ Route::middleware(['auth'])->group(function () {
                 return view('components.admin.dashboard');
             })->name('dashboard');
 
-        
+        Route::get('/api/dashboard-stats', [AdminDashboardController::class, 'getStats'])->name('api.stats');
 
    Route::group(['prefix' => 'classes'], function () {
     Route::get('/', [AdminClassController::class, 'index'])->name('classes.managerClasses');
