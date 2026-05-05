@@ -6,6 +6,11 @@ use App\Http\Controllers\CourseController;
 use  App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminClassController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\OrderStatusController;
+use App\Http\Controllers\PaymentWebhookController;
+use App\Http\Controllers\Auth\EmailOtpAuthController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +25,30 @@ use App\Http\Controllers\Admin\AdminClassController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/courses/{slug}', [CourseController::class, 'show'])->name('courses.show');
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+
+Route::post('/payment/webhook', [PaymentWebhookController::class, 'sepay'])
+    ->name('payment.webhook.sepay');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/orders/{order}/status', [OrderStatusController::class, 'show'])->name('orders.status');
+    Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+});
+
+Route::post('/auth/send-code', [EmailOtpAuthController::class, 'sendCode'])
+    ->middleware(['guest', 'throttle:5,1'])
+    ->name('auth.send-code');
+
+Route::post('/auth/verify-code', [EmailOtpAuthController::class, 'verifyCode'])
+    ->middleware(['guest', 'throttle:12,1'])
+    ->name('auth.verify-code');
+
+Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])
+    ->middleware('guest')
+    ->name('auth.google.redirect');
+
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])
+    ->name('auth.google.callback');
 
 
 Route::middleware(['auth'])->group(function () {

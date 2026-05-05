@@ -22,4 +22,6 @@ interface CourseRepositoryInterface
 
     
     public function getRecentCourses(int $limit): Collection;
+    public function findPublishedCourseForCheckout(int $courseId): Course;
+
 }

@@ -11,7 +11,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class CourseRepository implements CourseRepositoryInterface
 {
     /**
-     * Lấy danh sách khóa học phân trang cho Admin.
+     * 
      * 
      * @param int $perPage
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
@@ -156,10 +156,8 @@ class CourseRepository implements CourseRepositoryInterface
         return Course::count();
     }
 
-    /**
-     * Lấy các khóa học mới nhất (Cho Dashboard Admin).
-     */
-    public function getRecentCourses(int $limit): Collection
+    // public function getRecentCourses(int $limit): Collection
+    public function getRecentCourses($limit):Collection
     {
         return Course::query()
             ->with(['instructor:id,name'])
@@ -169,4 +167,56 @@ class CourseRepository implements CourseRepositoryInterface
     }
 
     
+    
+    /**
+     * Find a published course by id for checkout (active price window, currency).
+     *
+     * @param  int  $courseId
+     * @return \App\Models\Course
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function findPublishedCourseForCheckout(int $courseId): Course
+    {
+        $now = now();
+
+        return Course::query()
+            ->select([
+                'id',
+                'title',
+                'slug',
+                'thumbnail_url',
+                'is_free',
+            ])
+            ->with([
+                'prices' => function ($query) use ($now) {
+                    $query->select([
+                        'id',
+                        'course_id',
+                        'currency_id',
+                        'price',
+                        'compare_price',
+                        'starts_at',
+                        'ends_at',
+                        'is_active',
+                    ])
+                        ->where('is_active', true)
+                        ->where(function ($subQuery) use ($now) {
+                            $subQuery->whereNull('starts_at')
+                                ->orWhere('starts_at', '<=', $now);
+                        })
+                        ->where(function ($subQuery) use ($now) {
+                            $subQuery->whereNull('ends_at')
+                                ->orWhere('ends_at', '>=', $now);
+                        })
+                        ->orderByDesc('starts_at');
+                },
+                'prices.currency:id,symbol',
+            ])
+            ->whereKey($courseId)
+            ->where('status', 1)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', $now)
+            ->firstOrFail();
+    }
 }

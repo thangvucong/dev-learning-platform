@@ -3,11 +3,27 @@
 namespace Database\Seeders;
 
 use App\Models\Enrollment;
+use App\Services\EnrollmentClassSyncService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Seeder;
 
 class CourseClassStudentSeeder extends Seeder
 {
+    /**
+     * @var \App\Services\EnrollmentClassSyncService
+     */
+    protected EnrollmentClassSyncService $enrollmentClassSyncService;
+
+    /**
+     * Create a new seeder instance.
+     *
+     * @param  \App\Services\EnrollmentClassSyncService  $enrollmentClassSyncService
+     */
+    public function __construct(EnrollmentClassSyncService $enrollmentClassSyncService)
+    {
+        $this->enrollmentClassSyncService = $enrollmentClassSyncService;
+    }
+
     /**
      * Seed students into classes from existing enrollments.
      *
@@ -39,14 +55,12 @@ class CourseClassStudentSeeder extends Seeder
 
             $classIndexes[$courseId] = $currentIndex + 1;
 
-            $targetClass->students()->syncWithoutDetaching([
-                $enrollment->user_id => [
-                    'status' => 'active',
-                    'assigned_at' => $enrollment->enrolled_at ?: now(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-            ]);
+            $this->enrollmentClassSyncService->assignUserToClass(
+                $targetClass,
+                (int) $enrollment->user_id,
+                'active',
+                $enrollment->enrolled_at ?: now()
+            );
         }
     }
 }
