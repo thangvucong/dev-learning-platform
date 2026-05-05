@@ -6,12 +6,116 @@
     <!-- Gọi Modal chi tiết -->
     @include('components.admin.modalDetailCourse')
 
+    <div id="create-course-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm" data-close-create-course></div>
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div class="relative bg-[#1e293b] w-full max-w-3xl rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
+                    <h3 class="text-xl font-bold text-white">Tạo khóa học mới</h3>
+                    <button type="button" data-close-create-course class="p-2 text-slate-400 hover:text-white">✕</button>
+                </div>
+                <form method="POST" action="{{ route('admin.courses.store') }}" class="p-6 space-y-4">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-2">Tên khóa học *</label>
+                            <input id="course-title" name="title" type="text" value="{{ old('title') }}" required class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            @error('title') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-2">Slug</label>
+                            <input id="course-slug" name="slug" type="text" value="{{ old('slug') }}" class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white" placeholder=".....">
+                            @error('slug') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-2">Giảng viên *</label>
+                            <select name="instructor_id" required class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                                <option value="">-- Chọn giảng viên --</option>
+                                @foreach ($instructors as $instructor)
+                                    <option value="{{ $instructor->id }}" @selected((string) old('instructor_id') === (string) $instructor->id)>
+                                        {{ $instructor->name }} ({{ $instructor->email }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('instructor_id') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-2">Trạng thái *</label>
+                            <select name="status" required class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                                <option value="0" @selected((string) old('status', '0') === '0')>Ẩn</option>
+                                <option value="1" @selected((string) old('status') === '1')>Hiển thị</option>
+                            </select>
+                            @error('status') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-2">Giá bán *</label>
+                            <input name="price" type="number" min="0" step="1000" value="{{ old('price', 0) }}" required class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            @error('price') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-2">Giá niêm yết</label>
+                            <input name="compare_price" type="number" min="0" step="1000" value="{{ old('compare_price') }}" class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            @error('compare_price') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-2">Tiền tệ *</label>
+                            <select name="currency_id" required class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                                @foreach ($currencies as $currency)
+                                    <option value="{{ $currency->id }}" @selected((string) old('currency_id') === (string) $currency->id)>
+                                        {{ $currency->code }} {{ $currency->symbol ? '(' . $currency->symbol . ')' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('currency_id') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-2">Thumbnail URL</label>
+                            <input name="thumbnail_url" type="url" value="{{ old('thumbnail_url') }}" class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            @error('thumbnail_url') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-2">Intro video URL</label>
+                            <input name="intro_video_url" type="url" value="{{ old('intro_video_url') }}" class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            @error('intro_video_url') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-2">Mô tả</label>
+                        <textarea name="description" rows="4" class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">{{ old('description') }}</textarea>
+                        @error('description') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="pt-2 flex justify-end gap-2">
+                        <button type="button" data-close-create-course class="px-4 py-2 rounded-lg border border-slate-600 text-slate-300">Hủy</button>
+                        <button type="submit" class="px-5 py-2 rounded-lg bg-emerald-500 text-white font-semibold">Lưu khóa học</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @if (session('success'))
+        <div class="mb-4 rounded-lg border border-emerald-700 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+            {{ session('success') }}
+        </div>
+    @endif
+
     <header class="flex justify-between items-center mb-8">
         <div>
             <h1 class="text-2xl font-bold text-white">Quản lý khóa học</h1>
             <p class="text-sm text-slate-400">Dữ liệu được cập nhật từ hệ thống</p>
         </div>
-        <button class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition-all">
+        <button id="open-create-course" type="button" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition-all">
             + Thêm khóa học
         </button>
     </header>
@@ -47,7 +151,45 @@
         document.addEventListener('DOMContentLoaded', function() {
             const API_URL = '/admin/courses/api/list';
             const tableBody = document.getElementById('course-table-body');
+            const paginationInfo = document.getElementById('pagination-info');
             const detailModal = document.getElementById('course-detail-modal');
+            const createCourseModal = document.getElementById('create-course-modal');
+            const openCreateCourseBtn = document.getElementById('open-create-course');
+            const closeCreateCourseButtons = document.querySelectorAll('[data-close-create-course]');
+            const courseTitleInput = document.getElementById('course-title');
+            const courseSlugInput = document.getElementById('course-slug');
+
+            function slugify(value) {
+                return (value || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+            }
+
+            function openCreateCourseModal() {
+                if (!createCourseModal) return;
+                createCourseModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeCreateCourseModal() {
+                if (!createCourseModal) return;
+                createCourseModal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+
+            if (openCreateCourseBtn) {
+                openCreateCourseBtn.addEventListener('click', openCreateCourseModal);
+            }
+            closeCreateCourseButtons.forEach(function(btn) {
+                btn.addEventListener('click', closeCreateCourseModal);
+            });
+            if (courseTitleInput && courseSlugInput) {
+                courseTitleInput.addEventListener('input', function() {
+                    if (courseSlugInput.value.trim() !== '') return;
+                    courseSlugInput.value = slugify(courseTitleInput.value);
+                });
+            }
+            if (@json($errors->any())) {
+                openCreateCourseModal();
+            }
 
             // 1. Hàm hiển thị Modal chi tiết (Đã sửa lỗi trùng lặp và khớp với DB)
             window.showCourseDetail = function(courseEncoded) {
@@ -118,7 +260,7 @@
                                 const courseData = encodeURIComponent(JSON.stringify(course));
                                 
                                 const row = `
-                                <tr onclick="showCourseDetail('${courseData}')" class="hover:bg-slate-800/60 cursor-pointer transition-all group">
+                                <tr data-course="${courseData}" class="hover:bg-slate-800/60 cursor-pointer transition-all group">
                                     <td class="px-6 py-4 text-sm text-slate-500 font-mono">#${course.id}</td>
                                     <td class="px-6 py-4 text-sm font-semibold text-slate-200 group-hover:text-emerald-400 transition-colors">${course.instructor}</td>
                                     <td class="px-6 py-4 text-center text-sm text-slate-300">${course.class_count}</td>
@@ -139,12 +281,55 @@
                         } else {
                             tableBody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500">Không có dữ liệu khóa học.</td></tr>';
                         }
+                        renderPagination(res);
                     })
                     .catch(err => {
                         console.error("Lỗi:", err);
                         tableBody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-red-400">Lỗi đồng bộ dữ liệu. Vui lòng thử lại.</td></tr>';
+                        if (paginationInfo) {
+                            paginationInfo.innerHTML = '<span>Không thể tải phân trang.</span>';
+                        }
                     });
             };
+
+            function renderPagination(meta) {
+                if (!paginationInfo) return;
+                const total = Number(meta.total || 0);
+                const from = Number(meta.from || 0);
+                const to = Number(meta.to || 0);
+                const currentPage = Number(meta.current_page || 1);
+                const lastPage = Number(meta.last_page || 1);
+                const prevPage = currentPage > 1 ? currentPage - 1 : null;
+                const nextPage = currentPage < lastPage ? currentPage + 1 : null;
+                paginationInfo.innerHTML = `
+                    <span>Hiển thị ${from} - ${to} / ${total} khóa học</span>
+                    <div class="flex items-center gap-2">
+                        ${prevPage ? `<button data-page="${prevPage}" class="px-3 py-1 rounded border border-slate-600 hover:bg-slate-700">Trước</button>` : `<button disabled class="px-3 py-1 rounded border border-slate-700 text-slate-600">Trước</button>`}
+                        <span>Trang ${currentPage}/${lastPage}</span>
+                        ${nextPage ? `<button data-page="${nextPage}" class="px-3 py-1 rounded border border-slate-600 hover:bg-slate-700">Sau</button>` : `<button disabled class="px-3 py-1 rounded border border-slate-700 text-slate-600">Sau</button>`}
+                    </div>
+                `;
+            }
+
+            tableBody.addEventListener('click', function(event) {
+                const row = event.target.closest('tr[data-course]');
+                if (!row) return;
+                const encoded = row.getAttribute('data-course');
+                if (!encoded) return;
+                showCourseDetail(encoded);
+            });
+
+            if (paginationInfo) {
+                paginationInfo.addEventListener('click', function(event) {
+                    const button = event.target.closest('button[data-page]');
+                    if (!button) return;
+                    const page = button.getAttribute('data-page');
+                    if (!page) return;
+                    const targetUrl = new URL(API_URL, window.location.origin);
+                    targetUrl.searchParams.set('page', page);
+                    loadCourses(targetUrl.toString());
+                });
+            }
 
             // Khởi chạy lấy dữ liệu
             loadCourses(API_URL);

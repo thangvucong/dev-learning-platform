@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Services;
 
 use App\Models\Course;
@@ -16,8 +15,7 @@ class CourseService
 
     public function __construct(CourseRepository $courseRepository)
     {
-        
-        $this->courseRepository = $courseRepository; 
+        $this->courseRepository = $courseRepository;
     }
 
     /**
@@ -26,7 +24,7 @@ class CourseService
      * @param  string  $slug
      * @return array<string, mixed>
      */
-    public function getCourseDetailSourceData(string $slug): array|null
+    public function getCourseDetailSourceData(string $slug): ?array
     {
         try {
             $course = $this->courseRepository->findPublishedCourseDetailBySlug($slug);
@@ -38,6 +36,7 @@ class CourseService
             ];
         } catch (\Throwable $th) {
             Log::error('Error getting course detail source data: ' . $th->getMessage());
+
             return [];
         }
     }
@@ -49,7 +48,6 @@ class CourseService
             $courses = $this->courseRepository->getAllCoursesPaginated($perPage);
 
             $items = $courses->getCollection()->map(function ($course) {
-            
                 $activePrice = $course->prices->first();
                 $priceValue = $activePrice ? (float) $activePrice->price : (float) ($course->price ?? 0);
 
@@ -75,12 +73,11 @@ class CourseService
             });
 
             $courses->setCollection($items);
-            return $courses;
 
+            return $courses;
         } catch (\Exception $e) {
-           
-            Log::error("Lỗi tại CourseService@getManagerListData: " . $e->getMessage());
-            throw $e; 
+            Log::error('Lỗi tại CourseService@getManagerListData: ' . $e->getMessage());
+            throw $e;
         }
     }
 
