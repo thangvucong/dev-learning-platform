@@ -57,6 +57,19 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])
 
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', function () {
+        $role = (string) (auth()->user()->role ?? 'user');
+
+        if ($role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if ($role === 'teacher') {
+            return redirect()->route('teacher.dashboard');
+        }
+
+        return redirect()->route('user.dashboard');
+    })->name('dashboard');
 
     //  Route dành cho Admin
     Route::middleware(['role:admin'])
@@ -93,6 +106,23 @@ Route::middleware(['auth'])->group(function () {
                 // Route::delete('/api/delete/{id}', [AdminCourseController::class, 'destroy'])->name('courses.api.delete');
             });
         });
-     
+
+    Route::middleware(['role:teacher'])
+        ->prefix('teacher')
+        ->name('teacher.')
+        ->group(function () {
+            Route::get('/dashboard', function () {
+                return view('components.admin.dashboard');
+            })->name('dashboard');
+        });
+
+    Route::middleware(['role:user'])
+        ->prefix('user')
+        ->name('user.')
+        ->group(function () {
+            Route::get('/dashboard', function () {
+                return view('components.admin.dashboard');
+            })->name('dashboard');
+        });
 });
 require __DIR__.'/auth.php';
