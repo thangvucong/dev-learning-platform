@@ -40,6 +40,8 @@
             $first = mb_substr($segments[0], 0, 1);
             $last = mb_substr($segments[count($segments) - 1], 0, 1);
             $initials = strtoupper($first . $last);
+            $role = (string) (Auth::user()->role ?? 'user');
+            $dashboardRouteName = $role === 'admin' ? 'admin.dashboard' : ($role === 'teacher' ? 'teacher.dashboard' : 'user.dashboard');
         @endphp
         <div class="flex items-center gap-4">
             <a href="{{ url('/courses') }}"
@@ -73,7 +75,7 @@
                         class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm text-[#333] hover:bg-[#f6f6f6]">
                         Trang cá nhân
                     </a>
-                   <a href="{{ route('admin.dashboard') }}"
+                   <a href="{{ route($dashboardRouteName) }}"
    class="flex items-center rounded-lg px-3 py-2 text-sm text-[#333] hover:bg-[#f6f6f6]">
     Dashboard
 </a>
