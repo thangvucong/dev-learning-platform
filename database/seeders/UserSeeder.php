@@ -59,14 +59,20 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($teachers as $teacherData) {
+            $attributes = [
+                'name' => $teacherData['name'],
+                'avatar_url' => $teacherData['avatar_url'],
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ];
+            // Không ghi đè role admin của tài khoản admin khi merge danh sách teacher.
+            if ($teacherData['email'] !== 'admin@example.com') {
+                $attributes['role'] = 'teacher';
+            }
+
             $teacher = User::query()->updateOrCreate(
                 ['email' => $teacherData['email']],
-                [
-                    'name' => $teacherData['name'],
-                    'avatar_url' => $teacherData['avatar_url'],
-                    'password' => Hash::make('password'),
-                    'email_verified_at' => now(),
-                ]
+                $attributes
             );
 
             $teacher->syncRoles(['teacher']);
@@ -88,6 +94,7 @@ class UserSeeder extends Seeder
                     'avatar_url' => $adminData['avatar_url'],
                     'password' => Hash::make('12345678'),
                     'email_verified_at' => now(),
+                    'role' => 'admin',
                 ]
             );
 
@@ -112,6 +119,7 @@ class UserSeeder extends Seeder
                     'name' => $studentData['name'],
                     'password' => Hash::make('password'),
                     'email_verified_at' => now(),
+                    'role' => 'student',
                 ]
             );
 

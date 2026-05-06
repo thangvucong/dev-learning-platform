@@ -10,9 +10,9 @@ use App\Services\CheckoutOrderService;
 class CheckoutService
 {
     /**
-     * @var \App\Repositories\CourseRepository
+     * @var \App\Repositories\Interfaces\CourseRepositoryInterface
      */
-    protected CourseRepository $courseRepository;
+    protected CourseRepositoryInterface $courseRepository;
 
     /**
      * @var \App\Services\CheckoutOrderService

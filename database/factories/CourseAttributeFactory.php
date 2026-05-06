@@ -16,7 +16,7 @@ class CourseAttributeFactory extends Factory
             'course_id' => Course::factory(),
             'type' => $this->faker->randomElement(['requirement', 'benefit', 'target']),
             'content' => $this->faker->sentence(10),
-            'position' => $this->faker->numberBetween(1, 10),
+           
         ];
     }
 
