@@ -32,6 +32,25 @@ class OrderRepository
     }
 
     /**
+     * Find a pending OnePay card order for user + course.
+     *
+     * @param  int  $userId
+     * @param  int  $courseId
+     * @param  string  $paymentMethod
+     * @return \App\Models\Order|null
+     */
+    public function findPendingOnepayOrderForCourse(int $userId, int $courseId, string $paymentMethod): ?Order
+    {
+        return Order::query()
+            ->where('user_id', $userId)
+            ->where('course_id', $courseId)
+            ->where('status', 'pending')
+            ->where('payment_method', $paymentMethod)
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
      * Create pending order with one course line and set payment_reference to ORDER_{id}.
      *
      * @param  int  $userId
@@ -65,6 +84,44 @@ class OrderRepository
 
             $reference = 'ORDER_' . $order->id;
             $order->forceFill(['payment_reference' => $reference])->save();
+
+            return $order->fresh(['items']);
+        });
+    }
+
+    /**
+     * Create pending OnePay card order with one course line.
+     *
+     * @param  int  $userId
+     * @param  float  $totalAmount
+     * @param  int  $courseId
+     * @param  float  $linePrice
+     * @param  string  $paymentMethod
+     * @return \App\Models\Order
+     */
+    public function createPendingOnepayOrderWithCourse(
+        int $userId,
+        float $totalAmount,
+        int $courseId,
+        float $linePrice,
+        string $paymentMethod
+    ): Order {
+        return DB::transaction(function () use ($userId, $totalAmount, $courseId, $linePrice, $paymentMethod) {
+            $order = Order::query()->create([
+                'user_id' => $userId,
+                'course_id' => $courseId,
+                'total_amount' => $totalAmount,
+                'status' => 'pending',
+                'payment_method' => $paymentMethod,
+                'note' => null,
+                'payment_reference' => null,
+            ]);
+
+            OrderItem::query()->create([
+                'order_id' => $order->id,
+                'course_id' => $courseId,
+                'price' => $linePrice,
+            ]);
 
             return $order->fresh(['items']);
         });

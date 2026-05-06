@@ -8,7 +8,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminClassController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderStatusController;
-use App\Http\Controllers\PaymentWebhookController;
+use App\Http\Controllers\OnePayController;
 use App\Http\Controllers\Auth\EmailOtpAuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 
@@ -27,12 +27,16 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/courses/{slug}', [CourseController::class, 'show'])->name('courses.show');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 
-Route::post('/payment/webhook', [PaymentWebhookController::class, 'sepay'])
-    ->name('payment.webhook.sepay');
+Route::post('/payment/onepay/ipn', [OnePayController::class, 'ipn'])
+    ->name('payment.onepay.ipn');
+
+Route::get('/payment/onepay/return', [OnePayController::class, 'handleReturn'])
+    ->name('payment.onepay.return');
 
 Route::middleware('auth')->group(function () {
     Route::get('/orders/{order}/status', [OrderStatusController::class, 'show'])->name('orders.status');
     Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+    Route::post('/payment/onepay/start', [OnePayController::class, 'start'])->name('payment.onepay.start');
 });
 
 Route::post('/auth/send-code', [EmailOtpAuthController::class, 'sendCode'])

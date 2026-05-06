@@ -21,7 +21,7 @@ class CreateOrdersTable extends Migration
             $table->string('status');
             $table->string('payment_method');
             $table->text('note')->nullable();
-            $table->string('payment_reference', 64)->nullable()->unique()->after('note');
+            $table->string('payment_reference', 64)->nullable()->unique();
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();
         });
