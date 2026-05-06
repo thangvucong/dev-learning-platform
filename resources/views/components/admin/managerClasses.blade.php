@@ -8,13 +8,159 @@
             <h1 class="text-2xl font-bold text-white">Quản lý lớp học</h1>
             <p class="text-sm text-slate-400">Danh sách các lớp học đang diễn ra và sắp tới</p>
         </div>
-        <button class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-emerald-500 transition-all flex items-center gap-2 shadow-lg shadow-emerald-900/20">
+        <button id="open-create-class"
+            class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-emerald-500 transition-all flex items-center gap-2 shadow-lg shadow-emerald-900/20"
+            type="button">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
             Tạo lớp mới
         </button>
     </header>
+
+    <!-- Create class modal -->
+    <div id="create-class-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm" data-close-create-class></div>
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div class="relative bg-[#1e293b] w-full max-w-4xl rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
+                    <h3 class="text-xl font-bold text-white">Tạo lớp học mới</h3>
+                    <button type="button" data-close-create-class class="p-2 text-slate-400 hover:text-white">✕</button>
+                </div>
+
+                <div class="p-6">
+                    <div id="create-class-error" class="hidden mb-4 rounded-lg border border-red-700 bg-red-500/10 px-4 py-3 text-sm text-red-200"></div>
+
+                    <div class="flex flex-col gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-2">Khóa học *</label>
+                                <select id="create-class-course-id"
+                                    class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                                    <option value="">-- Chọn khóa học --</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-2">Tên lớp *</label>
+                                <input id="create-class-name" type="text" required
+                                    class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white"
+                                    placeholder="Ví dụ: Lớp React căn bản">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-2">Mã lớp *</label>
+                                <input id="create-class-code" type="text" required
+                                    class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white"
+                                    placeholder="Ví dụ: REACT-001">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-2">Hình thức *</label>
+                                <select id="create-class-mode"
+                                    class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                                    <option value="online" selected>Online</option>
+                                    <option value="offline">Offline</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-2">Trạng thái *</label>
+                                <select id="create-class-status"
+                                    class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                                    <option value="upcoming" selected>Sắp tới</option>
+                                    <option value="ongoing">Đang diễn ra</option>
+                                    <option value="completed">Đã kết thúc</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-2">Sức chứa *</label>
+                                <input id="create-class-capacity" type="number" min="0" required value="30"
+                                    class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-2">Thời gian bắt đầu *</label>
+                                <input id="create-class-start-at" type="datetime-local" required
+                                    class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-2">Thời gian kết thúc *</label>
+                                <input id="create-class-end-at" type="datetime-local" required
+                                    class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-2">Địa điểm</label>
+                            <input id="create-class-location" type="text"
+                                class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white"
+                                placeholder="Tùy chọn">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-slate-700 bg-slate-800/20 flex justify-end gap-2">
+                    <button type="button" data-close-create-class class="px-4 py-2 rounded-lg border border-slate-600 text-slate-300">Hủy</button>
+                    <button id="btn-create-class" type="button" class="px-5 py-2 rounded-lg bg-emerald-500 text-white font-semibold">Tạo lớp học</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add students modal -->
+    <div id="add-students-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm" data-close-add-students></div>
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div class="relative bg-[#1e293b] w-full max-w-3xl rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
+                    <h3 class="text-xl font-bold text-white">Thêm học viên</h3>
+                    <button type="button" data-close-add-students class="p-2 text-slate-400 hover:text-white">✕</button>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <div id="add-students-error" class="hidden rounded-lg border border-red-700 bg-red-500/10 px-4 py-3 text-sm text-red-200"></div>
+
+                    <div class="bg-slate-900/30 border border-slate-800 rounded-xl p-4">
+                        <p class="text-xs text-slate-400 mb-1">Lớp đang chọn</p>
+                        <p id="add-students-class-meta" class="text-sm text-slate-200 font-semibold">-</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-2">Thêm thủ công (user_id hoặc email, ngăn cách bởi dấu phẩy/dòng mới) *</label>
+                        <textarea id="add-students-members" rows="5"
+                            class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white"
+                            placeholder="Ví dụ:
+12
+user@example.com"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-2">Import Excel/CSV</label>
+                        <input id="add-students-import-file" type="file" accept=".xlsx,.csv"
+                            class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                        <p class="text-[11px] text-slate-500 mt-2">Hỗ trợ cột tiêu đề: <code>email</code> hoặc <code>user_id</code>. Nếu không có header, lấy cột A.</p>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-slate-700 bg-slate-800/20 flex justify-between gap-2">
+                    <button type="button" data-close-add-students class="px-4 py-2 rounded-lg border border-slate-600 text-slate-300">Đóng</button>
+                    <div class="flex gap-2">
+                        <button id="btn-add-students-manual" type="button" class="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 font-semibold">Thêm thủ công</button>
+                        <button id="btn-add-students-import" type="button" class="px-4 py-2 rounded-lg bg-emerald-500 text-white font-semibold">Import</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Filter & Search Bar -->
     <div class="mb-6 flex flex-wrap gap-4">
@@ -68,7 +214,102 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const API_URL = "{{ route('admin.classes.api.list') }}";
+        const COURSES_API_URL = '/admin/courses/api/list';
         const tableBody = document.getElementById('class-table-body');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        const createClassModal = document.getElementById('create-class-modal');
+        const openCreateClassBtn = document.getElementById('open-create-class');
+        const createCloseButtons = document.querySelectorAll('[data-close-create-class]');
+        const createErrorBox = document.getElementById('create-class-error');
+
+        const addStudentsModal = document.getElementById('add-students-modal');
+        const addStudentsClassMeta = document.getElementById('add-students-class-meta');
+        const addStudentsCloseButtons = document.querySelectorAll('[data-close-add-students]');
+        const addStudentsErrorBox = document.getElementById('add-students-error');
+        const addStudentsMembersTextarea = document.getElementById('add-students-members');
+        const addStudentsImportFileInput = document.getElementById('add-students-import-file');
+        const btnAddStudentsManual = document.getElementById('btn-add-students-manual');
+        const btnAddStudentsImport = document.getElementById('btn-add-students-import');
+
+        const btnCreateClass = document.getElementById('btn-create-class');
+        const CREATE_URL = "{{ route('admin.classes.store') }}";
+        const CLASSES_BASE = '/admin/classes';
+        let currentSelectedClassId = null;
+
+        function showError(boxEl, message) {
+            if (!boxEl) return;
+            boxEl.textContent = message;
+            boxEl.classList.remove('hidden');
+        }
+
+        function clearError(boxEl) {
+            if (!boxEl) return;
+            boxEl.textContent = '';
+            boxEl.classList.add('hidden');
+        }
+
+        function openModal(modalEl) {
+            if (!modalEl) return;
+            modalEl.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalEl) {
+            if (!modalEl) return;
+            modalEl.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function closeCreateClassModal() {
+            closeModal(createClassModal);
+            clearError(createErrorBox);
+        }
+
+        function closeAddStudentsModal() {
+            closeModal(addStudentsModal);
+            clearError(addStudentsErrorBox);
+        }
+
+        // Load courses for create-class dropdown
+        async function loadCoursesForClassSelect() {
+            const selectEl = document.getElementById('create-class-course-id');
+            if (!selectEl) return;
+
+            try {
+                const res = await fetch(`${COURSES_API_URL}?perPage=1000`);
+                if (!res.ok) throw new Error('Không thể tải danh sách khóa học');
+                const json = await res.json();
+                const courses = json.data || [];
+
+                selectEl.innerHTML = `<option value="">-- Chọn khóa học --</option>`;
+                courses.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name || c.title || `Course #${c.id}`;
+                    selectEl.appendChild(opt);
+                });
+            } catch (e) {
+                // Không chặn page nếu danh sách khóa học không tải được
+                console.error(e);
+            }
+        }
+
+        if (openCreateClassBtn) {
+            openCreateClassBtn.addEventListener('click', function() {
+                clearError(createErrorBox);
+                openModal(createClassModal);
+                loadCoursesForClassSelect();
+            });
+        }
+
+        createCloseButtons.forEach(function(btn) {
+            btn.addEventListener('click', closeCreateClassModal);
+        });
+
+        addStudentsCloseButtons.forEach(function(btn) {
+            btn.addEventListener('click', closeAddStudentsModal);
+        });
 
         function fetchClasses(page = 1) {
             // Loading state
@@ -119,7 +360,9 @@
                                 <td class="px-6 py-4 text-center">${modeBadge}</td>
                                 <td class="px-6 py-4 text-center">${statusBadge}</td>
                                 <td class="px-6 py-4 text-center">
-                                    <div class="text-sm text-slate-300 font-semibold">${item.capacity} học viên</div>
+                                    <div class="text-sm text-slate-300 font-semibold">
+                                        ${item.current_students || 0}/${item.capacity} học viên
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col text-[11px]">
@@ -129,16 +372,20 @@
                                             </svg>
                                             ${item.start_at || 'Chưa cập nhật'}
                                         </div>
+                                        <div class="text-slate-600 text-[10px] mt-0.5">
+                                            ${item.end_at ? `Kết thúc: ${item.end_at}` : 'Chưa cập nhật'}
+                                        </div>
                                         <span class="text-slate-600 text-[10px] mt-0.5">${item.location || 'N/A'}</span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button title="Chỉnh sửa" class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-all">
-                                            <i class="fas fa-edit text-xs"></i>
-                                        </button>
-                                        <button title="Xóa lớp" class="p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-500 transition-all">
-                                            <i class="fas fa-trash-alt text-xs"></i>
+                                    <div class="flex justify-end gap-2 opacity-100">
+                                        <button
+                                            type="button"
+                                            data-open-add-students
+                                            data-class-id="${item.id}"
+                                            class="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 rounded-lg text-xs hover:bg-emerald-500/20 transition-all">
+                                            Thêm học viên
                                         </button>
                                     </div>
                                 </td>
@@ -185,6 +432,166 @@
 
         // Initial fetch
         fetchClasses();
+
+        // Create class
+        if (btnCreateClass) {
+            btnCreateClass.addEventListener('click', async function() {
+                clearError(createErrorBox);
+                try {
+                    const courseId = document.getElementById('create-class-course-id')?.value;
+                    const name = document.getElementById('create-class-name')?.value?.trim();
+                    const code = document.getElementById('create-class-code')?.value?.trim();
+                    const mode = document.getElementById('create-class-mode')?.value;
+                    const status = document.getElementById('create-class-status')?.value;
+                    const capacity = document.getElementById('create-class-capacity')?.value;
+                    const startAt = document.getElementById('create-class-start-at')?.value;
+                    const endAt = document.getElementById('create-class-end-at')?.value;
+                    const location = document.getElementById('create-class-location')?.value?.trim();
+
+                    if (!courseId || !name || !code || !startAt || !endAt) {
+                        showError(createErrorBox, 'Vui lòng điền đầy đủ thông tin bắt buộc.');
+                        return;
+                    }
+
+                    const payload = {
+                        course_id: Number(courseId),
+                        name,
+                        code,
+                        mode,
+                        status,
+                        capacity: Number(capacity || 0),
+                        start_at: startAt,
+                        end_at: endAt,
+                        location: location || null,
+                    };
+
+                    const res = await fetch(CREATE_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            ...(csrfToken ? {'X-CSRF-TOKEN': csrfToken} : {})
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await res.json().catch(() => ({}));
+
+                    if (!res.ok) {
+                        const message = data?.message || data?.error || 'Tạo lớp thất bại.';
+                        showError(createErrorBox, message);
+                        return;
+                    }
+
+                    closeCreateClassModal();
+                    fetchClasses();
+                } catch (e) {
+                    console.error(e);
+                    showError(createErrorBox, 'Lỗi hệ thống khi tạo lớp.');
+                }
+            });
+        }
+
+        // Open add-students modal (manual + import)
+        tableBody.addEventListener('click', function(event) {
+            const btn = event.target.closest('[data-open-add-students]');
+            if (!btn) return;
+
+            const classId = btn.getAttribute('data-class-id');
+            if (!classId) return;
+
+            currentSelectedClassId = Number(classId);
+            addStudentsClassMeta.textContent = `#${currentSelectedClassId}`;
+            addStudentsMembersTextarea.value = '';
+            addStudentsImportFileInput.value = '';
+            clearError(addStudentsErrorBox);
+
+            openModal(addStudentsModal);
+        });
+
+        // Manual add students
+        if (btnAddStudentsManual) {
+            btnAddStudentsManual.addEventListener('click', async function() {
+                clearError(addStudentsErrorBox);
+                if (!currentSelectedClassId) {
+                    showError(addStudentsErrorBox, 'Chưa chọn lớp.');
+                    return;
+                }
+
+                const members = (addStudentsMembersTextarea.value || '').trim();
+                if (!members) {
+                    showError(addStudentsErrorBox, 'Vui lòng nhập user_id hoặc email để thêm.');
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`${CLASSES_BASE}/${currentSelectedClassId}/students`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            ...(csrfToken ? {'X-CSRF-TOKEN': csrfToken} : {})
+                        },
+                        body: JSON.stringify({members})
+                    });
+
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                        showError(addStudentsErrorBox, data?.message || 'Không thể thêm học viên.');
+                        return;
+                    }
+
+                    closeAddStudentsModal();
+                    fetchClasses();
+                } catch (e) {
+                    console.error(e);
+                    showError(addStudentsErrorBox, 'Lỗi hệ thống khi thêm học viên.');
+                }
+            });
+        }
+
+        // Import students
+        if (btnAddStudentsImport) {
+            btnAddStudentsImport.addEventListener('click', async function() {
+                clearError(addStudentsErrorBox);
+                if (!currentSelectedClassId) {
+                    showError(addStudentsErrorBox, 'Chưa chọn lớp.');
+                    return;
+                }
+
+                const file = addStudentsImportFileInput.files?.[0];
+                if (!file) {
+                    showError(addStudentsErrorBox, 'Vui lòng chọn file Excel/CSV.');
+                    return;
+                }
+
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    const res = await fetch(`${CLASSES_BASE}/${currentSelectedClassId}/students/import`, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            ...(csrfToken ? {'X-CSRF-TOKEN': csrfToken} : {})
+                        },
+                        body: formData
+                    });
+
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                        showError(addStudentsErrorBox, data?.message || 'Không thể import học viên.');
+                        return;
+                    }
+
+                    closeAddStudentsModal();
+                    fetchClasses();
+                } catch (e) {
+                    console.error(e);
+                    showError(addStudentsErrorBox, 'Lỗi hệ thống khi import.');
+                }
+            });
+        }
     });
 </script>
 @endpush
