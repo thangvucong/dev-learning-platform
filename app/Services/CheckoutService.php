@@ -12,7 +12,7 @@ class CheckoutService
     /**
      * @var \App\Repositories\Interfaces\CourseRepositoryInterface
      */
-    protected CourseRepositoryInterface $courseRepository;
+    protected CourseRepository $courseRepository;
 
     /**
      * @var \App\Services\CheckoutOrderService
