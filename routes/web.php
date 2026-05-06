@@ -12,6 +12,7 @@ use App\Http\Controllers\OrderStatusController;
 use App\Http\Controllers\OnePayController;
 use App\Http\Controllers\Auth\EmailOtpAuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -128,9 +129,7 @@ Route::middleware(['auth'])->group(function () {
         ->prefix('user')
         ->name('user.')
         ->group(function () {
-            Route::get('/dashboard', function () {
-                return view('components.admin.dashboard');
-            })->name('dashboard');
+            Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
         });
 });
 require __DIR__.'/auth.php';
