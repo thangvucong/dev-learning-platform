@@ -57,6 +57,9 @@ class AdminClassController extends Controller
             'success' => true,
             'message' => 'Tạo lớp học thành công.',
             'data' => $class,
+            'meta' => [
+                'sessions_created' => (int) $class->sessions->count(),
+            ],
         ], 201);
     }
 

@@ -6,14 +6,20 @@ use App\Models\CourseClass;
 use App\Repositories\CourseClassRepository;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class CourseClassManagementService
 {
     protected CourseClassRepository $classRepository;
+    protected ClassSessionGeneratorService $sessionGeneratorService;
 
-    public function __construct(CourseClassRepository $classRepository)
+    public function __construct(
+        CourseClassRepository $classRepository,
+        ClassSessionGeneratorService $sessionGeneratorService
+    )
     {
         $this->classRepository = $classRepository;
+        $this->sessionGeneratorService = $sessionGeneratorService;
     }
 
     /**
@@ -55,7 +61,14 @@ class CourseClassManagementService
                 : 'upcoming';
         }
 
-        return $this->classRepository->createClass($payload);
+        $scheduleConfig = (array) Arr::pull($payload, 'schedule_config', []);
+
+        return DB::transaction(function () use ($payload, $scheduleConfig) {
+            $courseClass = $this->classRepository->createClass($payload);
+            $this->sessionGeneratorService->generate($courseClass, $scheduleConfig);
+
+            return $courseClass->loadMissing('sessions');
+        });
     }
 }
 

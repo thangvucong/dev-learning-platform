@@ -28,7 +28,7 @@ class StudentScheduleService
 
         $user->loadMissing([
             'assignedClasses' => function ($query) {
-                $query->with(['course.instructor'])->orderBy('start_at');
+                $query->with(['course.instructor', 'sessions'])->orderBy('start_at');
             },
         ]);
 
@@ -77,15 +77,42 @@ class StudentScheduleService
      */
     protected function buildSessionsFromClasses(Collection $classes, Carbon $weekStart, Carbon $weekEnd): Collection
     {
-        return $classes
-            ->filter(function ($classItem) use ($weekStart, $weekEnd) {
-                return $classItem->start_at !== null && $classItem->start_at->between($weekStart, $weekEnd);
-            })
-            ->map(function ($classItem) {
+        $sessions = $classes->flatMap(function ($classItem) use ($weekStart, $weekEnd) {
+            if ($classItem->relationLoaded('sessions') && $classItem->sessions->isNotEmpty()) {
+                return $classItem->sessions
+                    ->filter(function ($session) use ($weekStart, $weekEnd) {
+                        return $session->start_at !== null && $session->start_at->between($weekStart, $weekEnd);
+                    })
+                    ->map(function ($session) use ($classItem) {
+                        $startAt = $session->start_at;
+                        $endAt = $session->end_at ?: (clone $startAt)->addHours(2);
+
+                        return [
+                            'id' => 'session-' . $session->id,
+                            'class_id' => $classItem->id,
+                            'class_name' => $classItem->name,
+                            'teacher' => optional(optional($classItem->course)->instructor)->name ?: 'Giảng viên',
+                            'course' => optional($classItem->course)->title ?: 'Khóa học',
+                            'description' => $session->description ?: ('Buổi ' . $session->session_no . ' theo lộ trình lớp học.'),
+                            'day_key' => $startAt->format('Y-m-d'),
+                            'start_iso' => $startAt->toIso8601String(),
+                            'end_iso' => $endAt->toIso8601String(),
+                            'time' => $startAt->format('H:i') . ' - ' . $endAt->format('H:i'),
+                            'start_at' => $startAt->format('d/m/Y H:i'),
+                            'meeting_type' => $session->meeting_type ?: ($classItem->location ? 'offline' : 'zoom'),
+                            'meeting_info' => $session->meeting_info ?: ($classItem->location ?: 'Zoom meeting'),
+                            'status' => $this->resolveSessionStatus($startAt, $endAt),
+                            'relative' => $this->resolveRelativeText($startAt, $endAt),
+                            'join_url' => '#',
+                        ];
+                    });
+            }
+
+            if ($classItem->start_at !== null && $classItem->start_at->between($weekStart, $weekEnd)) {
                 $startAt = $classItem->start_at;
                 $endAt = $classItem->end_at ?: (clone $startAt)->addHours(2);
 
-                return [
+                return collect([[
                     'id' => 'cls-' . $classItem->id . '-' . $startAt->timestamp,
                     'class_id' => $classItem->id,
                     'class_name' => $classItem->name,
@@ -102,10 +129,15 @@ class StudentScheduleService
                     'status' => $this->resolveSessionStatus($startAt, $endAt),
                     'relative' => $this->resolveRelativeText($startAt, $endAt),
                     'join_url' => '#',
-                ];
-            })
+                ]]);
+            }
+
+            return collect();
+        });
+
+        return $sessions
             ->sortBy(function (array $session) {
-                return $session['start_at'];
+                return $session['start_iso'];
             })
             ->values();
     }
