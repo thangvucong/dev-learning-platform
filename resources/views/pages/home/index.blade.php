@@ -30,10 +30,10 @@
                     <h2 class="text-2xl font-black text-gray-900">Khóa học Pro</h2><span
                         class="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-600">MỚI</span>
                 </div>
-                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
                     @foreach ($courses as $course)
                         <div
-                            class="group cursor-pointer overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-lg hover:-translate-y-1">
+                            class="group h-full cursor-pointer overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-lg hover:-translate-y-1 flex flex-col">
                             <a href="{{ route('courses.show', $course['slug']) }}" class="block">
                                 <div class="relative overflow-hidden">
                                     <img alt="{{ $course['title'] }}"
@@ -43,19 +43,19 @@
                                             : 'https://files.f8.edu.vn/f8-prod/courses/15/62f13d2424a47.png' }}" />
                                 </div>
                             </a>
-                            <div class="p-4">
+                            <div class="p-4 flex flex-col flex-1">
                                 <h3
-                                    class="mb-2 text-[15px] font-bold text-gray-900 group-hover:text-[#f05123] line-clamp-2">
+                                    class="mb-2 h-[2.8rem] text-[15px] leading-snug font-bold text-gray-900 group-hover:text-[#f05123] line-clamp-2">
                                     <a href="{{ route('courses.show', $course['slug']) }}" class="block">
                                         {{ $course['title'] }}
                                     </a>
                                 </h3>
-                                <div class="mb-3 flex items-center gap-2">
+                                <div class="mb-3 mt-auto flex items-center gap-2">
                                     <span
                                         class="text-base font-bold text-[#f05123]">{{ format_price($course['price'] ?? 0, $course['currency_symbol'] ?? 'đ') }}
                                     </span>
                                 </div>
-                                <div class="mb-3 flex items-center justify-between gap-3">
+                                <div class="mb-3 mt-auto flex items-center justify-between gap-3 min-h-[1.75rem]">
                                     <div class="flex min-w-0 items-center gap-2">
                                         <img alt="{{ $course->instructor->name ?? 'Unknown Teacher' }}"
                                             class="h-6 w-6 rounded-full object-cover"
@@ -77,7 +77,7 @@
 
             <section class="mb-12">
                 <div class="mb-6 flex items-center justify-between">
-                    <h2 class="text-2xl font-black text-gray-900">Bài viết nổi bật</h2><button
+                    <h2 class="text-2xl font-black text-gray-900">Bài viết gần đây</h2><button
                         class="flex items-center gap-1 text-sm font-semibold text-[#f05123] hover:underline"><span>Xem tất
                             cả</span> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -85,33 +85,39 @@
                             <path d="m9 18 6-6-6-6"></path>
                         </svg></button>
                 </div>
-                <div class="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
                     @foreach ($posts as $post)
                         <div
-                            class="group h-full cursor-pointer rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5 flex flex-col">
-                            <div class="overflow-hidden"><img alt="{{ $post['title'] }}"
-                                    class="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                    src="{{ $post['thumbnail'] ?? 'https://files.f8.edu.vn/f8-prod/blog_posts/65/6139fe28a9844.png' }}">
-                            </div>
-                            <div class="p-3 flex flex-col flex-1">
+                            class="group h-full cursor-pointer overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-lg hover:-translate-y-1 flex flex-col">
+                            <a href="/" class="block">
+                                <div class="relative overflow-hidden">
+                                    <img alt="{{ $post['title'] }}"
+                                        class="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                        src="{{ !empty($post['thumbnail_url'])
+                                            ? $post['thumbnail_url']
+                                            : 'https://files.f8.edu.vn/f8-prod/courses/15/62f13d2424a47.png' }}" />
+                                </div>
+                            </a>
+                            <div class="p-4 flex flex-col flex-1">
                                 <h3
-                                    class="mb-2 min-h-[2.25rem] text-[13px] font-bold text-gray-900 line-clamp-2 group-hover:text-[#f05123] leading-snug">
-                                    {{ $post['title'] }}</h3>
-                                <div class="mt-auto flex items-center gap-1.5">
-                                    <img alt="{{ $post['user']['name'] ?? 'Unknown Author' }}"
-                                        class="h-5 w-5 rounded-full object-cover flex-shrink-0"
-                                        src="{{ $post['user']['avatar_url'] ?? 'https://www.gravatar.com/avatar/?d=mp' }}"><span
-                                        class="text-[12px] text-gray-600 font-medium truncate">{{ $post['user']['name'] ?? 'Unknown Author' }}</span><svg
-                                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        class="lucide lucide-circle-check h-3 w-3 text-blue-500 flex-shrink-0"
-                                        aria-hidden="true">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <path d="m9 12 2 2 4-4"></path>
-                                    </svg>
-                                    <span class="text-[11px] text-gray-400 ml-auto whitespace-nowrap">·
-                                        {{ time_ago($post['published_at']) }}</span>
+                                    class="mb-2 min-h-[2.8rem] text-[15px] leading-snug font-bold text-gray-900 group-hover:text-[#f05123] line-clamp-2">
+                                    <a href="/" class="block">
+                                        {{ $post['title'] }}
+                                    </a>
+                                </h3>
+                                <div class="mb-3 flex items-center justify-between gap-3 min-h-[1.75rem]">
+                                    <div class="flex min-w-0 items-center gap-2">
+                                        <img alt="{{ $post->user->name ?? 'Unknown Author' }}"
+                                            class="h-6 w-6 rounded-full object-cover"
+                                            src="{{ $post->user->avatar_url ?? 'https://files.f8.edu.vn/f8-prod/avatars/699286a5e7330.png' }}">
+                                        <span
+                                            class="truncate text-sm font-medium text-gray-600">{{ $post->user->name ?? 'Unknown Author' }}
+                                        </span>
+                                    </div>
+                                    <span class="whitespace-nowrap text-xs text-gray-500">
+                                        <span class="font-medium text-gray-700">Ngày đăng:</span>
+                                        {{ optional($post->published_at)->format('d/m/Y') ?? 'Chưa có ngày đăng' }}
+                                    </span>
                                 </div>
                             </div>
                         </div>

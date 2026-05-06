@@ -188,55 +188,35 @@
                 </div>
 
                 @auth
-                    @if (!empty($sepay))
-                        <div id="checkout-sepay-root" class="border-t border-[#d1d7dc] py-8"
-                            data-status-url="{{ $sepay['poll_status_url'] }}" data-success-url="{{ $sepay['success_url'] }}">
+                    @if (session('onepay_error'))
+                        <div class="mt-4 rounded border border-[#f5c2c2] bg-[#fff4f4] px-4 py-3 text-[14px] text-[#b32d2d]"
+                            role="alert">
+                            {{ session('onepay_error') }}
+                        </div>
+                    @endif
+
+                    @if (!empty($onepay))
+                        <div class="border-t border-[#d1d7dc] py-8">
                             <h2 class="text-[18px] sm:text-[20px] font-bold text-[#2d2f31] mb-4">
-                                Thanh toán chuyển khoản (QR)
+                                Thanh toán thẻ OnePay
                             </h2>
                             <p
                                 class="text-[14px] text-[#2d2f31] mb-4 leading-relaxed bg-[#f7f9fa] border border-[#d1d7dc] rounded px-4 py-3">
-                                Quét mã QR để thanh toán. Hệ thống sẽ tự động xác nhận sau khi thanh toán.
+                                Chọn loại thẻ để chuyển sang cổng OnePay và hoàn tất thanh toán an toàn.
                             </p>
-                            <div class="flex flex-col sm:flex-row gap-6 items-start mb-6">
-                                <div class="shrink-0 border border-[#d1d7dc] rounded bg-white p-3">
-                                    <img src="{{ $sepay['qr_image_url'] }}" alt="Mã QR chuyển khoản" width="200"
-                                        height="200" class="w-[200px] h-[200px] object-contain" loading="lazy">
-                                </div>
-                                <dl class="flex-1 min-w-0 space-y-3 text-[14px]">
-                                    <div class="flex flex-col sm:flex-row sm:gap-3">
-                                        <dt class="text-[#6a6f73] sm:w-40 shrink-0">Ngân hàng</dt>
-                                        <dd class="font-semibold text-[#2d2f31]">{{ $sepay['bank_name'] }}</dd>
-                                    </div>
-                                    <div class="flex flex-col sm:flex-row sm:gap-3">
-                                        <dt class="text-[#6a6f73] sm:w-40 shrink-0">Số tài khoản</dt>
-                                        <dd class="font-semibold text-[#2d2f31] tracking-wide">
-                                            {{ $sepay['account_number'] }}</dd>
-                                    </div>
-                                    <div class="flex flex-col sm:flex-row sm:gap-3">
-                                        <dt class="text-[#6a6f73] sm:w-40 shrink-0">Tên tài khoản</dt>
-                                        <dd class="font-semibold text-[#2d2f31]">{{ $sepay['account_name'] }}</dd>
-                                    </div>
-                                    <div class="flex flex-col sm:flex-row sm:gap-3">
-                                        <dt class="text-[#6a6f73] sm:w-40 shrink-0">Số tiền</dt>
-                                        <dd class="font-semibold text-[#2d2f31]">{{ $sepay['amount_formatted'] }}</dd>
-                                    </div>
-                                    <div class="flex flex-col sm:flex-row sm:gap-3">
-                                        <dt class="text-[#6a6f73] sm:w-40 shrink-0">Nội dung chuyển khoản</dt>
-                                        <dd class="font-semibold text-[#5624d0] break-all">
-                                            {{ $sepay['transfer_content'] }}
-                                            <button type="button"
-                                                class="ml-2 align-baseline text-[13px] font-bold text-[#1473e6] hover:underline"
-                                                data-checkout-copy="{{ $sepay['transfer_content'] }}">
-                                                Sao chép
-                                            </button>
-                                        </dd>
-                                    </div>
-                                </dl>
+                            <div class="flex flex-col gap-3">
+                                @foreach ($onepay['available_methods'] as $onepayMethod)
+                                    <form method="POST" action="{{ $onepay['start_url'] }}">
+                                        @csrf
+                                        <input type="hidden" name="course_id" value="{{ $onepay['course_id'] }}">
+                                        <input type="hidden" name="method" value="{{ $onepayMethod['method'] }}">
+                                        <button type="submit"
+                                            class="w-full h-12 bg-[#5624d0] text-white font-bold text-[15px] hover:bg-[#401b9b] transition-colors rounded-[2px]">
+                                            Thanh toán qua {{ $onepayMethod['label'] }}
+                                        </button>
+                                    </form>
+                                @endforeach
                             </div>
-                            <p id="checkout-sepay-waiting" class="text-[14px] font-medium text-[#6a6f73]" aria-live="polite">
-                                Đang chờ thanh toán...
-                            </p>
                         </div>
                     @endif
                 @endauth
@@ -264,17 +244,8 @@
                     <h2 class="text-[22px] sm:text-[24px] font-bold text-[#2d2f31] mb-6">Tổng quan đơn hàng</h2>
 
                     <div class="flex justify-between items-center mb-4 text-[15px]">
-                        <span class="text-[#2d2f31]">Giá gốc:</span>
+                        <span class="text-[#2d2f31]">Giá khóa học:</span>
                         <span class="text-[#2d2f31]">{{ $checkout['list_price_formatted'] }}</span>
-                    </div>
-                    <div class="flex justify-between items-center mb-4 text-[15px]">
-                        <span class="text-[#2d2f31] inline-flex items-center gap-2">Giảm giá:
-                            @if ($checkout['has_discount'] && $checkout['discount_percent_label'])
-                                <span
-                                    class="rounded bg-[#fef3f0] px-2 py-0.5 text-xs font-semibold text-[#f05123]">{{ $checkout['discount_percent_label'] }}</span>
-                            @endif
-                        </span>
-                        <span class="text-[#2d2f31]">{{ $checkout['discount_amount_formatted'] }}</span>
                     </div>
                     <hr class="border-[#d1d7dc] my-4">
                     <div class="flex justify-between items-center mb-8">
@@ -733,30 +704,6 @@
                             sending = false;
                         });
                     });
-                }
-            }
-
-            var sepayRoot = document.getElementById('checkout-sepay-root');
-            if (sepayRoot) {
-                var statusUrl = sepayRoot.getAttribute('data-status-url');
-                var successUrl = sepayRoot.getAttribute('data-success-url');
-                if (statusUrl && successUrl) {
-                    setInterval(function() {
-                        fetch(statusUrl, {
-                            method: 'GET',
-                            headers: {
-                                'Accept': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            credentials: 'same-origin'
-                        }).then(function(res) {
-                            return res.json();
-                        }).then(function(data) {
-                            if (data && data.status === 'paid') {
-                                window.location.href = successUrl;
-                            }
-                        }).catch(function() {});
-                    }, 5000);
                 }
             }
 

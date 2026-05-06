@@ -137,32 +137,7 @@ class CourseRepository implements CourseRepositoryInterface
                 'title',
                 'slug',
                 'thumbnail_url',
-                'price',
-            ])
-            ->with([
-                'prices' => function ($query) use ($now) {
-                    $query->select([
-                        'id',
-                        'course_id',
-                        'currency_id',
-                        'price',
-                        'compare_price',
-                        'starts_at',
-                        'ends_at',
-                        'is_active',
-                    ])
-                        ->where('is_active', true)
-                        ->where(function ($subQuery) use ($now) {
-                            $subQuery->whereNull('starts_at')
-                                ->orWhere('starts_at', '<=', $now);
-                        })
-                        ->where(function ($subQuery) use ($now) {
-                            $subQuery->whereNull('ends_at')
-                                ->orWhere('ends_at', '>=', $now);
-                        })
-                        ->orderByDesc('starts_at');
-                },
-                'prices.currency:id,symbol',
+                'price'
             ])
             ->whereKey($courseId)
             ->where('status', 1)
