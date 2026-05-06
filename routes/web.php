@@ -14,6 +14,7 @@ use App\Http\Controllers\Auth\EmailOtpAuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Student\ClassController as StudentClassController;
+use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -131,6 +132,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('user.')
         ->group(function () {
             Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/schedule', [StudentScheduleController::class, 'index'])->name('schedule.index');
             Route::get('/classes', [StudentClassController::class, 'index'])->name('classes.index');
             Route::get('/classes/{id}', [StudentClassController::class, 'show'])->name('classes.show');
         });

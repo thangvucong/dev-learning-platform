@@ -12,7 +12,11 @@ const mix = require('laravel-mix');
  */
 
 mix.js('resources/js/app.js', 'public/js')
+    .js('resources/js/student-schedule.js', 'public/assets/js')
     .postCss('resources/css/app.css', 'public/css', [
         require('tailwindcss'),
+        require('autoprefixer'),
+    ])
+    .postCss('resources/css/student-schedule.css', 'public/assets/css', [
         require('autoprefixer'),
     ]);
