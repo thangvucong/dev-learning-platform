@@ -6,6 +6,7 @@ use App\Http\Controllers\CourseController;
 use  App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminClassController;
+use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderStatusController;
 use App\Http\Controllers\OnePayController;
@@ -74,8 +75,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/', [AdminClassController::class, 'index'])->name('classes.managerClasses');
     Route::get('/api/list', [AdminClassController::class, 'getListData'])->name('classes.api.list');
 });
-            // Quản lý người dùng 
-            // Route::get('/users', [UserController::class, 'index'])->name('users.index');
+            Route::group(['prefix' => 'users'], function () {
+                Route::get('/', [AdminUserController::class, 'index'])->name('users.index');
+                Route::get('/{user}', [AdminUserController::class, 'show'])->name('users.show');
+                Route::get('/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
+                Route::put('/{user}', [AdminUserController::class, 'update'])->name('users.update');
+                Route::patch('/{user}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('users.toggleStatus');
+                Route::delete('/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+            });
             
             // Quản lý khóa học 
         Route::group(['prefix' => 'courses'], function () {

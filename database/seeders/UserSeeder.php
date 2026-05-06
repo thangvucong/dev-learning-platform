@@ -17,6 +17,8 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
+        $faker = app('faker');
+
         Role::query()->firstOrCreate(['name' => 'admin']);
         Role::query()->firstOrCreate(['name' => 'student']);
         Role::query()->firstOrCreate(['name' => 'teacher']);
@@ -30,6 +32,8 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password'), 
                 'email_verified_at' => now(),
                 'role' => 'admin', 
+                'is_active' => true,
+                'last_login_at' => now(),
             ]
         );
       
@@ -66,6 +70,9 @@ class UserSeeder extends Seeder
                     'avatar_url' => $teacherData['avatar_url'],
                     'password' => Hash::make('password'),
                     'email_verified_at' => now(),
+                    'role' => 'teacher',
+                    'is_active' => true,
+                    'last_login_at' => now()->subDays(random_int(1, 20)),
                 ]
             );
 
@@ -88,6 +95,9 @@ class UserSeeder extends Seeder
                     'avatar_url' => $adminData['avatar_url'],
                     'password' => Hash::make('12345678'),
                     'email_verified_at' => now(),
+                    'role' => 'admin',
+                    'is_active' => true,
+                    'last_login_at' => now(),
                 ]
             );
 
@@ -112,6 +122,9 @@ class UserSeeder extends Seeder
                     'name' => $studentData['name'],
                     'password' => Hash::make('password'),
                     'email_verified_at' => now(),
+                    'role' => 'student',
+                    'is_active' => (bool) random_int(0, 1),
+                    'last_login_at' => now()->subDays(random_int(3, 60)),
                 ]
             );
 
