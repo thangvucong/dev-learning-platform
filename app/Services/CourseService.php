@@ -1,9 +1,10 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\Course;
-use App\Models\CoursePrice;
-use App\Repositories\CourseRepository;
+use App\Repositories\Interfaces\CourseRepositoryInterface;
+use App\Repositories\Interfaces\UserRepositoryInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -11,11 +12,28 @@ use Illuminate\Support\Str;
 
 class CourseService
 {
-    protected CourseRepository $courseRepository;
+    protected CourseRepositoryInterface $courseRepository;
 
-    public function __construct(CourseRepository $courseRepository)
-    {
+    protected UserRepositoryInterface $userRepository;
+
+    public function __construct(
+        CourseRepositoryInterface $courseRepository,
+        UserRepositoryInterface $userRepository
+    ) {
         $this->courseRepository = $courseRepository;
+        $this->userRepository = $userRepository;
+    }
+
+    /**
+     * Dữ liệu view trang quản lý khóa học (admin).
+     *
+     * @return array<string, mixed>
+     */
+    public function getManagersCourseIndexViewData(): array
+    {
+        return [
+            'instructors' => $this->userRepository->findTeachersForSelect(),
+        ];
     }
 
     /**
@@ -48,9 +66,6 @@ class CourseService
             $courses = $this->courseRepository->getAllCoursesPaginated($perPage);
 
             $items = $courses->getCollection()->map(function ($course) {
-                $activePrice = $course->prices->first();
-                $priceValue = $activePrice ? (float) $activePrice->price : (float) ($course->price ?? 0);
-
                 return [
                     'id' => $course->id,
                     'name' => $course->title,
@@ -82,7 +97,7 @@ class CourseService
     }
 
     /**
-     * Create a course for admin with active pricing row.
+     * Tạo khóa học (admin), chỉ ghi vào bảng courses.
      *
      * @param  array<string, mixed>  $payload
      * @return \App\Models\Course
@@ -101,9 +116,8 @@ class CourseService
             }
 
             $price = (float) Arr::get($payload, 'price', 0);
-            $comparePrice = Arr::get($payload, 'compare_price');
 
-            $course = Course::query()->create([
+            $course = $this->courseRepository->createCourse([
                 'instructor_id' => (int) Arr::get($payload, 'instructor_id'),
                 'title' => $title,
                 'slug' => $slug !== '' ? $slug : $generatedSlug,
@@ -115,17 +129,7 @@ class CourseService
                 'published_at' => $publishedAt ?: null,
             ]);
 
-            CoursePrice::query()->create([
-                'course_id' => $course->id,
-                'currency_id' => (int) Arr::get($payload, 'currency_id'),
-                'price' => $price,
-                'compare_price' => $comparePrice !== null && $comparePrice !== '' ? (float) $comparePrice : null,
-                'starts_at' => null,
-                'ends_at' => null,
-                'is_active' => true,
-            ]);
-
-            return $course->fresh(['instructor', 'prices.currency']);
+            return $course->fresh(['instructor']);
         });
     }
 }

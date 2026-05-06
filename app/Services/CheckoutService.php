@@ -4,14 +4,14 @@ namespace App\Services;
 
 use App\Models\Course;
 use App\Models\User;
-use App\Repositories\CourseRepository;
+use App\Repositories\Interfaces\CourseRepositoryInterface;
 
 class CheckoutService
 {
     /**
-     * @var \App\Repositories\CourseRepository
+     * @var \App\Repositories\Interfaces\CourseRepositoryInterface
      */
-    protected CourseRepository $courseRepository;
+    protected CourseRepositoryInterface $courseRepository;
 
     /**
      * @var \App\Services\CheckoutOrderService
@@ -21,10 +21,10 @@ class CheckoutService
     /**
      * Create a new service instance.
      *
-     * @param  \App\Repositories\CourseRepository  $courseRepository
+     * @param  \App\Repositories\Interfaces\CourseRepositoryInterface  $courseRepository
      * @param  \App\Services\CheckoutOrderService  $checkoutOrderService
      */
-    public function __construct(CourseRepository $courseRepository, CheckoutOrderService $checkoutOrderService)
+    public function __construct(CourseRepositoryInterface $courseRepository, CheckoutOrderService $checkoutOrderService)
     {
         $this->courseRepository = $courseRepository;
         $this->checkoutOrderService = $checkoutOrderService;

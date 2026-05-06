@@ -52,27 +52,11 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 gap-4">
                         <div>
                             <label class="block text-xs text-slate-400 mb-2">Giá bán *</label>
                             <input name="price" type="number" min="0" step="1000" value="{{ old('price', 0) }}" required class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
                             @error('price') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-2">Giá niêm yết</label>
-                            <input name="compare_price" type="number" min="0" step="1000" value="{{ old('compare_price') }}" class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
-                            @error('compare_price') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-2">Tiền tệ *</label>
-                            <select name="currency_id" required class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
-                                @foreach ($currencies as $currency)
-                                    <option value="{{ $currency->id }}" @selected((string) old('currency_id') === (string) $currency->id)>
-                                        {{ $currency->code }} {{ $currency->symbol ? '(' . $currency->symbol . ')' : '' }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('currency_id') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
                         </div>
                     </div>
 

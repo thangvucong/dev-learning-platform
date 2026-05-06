@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Repositories\CourseRepository;
+use App\Repositories\Interfaces\CourseRepositoryInterface;
 use App\Repositories\PostRepository;
 use Illuminate\Support\Facades\Log;
 
@@ -12,18 +12,18 @@ class HomeService
 
     protected const POST_LIMIT = 10;
 
-    protected CourseRepository $courseRepository;
+    protected CourseRepositoryInterface $courseRepository;
 
     protected PostRepository $postRepository;
 
     /**
      * Create a new service instance.
      *
-     * @param  \App\Repositories\CourseRepository  $courseRepository
+     * @param  \App\Repositories\Interfaces\CourseRepositoryInterface  $courseRepository
      * @param  \App\Repositories\PostRepository  $postRepository
      */
     public function __construct(
-        CourseRepository $courseRepository,
+        CourseRepositoryInterface $courseRepository,
         PostRepository $postRepository
     ) {
         $this->courseRepository = $courseRepository;

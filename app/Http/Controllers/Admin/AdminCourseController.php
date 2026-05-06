@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\Admin\StoreCourseRequest;
-use App\Models\Currency;
-use App\Models\User;
 use App\Services\CourseService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -20,22 +18,7 @@ class AdminCourseController extends Controller
 
     public function index()
     {
-        $instructors = User::query()
-            ->role('teacher')
-            ->select(['id', 'name', 'email'])
-            ->orderBy('name')
-            ->get();
-
-        $currencies = Currency::query()
-            ->where('is_active', true)
-            ->select(['id', 'code', 'symbol'])
-            ->orderBy('code')
-            ->get();
-
-        return view('components.admin.managerCourses', [
-            'instructors' => $instructors,
-            'currencies' => $currencies,
-        ]);
+        return view('components.admin.managerCourses', $this->courseService->getManagersCourseIndexViewData());
     }
 
     public function getListData(Request $request)
