@@ -3,9 +3,9 @@
 namespace App\Repositories;
 
 use App\Models\Course;
+use App\Repositories\Interfaces\CourseRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use App\Repositories\Interfaces\CourseRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class CourseRepository implements CourseRepositoryInterface
@@ -20,19 +20,16 @@ class CourseRepository implements CourseRepositoryInterface
 {
    return Course::query()
     ->with([
-        'instructor:id,name', 
-        'prices' => function($q) { 
-            $q->where('is_active', 1); 
-        },
+        'instructor:id,name',
         'classes' => function($q) {
-            // Thêm 'location' vào đây vì Service đang dùng, nếu thiếu sẽ bị null
+
             $q->select(['id', 'course_id', 'name', 'status', 'start_at', 'code', 'capacity', 'location'])
               ->withCount('users'); 
         },
         'attributes:id,course_id,type,content'
     ])
     ->latest()
-    // Đảm bảo lấy các cột cần thiết từ bảng courses
+  
     ->paginate($perPage);
 }
 
@@ -112,7 +109,7 @@ class CourseRepository implements CourseRepositoryInterface
     }
 
     // public function getRecentCourses(int $limit): Collection
-    public function getRecentCourses($limit):Collection
+    public function getRecentCourses(int $limit): Collection
     {
         return Course::query()
             ->with(['instructor:id,name'])
@@ -148,5 +145,13 @@ class CourseRepository implements CourseRepositoryInterface
             ->whereNotNull('published_at')
             ->where('published_at', '<=', $now)
             ->firstOrFail();
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    public function createCourse(array $attributes): Course
+    {
+        return Course::query()->create($attributes);
     }
 }

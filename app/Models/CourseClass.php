@@ -52,4 +52,9 @@ class CourseClass extends Model
             ->withPivot(['status', 'assigned_at'])
             ->withTimestamps();
     }
+    
+    public function students()
+    {
+        return $this->users();
+    }
 }

@@ -63,6 +63,17 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($teachers as $teacherData) {
+            $attributes = [
+                'name' => $teacherData['name'],
+                'avatar_url' => $teacherData['avatar_url'],
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ];
+            // Không ghi đè role admin của tài khoản admin khi merge danh sách teacher.
+            if ($teacherData['email'] !== 'admin@example.com') {
+                $attributes['role'] = 'teacher';
+            }
+
             $teacher = User::query()->updateOrCreate(
                 ['email' => $teacherData['email']],
                 [

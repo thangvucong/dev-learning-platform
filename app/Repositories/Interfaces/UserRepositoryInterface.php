@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Repositories\Interfaces;
 
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 interface UserRepositoryInterface {
     /**
@@ -26,4 +28,9 @@ interface UserRepositoryInterface {
      * @return array<string, int>
      */
     public function getAdminUserStats(): array;
+
+    /**
+     * Giảng viên cho form quản lý khóa học (theo cột users.role).
+     */
+    public function findTeachersForSelect(): Collection;
 }

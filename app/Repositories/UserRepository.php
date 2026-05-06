@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 class UserRepository implements UserRepositoryInterface
 {
@@ -87,6 +88,18 @@ class UserRepository implements UserRepositoryInterface
             ->select('id', 'name', 'email', 'role', 'created_at')
             ->latest()
             ->take((int) $limit)
+            ->get();
+    }
+
+    /**
+     * Giảng viên cho form quản lý khóa học (theo cột users.role).
+     */
+    public function findTeachersForSelect(): Collection
+    {
+        return User::query()
+            ->where('role', 'teacher')
+            ->select(['id', 'name', 'email'])
+            ->orderBy('name')
             ->get();
     }
 }

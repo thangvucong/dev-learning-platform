@@ -17,10 +17,10 @@ class CourseSeeder extends Seeder
     {
         Course::query()->delete();
 
-        $teacherIds = User::role('teacher')->pluck('id')->all();
+        $teacherIds = User::query()->where('role', 'teacher')->pluck('id')->all();
         if ($teacherIds === []) {
             throw new \RuntimeException(
-                'CourseSeeder: không có user role teacher. Chạy UserSeeder trước và đảm bảo có ít nhất một teacher.'
+                'CourseSeeder: không có user nào với role=teacher trong bảng users. Chạy UserSeeder trước và đảm bảo có ít nhất một teacher.'
             );
         }
 
