@@ -28,6 +28,13 @@ class StoreCourseClassRequest extends FormRequest
             'start_at' => ['required', 'date'],
             'end_at' => ['required', 'date', 'after_or_equal:start_at'],
             'location' => ['nullable', 'string', 'max:255'],
+            'schedule_config' => ['nullable', 'array'],
+            'schedule_config.generation_mode' => ['nullable', Rule::in(['auto', 'custom'])],
+            'schedule_config.sessions_count' => ['nullable', 'integer', 'min:1', 'max:500'],
+            'schedule_config.days_of_week' => ['required_if:schedule_config.generation_mode,custom', 'array', 'min:1'],
+            'schedule_config.days_of_week.*' => ['integer', 'between:1,7'],
+            'schedule_config.session_start_time' => ['nullable', 'date_format:H:i'],
+            'schedule_config.session_end_time' => ['nullable', 'date_format:H:i'],
         ];
     }
 }

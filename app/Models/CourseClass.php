@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\ClassSession;
 
 class CourseClass extends Model
 {
@@ -59,5 +60,15 @@ class CourseClass extends Model
     public function students()
     {
         return $this->users();
+    }
+
+    /**
+     * Get sessions of this class.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function sessions()
+    {
+        return $this->hasMany(ClassSession::class, 'class_id')->orderBy('start_at');
     }
 }
