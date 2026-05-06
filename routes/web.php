@@ -14,6 +14,8 @@ use App\Http\Controllers\Auth\EmailOtpAuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Student\ClassController as StudentClassController;
+use App\Http\Controllers\Student\CourseController as StudentCourseController;
+use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 
 /*
@@ -60,6 +62,10 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])
 
 
 Route::middleware(['auth'])->group(function () {
+    Route::middleware(['role:user'])->group(function () {
+        Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.edit');
+    });
+
     Route::get('/dashboard', function () {
         $role = (string) (auth()->user()->role ?? 'user');
 
@@ -133,6 +139,9 @@ Route::middleware(['auth'])->group(function () {
         ->group(function () {
             Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
             Route::get('/schedule', [StudentScheduleController::class, 'index'])->name('schedule.index');
+            Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.index');
+            Route::get('/courses', [StudentCourseController::class, 'index'])->name('courses.index');
+            Route::get('/courses/{id}', [StudentCourseController::class, 'show'])->name('courses.show');
             Route::get('/classes', [StudentClassController::class, 'index'])->name('classes.index');
             Route::get('/classes/{id}', [StudentClassController::class, 'show'])->name('classes.show');
         });
