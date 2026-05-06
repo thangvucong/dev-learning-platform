@@ -20,13 +20,16 @@ class CourseClass extends Model
         'course_id',
         'name',
         'code',
+        'mode',
         'status',
+        'capacity',
         'start_at',
         'end_at',
         'location',
     ];
 
     protected $casts = [
+        'capacity' => 'integer',
         'start_at' => 'datetime',
         'end_at' => 'datetime',
     ];

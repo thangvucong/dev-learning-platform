@@ -74,6 +74,14 @@ Route::middleware(['auth'])->group(function () {
    Route::group(['prefix' => 'classes'], function () {
     Route::get('/', [AdminClassController::class, 'index'])->name('classes.managerClasses');
     Route::get('/api/list', [AdminClassController::class, 'getListData'])->name('classes.api.list');
+
+            // Admin APIs (JSON) for managing classes and class students
+            Route::post('/', [AdminClassController::class, 'store'])->name('classes.store');
+            Route::get('/{courseClass}/api/students', function () {
+                return response()->json(['message' => 'Not implemented']);
+            })->name('classes.api.students');
+            Route::post('/{courseClass}/students', [AdminClassController::class, 'addStudents'])->name('classes.students.add');
+            Route::post('/{courseClass}/students/import', [AdminClassController::class, 'importStudents'])->name('classes.students.import');
 });
             Route::group(['prefix' => 'users'], function () {
                 Route::get('/', [AdminUserController::class, 'index'])->name('users.index');
