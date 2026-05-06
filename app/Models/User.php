@@ -22,8 +22,10 @@ class User extends Authenticatable
         'name',
         'email',
         'role',
+        'is_active',
         'avatar_url',
         'email_verified_at',
+        'last_login_at',
         'password',
     ];
 
@@ -44,6 +46,8 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'last_login_at' => 'datetime',
+        'is_active' => 'boolean',
     ];
 
     /**
@@ -88,5 +92,15 @@ class User extends Authenticatable
         return $this->belongsToMany(CourseClass::class, 'class_user', 'user_id', 'class_id')
             ->withPivot(['status', 'assigned_at'])
             ->withTimestamps();
+    }
+
+    /**
+     * Get all orders of the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
     }
 }

@@ -12,6 +12,9 @@
         "laravel/sanctum": "^2.11",
         "laravel/socialite": "^5.5",
         "laravel/tinker": "^2.5",
+        "php-flasher/flasher-laravel": "^1",
+        "php-flasher/flasher-toastr-laravel": "^1",
+        "php-http/guzzle7-adapter": "^1.1",
         "phpviet/omnipay-onepay": "^1.0",
         "spatie/laravel-permission": "^6.25"
     },
@@ -63,7 +66,10 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true
