@@ -96,7 +96,7 @@
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold text-white">Lớp học sắp tới</h2>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-4 gap-4">
                 @forelse ($upcoming_classes as $classCard)
                     @include('components.student.class-card', [
                         'name' => $classCard['name'],

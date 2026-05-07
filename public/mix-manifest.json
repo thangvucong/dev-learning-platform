@@ -1,6 +1,7 @@
 {
     "/js/app.js": "/js/app.js",
     "/assets/js/student-schedule.js": "/assets/js/student-schedule.js",
+    "/assets/js/student-profile.js": "/assets/js/student-profile.js",
     "/assets/css/student-schedule.css": "/assets/css/student-schedule.css",
     "/css/app.css": "/css/app.css"
 }

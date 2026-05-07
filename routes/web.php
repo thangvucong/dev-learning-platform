@@ -141,6 +141,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/schedule', [StudentScheduleController::class, 'index'])->name('schedule.index');
             Route::get('/schedule/data', [StudentScheduleController::class, 'data'])->name('schedule.data');
             Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.index');
+            Route::patch('/profile', [StudentProfileController::class, 'updateProfile'])->name('profile.update');
+            Route::post('/profile/avatar', [StudentProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+            Route::patch('/profile/password', [StudentProfileController::class, 'updatePassword'])->name('profile.password.update');
+            Route::patch('/profile/settings', [StudentProfileController::class, 'updateSettings'])->name('profile.settings.update');
             Route::get('/courses', [StudentCourseController::class, 'index'])->name('courses.index');
             Route::get('/courses/{id}', [StudentCourseController::class, 'show'])->name('courses.show');
             Route::get('/classes', [StudentClassController::class, 'index'])->name('classes.index');
