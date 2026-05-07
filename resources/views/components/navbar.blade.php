@@ -21,17 +21,7 @@
 
     </a>
     <div class="flex-1 max-w-[420px] mx-8">
-        <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><svg
-                    xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="lucide lucide-search text-[#a0a0a0]" aria-hidden="true">
-                    <path d="m21 21-4.34-4.34"></path>
-                    <circle cx="11" cy="11" r="8"></circle>
-                </svg></div><input
-                class="block w-full pl-10 pr-3 py-2 border border-[#e8e8e8] rounded-full leading-5 bg-white placeholder-[#a0a0a0] focus:outline-none focus:border-[#d3d3d3] focus:ring-0 sm:text-sm"
-                placeholder="Tìm kiếm khóa học, bài viết, video, ..." type="text">
-        </div>
+        <x-search.topbar-search />
     </div>
     @auth
         @php
@@ -41,14 +31,10 @@
             $last = mb_substr($segments[count($segments) - 1], 0, 1);
             $initials = strtoupper($first . $last);
             $role = (string) (Auth::user()->role ?? 'user');
-            $dashboardRouteName = $role === 'admin' ? 'admin.dashboard' : ($role === 'teacher' ? 'teacher.dashboard' : 'user.dashboard');
+            $dashboardRouteName =
+                $role === 'admin' ? 'admin.dashboard' : ($role === 'teacher' ? 'teacher.dashboard' : 'user.dashboard');
         @endphp
         <div class="flex items-center gap-4">
-            <a href="{{ url('/courses') }}"
-                class="text-[15px] font-semibold text-[#242424] hover:text-[#f05123] transition-colors">
-                Khóa học của tôi
-            </a>
-
             <button type="button"
                 class="w-9 h-9 rounded-full flex items-center justify-center text-[#666] hover:bg-[#f4f4f4] hover:text-[#242424] transition-colors"
                 aria-label="Thông báo">
@@ -71,14 +57,14 @@
                         <p class="text-sm font-semibold text-[#242424]">{{ Auth::user()->name }}</p>
                         <p class="text-xs text-[#777]">{{ Auth::user()->email }}</p>
                     </div>
-                    <a href="{{ url('/profile') }}"
+                    <a href="{{ route('user.profile.index') }}"
                         class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm text-[#333] hover:bg-[#f6f6f6]">
                         Trang cá nhân
                     </a>
-                   <a href="{{ route($dashboardRouteName) }}"
-   class="flex items-center rounded-lg px-3 py-2 text-sm text-[#333] hover:bg-[#f6f6f6]">
-    Dashboard
-</a>
+                    <a href="{{ route($dashboardRouteName) }}"
+                        class="flex items-center rounded-lg px-3 py-2 text-sm text-[#333] hover:bg-[#f6f6f6]">
+                        Trang điều khiển
+                    </a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit"

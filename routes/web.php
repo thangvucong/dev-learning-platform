@@ -17,6 +17,7 @@ use App\Http\Controllers\Student\ClassController as StudentClassController;
 use App\Http\Controllers\Student\CourseController as StudentCourseController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
+use App\Http\Controllers\Search\GlobalSearchController;
 
 
 /*
@@ -31,6 +32,8 @@ use App\Http\Controllers\Student\ScheduleController as StudentScheduleController
 */
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::get('/search', [GlobalSearchController::class, 'index'])->name('search');
 Route::get('/courses/{slug}', [CourseController::class, 'show'])->name('courses.show');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 
@@ -136,7 +139,7 @@ Route::middleware(['auth'])->group(function () {
             ->name('api.classes');
         });
 
-    Route::middleware(['role:user'])
+    Route::middleware(['role:student'])
         ->prefix('user')
         ->name('user.')
         ->group(function () {
