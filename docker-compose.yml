@@ -52,12 +52,12 @@ services:
         image: mysql:8.0
         restart: unless-stopped
         environment:
-            MYSQL_DATABASE: ${DB_DATABASE:-dev_learning}
-            MYSQL_USER: ${DB_USERNAME:-dev_learning}
+            MYSQL_DATABASE: ${DB_DATABASE:-learning}
+            MYSQL_USER: ${DB_USERNAME:-learning}
             MYSQL_PASSWORD: ${DB_PASSWORD:-123456}
             MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-123456}
         ports:
-            - "127.0.0.1:${DB_PORT:-3308}:3306"
+            - "127.0.0.1:${DB_PORT:-3307}:3306"
         volumes:
             - db_data:/var/lib/mysql
         healthcheck:

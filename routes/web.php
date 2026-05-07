@@ -18,6 +18,7 @@ use App\Http\Controllers\Student\CourseController as StudentCourseController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -128,9 +129,11 @@ Route::middleware(['auth'])->group(function () {
         ->prefix('teacher')
         ->name('teacher.')
         ->group(function () {
-            Route::get('/dashboard', function () {
-                return view('components.admin.dashboard');
-            })->name('dashboard');
+
+           Route::get('/dashboard', [\App\Http\Controllers\Teacher\TeacherClassController::class, 'indexView'])->name('dashboard');
+
+            Route::get('/api/classes', [\App\Http\Controllers\Teacher\TeacherClassController::class, 'index'])
+            ->name('api.classes');
         });
 
     Route::middleware(['role:user'])
