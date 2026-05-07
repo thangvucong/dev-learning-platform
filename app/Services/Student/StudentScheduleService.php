@@ -22,6 +22,7 @@ class StudentScheduleService
             : 'week';
         $weekOffset = (int) ($filters['week_offset'] ?? 0);
         $classFilter = (int) ($filters['class_id'] ?? 0);
+        $sessionId = (string) ($filters['session_id'] ?? '');
 
         $weekStart = now()->startOfWeek(Carbon::MONDAY)->addWeeks($weekOffset);
         $weekEnd = (clone $weekStart)->endOfWeek(Carbon::SUNDAY);
@@ -42,7 +43,7 @@ class StudentScheduleService
             $sessions = $this->buildMockSessions($weekStart, $weekEnd);
         }
 
-        $selectedSession = $this->resolveSelectedSession($sessions, (string) ($filters['session_id'] ?? ''));
+        $selectedSession = $this->resolveSelectedSession($sessions, $sessionId);
 
         return [
             'header' => [
@@ -55,6 +56,8 @@ class StudentScheduleService
             'filters' => [
                 'class_id' => $classFilter,
                 'view' => $viewMode,
+                'week_offset' => $weekOffset,
+                'session_id' => $sessionId,
             ],
             'classes' => $this->mapClassesForFilter($user->assignedClasses ?? collect()),
             'sessions' => $sessions,
@@ -97,13 +100,15 @@ class StudentScheduleService
                             'day_key' => $startAt->format('Y-m-d'),
                             'start_iso' => $startAt->toIso8601String(),
                             'end_iso' => $endAt->toIso8601String(),
+                            'start_local' => $startAt->format('Y-m-d\TH:i:s'),
+                            'end_local' => $endAt->format('Y-m-d\TH:i:s'),
                             'time' => $startAt->format('H:i') . ' - ' . $endAt->format('H:i'),
                             'start_at' => $startAt->format('d/m/Y H:i'),
                             'meeting_type' => $session->meeting_type ?: ($classItem->location ? 'offline' : 'zoom'),
                             'meeting_info' => $session->meeting_info ?: ($classItem->location ?: 'Zoom meeting'),
                             'status' => $this->resolveSessionStatus($startAt, $endAt),
                             'relative' => $this->resolveRelativeText($startAt, $endAt),
-                            'join_url' => '#',
+                            'join_url' => (string) ($session->join_url ?: '#'),
                         ];
                     });
             }
@@ -122,6 +127,8 @@ class StudentScheduleService
                     'day_key' => $startAt->format('Y-m-d'),
                     'start_iso' => $startAt->toIso8601String(),
                     'end_iso' => $endAt->toIso8601String(),
+                    'start_local' => $startAt->format('Y-m-d\TH:i:s'),
+                    'end_local' => $endAt->format('Y-m-d\TH:i:s'),
                     'time' => $startAt->format('H:i') . ' - ' . $endAt->format('H:i'),
                     'start_at' => $startAt->format('d/m/Y H:i'),
                     'meeting_type' => $classItem->location ? 'offline' : 'zoom',
@@ -172,6 +179,8 @@ class StudentScheduleService
                 'day_key' => $startAt->format('Y-m-d'),
                 'start_iso' => $startAt->toIso8601String(),
                 'end_iso' => $endAt->toIso8601String(),
+                'start_local' => $startAt->format('Y-m-d\TH:i:s'),
+                'end_local' => $endAt->format('Y-m-d\TH:i:s'),
                 'time' => $startAt->format('H:i') . ' - ' . $endAt->format('H:i'),
                 'start_at' => $startAt->format('d/m/Y H:i'),
                 'meeting_type' => 'zoom',

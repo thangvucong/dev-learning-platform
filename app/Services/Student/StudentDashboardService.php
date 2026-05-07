@@ -18,7 +18,7 @@ class StudentDashboardService
     {
         $user->loadMissing([
             'assignedClasses' => function ($query) {
-                $query->with(['course.instructor'])->orderBy('start_at');
+                $query->with(['course.instructor', 'sessions'])->orderBy('start_at');
             },
             'enrolledCourses' => function ($query) {
                 $query->with(['instructor'])->orderByDesc('published_at');
@@ -32,39 +32,78 @@ class StudentDashboardService
         $todayEnd = now()->endOfDay();
 
         $todaySchedule = $assignedClasses
-            ->filter(function ($classItem) use ($todayStart, $todayEnd) {
-                return $classItem->start_at !== null && $classItem->start_at->between($todayStart, $todayEnd);
+            ->flatMap(function ($classItem) use ($todayStart, $todayEnd) {
+                if (isset($classItem->sessions) && $classItem->sessions instanceof Collection && $classItem->sessions->isNotEmpty()) {
+                    return $classItem->sessions
+                        ->filter(function ($session) use ($todayStart, $todayEnd) {
+                            return $session->start_at !== null && $session->start_at->between($todayStart, $todayEnd);
+                        })
+                        ->map(function ($session) use ($classItem) {
+                            return [
+                                'id' => $session->id,
+                                'class_name' => $classItem->name,
+                                'course_name' => optional($classItem->course)->title ?: 'Lớp học',
+                                'teacher_name' => optional(optional($classItem->course)->instructor)->name ?: 'Giảng viên',
+                                'start_time' => optional($session->start_at)->format('H:i'),
+                                'end_time' => optional($session->end_at)->format('H:i'),
+                                'location' => $classItem->location ?: 'Online',
+                                'status' => $this->resolveClassStatus(null, $session->start_at, $session->end_at),
+                                'join_url' => (string) ($session->join_url ?? ''),
+                            ];
+                        });
+                }
+
+                if ($classItem->start_at !== null && $classItem->start_at->between($todayStart, $todayEnd)) {
+                    return collect([[
+                        'id' => $classItem->id,
+                        'class_name' => $classItem->name,
+                        'course_name' => optional($classItem->course)->title ?: 'Lớp học',
+                        'teacher_name' => optional(optional($classItem->course)->instructor)->name ?: 'Giảng viên',
+                        'start_time' => optional($classItem->start_at)->format('H:i'),
+                        'end_time' => optional($classItem->end_at)->format('H:i'),
+                        'location' => $classItem->location ?: 'Online',
+                        'status' => $this->resolveClassStatus($classItem->status, $classItem->start_at, $classItem->end_at),
+                        'join_url' => '',
+                    ]]);
+                }
+
+                return collect();
             })
-            ->values()
-            ->map(function ($classItem) {
-                return [
-                    'id' => $classItem->id,
-                    'class_name' => $classItem->name,
-                    'course_name' => optional($classItem->course)->title ?: 'Lớp học',
-                    'teacher_name' => optional(optional($classItem->course)->instructor)->name ?: 'Giảng viên',
-                    'start_time' => optional($classItem->start_at)->format('H:i'),
-                    'end_time' => optional($classItem->end_at)->format('H:i'),
-                    'location' => $classItem->location ?: 'Online',
-                    'status' => $this->resolveClassStatus($classItem->status, $classItem->start_at, $classItem->end_at),
-                ];
-            });
+            ->sortBy(function (array $item) {
+                return (string) ($item['start_time'] ?? '');
+            })
+            ->values();
 
         $upcomingClasses = $assignedClasses
-            ->filter(function ($classItem) {
-                return $classItem->start_at !== null && $classItem->start_at->greaterThan(now());
+            ->map(function ($classItem) {
+                $nextSession = $this->resolveNextSession($classItem);
+                $classItem->dashboard_next_session = $nextSession;
+                $classItem->dashboard_next_session_at = $nextSession ? $nextSession->start_at : null;
+
+                return $classItem;
             })
-            ->sortBy('start_at')
+            ->filter(function ($classItem) {
+                return $classItem->dashboard_next_session_at !== null
+                    && $classItem->dashboard_next_session_at->greaterThan(now());
+            })
+            ->sortBy(function ($classItem) {
+                return $classItem->dashboard_next_session_at;
+            })
             ->take(6)
             ->values()
             ->map(function ($classItem) {
+                $nextSession = $classItem->dashboard_next_session;
+
                 return [
                     'id' => $classItem->id,
                     'name' => $classItem->name,
                     'course' => optional($classItem->course)->title ?: 'Khóa học',
                     'teacher' => optional(optional($classItem->course)->instructor)->name ?: 'Giảng viên',
-                    'next_session' => optional($classItem->start_at)->format('d/m/Y H:i'),
+                    'next_session' => optional($classItem->dashboard_next_session_at)->format('d/m/Y H:i'),
                     'thumbnail' => optional($classItem->course)->thumbnail_url,
                     'progress' => $this->estimateClassProgress($classItem),
+                    'status' => $this->resolveClassStatus($classItem->status, $classItem->dashboard_next_session_at, null),
+                    'join_url' => (string) data_get($nextSession, 'join_url', ''),
                 ];
             });
 
@@ -197,6 +236,32 @@ class StudentDashboardService
         }
 
         return 60;
+    }
+
+    /**
+     * Resolve next session entity for one class.
+     *
+     * @param  mixed  $classItem
+     * @return mixed|null
+     */
+    protected function resolveNextSession($classItem)
+    {
+        $now = now();
+
+        if (isset($classItem->sessions) && $classItem->sessions instanceof Collection) {
+            $nextSession = $classItem->sessions
+                ->filter(function ($session) use ($now) {
+                    return $session->start_at !== null && $session->start_at->greaterThan($now);
+                })
+                ->sortBy('start_at')
+                ->first();
+
+            if ($nextSession && $nextSession->start_at instanceof Carbon) {
+                return $nextSession;
+            }
+        }
+
+        return null;
     }
 
     /**

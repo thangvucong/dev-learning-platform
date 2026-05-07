@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Services\Student\StudentScheduleService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -32,16 +33,46 @@ class ScheduleController extends Controller
      */
     public function index(Request $request): View
     {
-        $filters = [
-            'week_offset' => (int) $request->query('week_offset', 0),
-            'view' => (string) $request->query('view', 'week'),
-            'class_id' => (int) $request->query('class_id', 0),
-            'session_id' => (string) $request->query('session_id', ''),
-        ];
+        $filters = $this->resolveFilters($request);
 
         $payload = $this->scheduleService->build($request->user(), $filters);
 
         return view('pages.student.schedule.index', $payload);
+    }
+
+    /**
+     * Return schedule payload as JSON for async calendar updates.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function data(Request $request): JsonResponse
+    {
+        $filters = $this->resolveFilters($request);
+        $payload = $this->scheduleService->build($request->user(), $filters);
+
+        return response()->json($payload);
+    }
+
+    /**
+     * Normalize query filters for schedule state.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return array<string, mixed>
+     */
+    protected function resolveFilters(Request $request): array
+    {
+        $view = (string) $request->query('view', 'week');
+        if (!in_array($view, ['day', 'week', 'month', 'list'], true)) {
+            $view = 'week';
+        }
+
+        return [
+            'week_offset' => (int) $request->query('week_offset', 0),
+            'view' => $view,
+            'class_id' => (int) $request->query('class_id', 0),
+            'session_id' => (string) $request->query('session_id', ''),
+        ];
     }
 }
 
