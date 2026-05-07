@@ -129,7 +129,7 @@ Route::middleware(['auth'])->group(function () {
         ->prefix('teacher')
         ->name('teacher.')
         ->group(function () {
-
+        Route::get('/api/schedule', [\App\Http\Controllers\Teacher\TeacherClassController::class, 'getSchedule'])->name('api.schedule');
            Route::get('/dashboard', [\App\Http\Controllers\Teacher\TeacherClassController::class, 'indexView'])->name('dashboard');
 
             Route::get('/api/classes', [\App\Http\Controllers\Teacher\TeacherClassController::class, 'index'])

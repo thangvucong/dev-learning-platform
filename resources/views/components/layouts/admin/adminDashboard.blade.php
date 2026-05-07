@@ -53,7 +53,16 @@
                         </div>
                     @endforeach
                 </nav>
-
+<div class="p-3 border-t border-slate-700">
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit"
+                class="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
+                <i class="fa-solid fa-right-from-bracket w-4 text-center"></i>
+                <span>Đăng xuất</span>
+            </button>
+        </form>
+    </div>
                 <div class="mt-4 pt-4 border-t border-slate-700">
                     <div class="bg-slate-800/50 rounded-xl p-3 flex items-center gap-3 border border-slate-700">
                         <div

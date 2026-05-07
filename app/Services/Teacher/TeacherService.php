@@ -22,4 +22,11 @@ class TeacherService
 {
     return $this->teacherRepository->getClassesWithStudents($teacherId);
 }
+// File: app/Services/Teacher/TeacherService.php
+
+public function getTeacherMonthlySchedule(int $teacherId)
+{
+    
+    return $this->teacherRepository->getMonthlySchedule($teacherId);
+}
 }

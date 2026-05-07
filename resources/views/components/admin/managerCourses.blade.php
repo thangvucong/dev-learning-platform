@@ -44,7 +44,7 @@
                         </div>
                         <div>
                             <label class="block text-xs text-slate-400 mb-2">Trạng thái *</label>
-                            <select name="status" required class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            <select name="status" required class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white"  >
                                 <option value="0" @selected((string) old('status', '0') === '0')>Ẩn</option>
                                 <option value="1" @selected((string) old('status') === '1')>Hiển thị</option>
                             </select>
@@ -110,6 +110,7 @@
                 <thead class="bg-slate-800/50 text-slate-400 text-[10px] uppercase tracking-widest">
                     <tr>
                         <th class="px-6 py-4 font-semibold">ID</th>
+                        <th class="px-6 py-4 font-semibold">Khóa học</th>
                         <th class="px-6 py-4 font-semibold">Giảng viên</th>
                         <th class="px-6 py-4 font-semibold text-center">Số lớp</th>
                         <th class="px-6 py-4 font-semibold">Giá</th>
@@ -175,7 +176,7 @@
                 openCreateCourseModal();
             }
 
-            // 1. Hàm hiển thị Modal chi tiết (Đã sửa lỗi trùng lặp và khớp với DB)
+        
             window.showCourseDetail = function(courseEncoded) {
                 const course = JSON.parse(decodeURIComponent(courseEncoded));
                 
@@ -246,6 +247,12 @@
                                 const row = `
                                 <tr data-course="${courseData}" class="hover:bg-slate-800/60 cursor-pointer transition-all group">
                                     <td class="px-6 py-4 text-sm text-slate-500 font-mono">#${course.id}</td>
+                                    <td class="px-6 py-4">
+            <div class="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
+                ${course.name}
+            </div>
+            <div class="text-[10px] text-slate-500 font-mono mt-0.5">${course.slug}</div>
+        </td>
                                     <td class="px-6 py-4 text-sm font-semibold text-slate-200 group-hover:text-emerald-400 transition-colors">${course.instructor}</td>
                                     <td class="px-6 py-4 text-center text-sm text-slate-300">${course.class_count}</td>
                                     <td class="px-6 py-4 text-sm font-bold text-white">${course.price}</td>

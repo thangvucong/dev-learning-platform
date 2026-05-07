@@ -74,5 +74,19 @@ class TeacherClassController extends Controller
             ], 500); //
         }
     }
+    public function getSchedule(): JsonResponse
+{
+    try {
+      
+        $schedule = $this->teacherService->getTeacherMonthlySchedule(Auth::id()); 
+        return response()->json([
+            'success' => true,
+            'data' => $schedule
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+}
+    
     
 }

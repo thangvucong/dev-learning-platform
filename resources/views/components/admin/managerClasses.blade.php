@@ -72,8 +72,8 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs text-slate-400 mb-2">Trạng thái *</label>
-                                <select id="create-class-status"
+                                <label class="block text-xs text-slate-400 mb-2" >Trạng thái *</label>
+                                <select id="create-class-status" disabled
                                     class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
                                     <option value="upcoming" selected>Sắp tới</option>
                                     <option value="ongoing">Đang diễn ra</option>
