@@ -5,13 +5,14 @@
 @section('content')
     <header class="flex justify-between items-center mb-8">
         <h1 class="text-2xl font-bold text-white">Tổng quan hệ thống</h1>
-        <div class="text-sm text-slate-400">05 tháng 05, 2026</div>
+        <div class="text-sm text-slate-400">{{ now()->format('d/m/Y') }}</div>
     </header>
 
     <div class="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-3xl p-8 mb-8 shadow-lg shadow-emerald-500/10">
         <h2 class="text-3xl font-bold mb-2">Chào mừng trở lại! 👋</h2>
         <p class="text-emerald-50 mb-6 opacity-90">Hệ thống đang hoạt động ổn định. Chúc bạn một ngày tốt lành.</p>
-        <button class="bg-white text-emerald-600 px-6 py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition-colors">Xem báo cáo</button>
+        <button class="bg-white text-emerald-600 px-6 py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition-colors">Xem
+            báo cáo</button>
     </div>
 
     <!-- Stats Grid -->
@@ -45,7 +46,9 @@
                     </tr>
                 </thead>
                 <tbody id="user-table-body" class="divide-y divide-slate-700">
-                    <tr><td colspan="3" class="px-6 py-10 text-center text-slate-500">Đang đồng bộ dữ liệu...</td></tr>
+                    <tr>
+                        <td colspan="3" class="px-6 py-10 text-center text-slate-500">Đang đồng bộ dữ liệu...</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -57,7 +60,7 @@
              * CẬP NHẬT: Sử dụng helper route() của Laravel để lấy URL chính xác 
              * tương ứng với route 'admin.api.stats' trong web.php
              */
-            const API_DASHBOARD = "{{ route('admin.api.stats') }}"; 
+            const API_DASHBOARD = "{{ route('admin.api.stats') }}";
 
             function loadDashboardData() {
                 fetch(API_DASHBOARD)
@@ -71,10 +74,12 @@
                     .then(res => {
                         if (res.success) {
                             const data = res.data;
-                            
+
                             // 1. Cập nhật các con số thống kê
-                            document.getElementById('total-users').innerText = (data.total_users || 0).toLocaleString();
-                            document.getElementById('total-courses').innerText = (data.total_courses || 0).toLocaleString();
+                            document.getElementById('total-users').innerText = (data.total_users || 0)
+                                .toLocaleString();
+                            document.getElementById('total-courses').innerText = (data.total_courses || 0)
+                                .toLocaleString();
                             document.getElementById('online-users').innerText = data.online_users || 0;
 
                             // 2. Cập nhật bảng người dùng mới
@@ -106,13 +111,15 @@
                                     tableBody.insertAdjacentHTML('beforeend', row);
                                 });
                             } else {
-                                tableBody.innerHTML = '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-500">Không có người dùng mới.</td></tr>';
+                                tableBody.innerHTML =
+                                    '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-500">Không có người dùng mới.</td></tr>';
                             }
                         }
                     })
                     .catch(error => {
                         console.error('Lỗi Dashboard:', error);
-                        document.getElementById('user-table-body').innerHTML = `<tr><td colspan="3" class="px-6 py-10 text-center text-red-400">Lỗi: ${error.message}</td></tr>`;
+                        document.getElementById('user-table-body').innerHTML =
+                            `<tr><td colspan="3" class="px-6 py-10 text-center text-red-400">Lỗi: ${error.message}</td></tr>`;
                     });
             }
 

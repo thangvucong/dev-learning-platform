@@ -8,7 +8,8 @@
     <div id="create-course-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
         <div class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm" data-close-create-course></div>
         <div class="relative min-h-screen flex items-center justify-center p-4">
-            <div class="relative bg-[#1e293b] w-full max-w-3xl rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
+            <div
+                class="relative bg-[#1e293b] w-full max-w-3xl rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
                     <h3 class="text-xl font-bold text-white">Tạo khóa học mới</h3>
                     <button type="button" data-close-create-course class="p-2 text-slate-400 hover:text-white">✕</button>
@@ -18,20 +19,28 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs text-slate-400 mb-2">Tên khóa học *</label>
-                            <input id="course-title" name="title" type="text" value="{{ old('title') }}" required class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
-                            @error('title') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                            <input id="course-title" name="title" type="text" value="{{ old('title') }}" required
+                                class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            @error('title')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div>
                             <label class="block text-xs text-slate-400 mb-2">Slug</label>
-                            <input id="course-slug" name="slug" type="text" value="{{ old('slug') }}" class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white" placeholder=".....">
-                            @error('slug') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                            <input id="course-slug" name="slug" type="text" value="{{ old('slug') }}"
+                                class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white"
+                                placeholder=".....">
+                            @error('slug')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs text-slate-400 mb-2">Giảng viên *</label>
-                            <select name="instructor_id" required class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            <select name="instructor_id" required
+                                class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
                                 <option value="">-- Chọn giảng viên --</option>
                                 @foreach ($instructors as $instructor)
                                     <option value="{{ $instructor->id }}" @selected((string) old('instructor_id') === (string) $instructor->id)>
@@ -39,48 +48,69 @@
                                     </option>
                                 @endforeach
                             </select>
-                            @error('instructor_id') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                            @error('instructor_id')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div>
                             <label class="block text-xs text-slate-400 mb-2">Trạng thái *</label>
-                            <select name="status" required class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            <select name="status" required
+                                class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
                                 <option value="0" @selected((string) old('status', '0') === '0')>Ẩn</option>
                                 <option value="1" @selected((string) old('status') === '1')>Hiển thị</option>
                             </select>
-                            @error('status') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                            @error('status')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 gap-4">
                         <div>
                             <label class="block text-xs text-slate-400 mb-2">Giá bán *</label>
-                            <input name="price" type="number" min="0" step="1000" value="{{ old('price', 0) }}" required class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
-                            @error('price') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                            <input name="price" type="number" min="0" step="1000"
+                                value="{{ old('price', 0) }}" required
+                                class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            @error('price')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs text-slate-400 mb-2">Thumbnail URL</label>
-                            <input name="thumbnail_url" type="url" value="{{ old('thumbnail_url') }}" class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
-                            @error('thumbnail_url') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                            <input name="thumbnail_url" type="url" value="{{ old('thumbnail_url') }}"
+                                class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            @error('thumbnail_url')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div>
                             <label class="block text-xs text-slate-400 mb-2">Intro video URL</label>
-                            <input name="intro_video_url" type="url" value="{{ old('intro_video_url') }}" class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
-                            @error('intro_video_url') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                            <input name="intro_video_url" type="url" value="{{ old('intro_video_url') }}"
+                                class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                            @error('intro_video_url')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs text-slate-400 mb-2">Mô tả</label>
-                        <textarea name="description" rows="4" class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">{{ old('description') }}</textarea>
-                        @error('description') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                        <textarea name="description" rows="10"
+                            class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white"
+                            placeholder="Mô tả khóa học...">{{ old('description', '') }}</textarea>
+                        @error('description')
+                            <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div class="pt-2 flex justify-end gap-2">
-                        <button type="button" data-close-create-course class="px-4 py-2 rounded-lg border border-slate-600 text-slate-300">Hủy</button>
-                        <button type="submit" class="px-5 py-2 rounded-lg bg-emerald-500 text-white font-semibold">Lưu khóa học</button>
+                        <button type="button" data-close-create-course
+                            class="px-4 py-2 rounded-lg border border-slate-600 text-slate-300">Hủy</button>
+                        <button type="submit" class="px-5 py-2 rounded-lg bg-emerald-500 text-white font-semibold">Lưu khóa
+                            học</button>
                     </div>
                 </form>
             </div>
@@ -99,10 +129,12 @@
             <p class="text-sm text-slate-400">Dữ liệu được cập nhật từ hệ thống</p>
         </div>
         <div class="flex gap-3">
-            <button id="btn-open-change-instructor" type="button" class="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all hidden">
+            <button id="btn-open-change-instructor" type="button"
+                class="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all hidden">
                 + Đổi giảng viên
             </button>
-            <button id="open-create-course" type="button" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition-all">
+            <button id="open-create-course" type="button"
+                class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition-all">
                 + Thêm khóa học
             </button>
         </div>
@@ -124,32 +156,36 @@
                 </thead>
                 <tbody id="course-table-body" class="divide-y divide-slate-700">
                     <tr>
-                        <td colspan="7" class="px-6 py-10 text-center text-slate-500 italic">Đang đồng bộ dữ liệu...</td>
+                        <td colspan="7" class="px-6 py-10 text-center text-slate-500 italic">Đang đồng bộ dữ liệu...
+                        </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <div id="pagination-info" class="p-4 border-t border-slate-700 bg-slate-800/20 text-xs flex justify-between items-center text-slate-400">
-            </div>
+        <div id="pagination-info"
+            class="p-4 border-t border-slate-700 bg-slate-800/20 text-xs flex justify-between items-center text-slate-400">
+        </div>
     </div>
 
     <div id="change-instructor-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
         <div class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm" onclick="closeChangeInstructorModal()"></div>
         <div class="relative min-h-screen flex items-center justify-center p-4">
-            <div class="relative bg-[#1e293b] w-full max-w-md rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
+            <div
+                class="relative bg-[#1e293b] w-full max-w-md rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-700 bg-slate-800/50">
                     <h3 class="text-xl font-bold text-white">Thay đổi giảng viên</h3>
                     <p id="target-course-name" class="text-xs text-emerald-400 mt-1"></p>
                 </div>
-                
+
                 <form id="form-change-instructor" method="POST" class="p-6 space-y-4">
                     @csrf
                     @method('PUT')
                     <input type="hidden" id="change-course-id" name="course_id">
-                    
+
                     <div>
                         <label class="block text-xs text-slate-400 mb-2">Chọn giảng viên mới *</label>
-                        <select name="instructor_id" required class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
+                        <select name="instructor_id" required
+                            class="w-full bg-slate-900/40 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white">
                             <option value="">-- Danh sách giảng viên --</option>
                             @foreach ($instructors as $instructor)
                                 <option value="{{ $instructor->id }}">
@@ -160,8 +196,10 @@
                     </div>
 
                     <div class="pt-2 flex justify-end gap-2">
-                        <button type="button" onclick="closeChangeInstructorModal()" class="px-4 py-2 rounded-lg border border-slate-600 text-slate-300">Hủy</button>
-                        <button type="submit" class="px-5 py-2 rounded-lg bg-blue-500 text-white font-semibold">Cập nhật</button>
+                        <button type="button" onclick="closeChangeInstructorModal()"
+                            class="px-4 py-2 rounded-lg border border-slate-600 text-slate-300">Hủy</button>
+                        <button type="submit" class="px-5 py-2 rounded-lg bg-blue-500 text-white font-semibold">Cập
+                            nhật</button>
                     </div>
                 </form>
             </div>
@@ -189,6 +227,13 @@
 
             let selectedCourse = null;
 
+            // Re-init when opening create modal (because DOM is hidden initially)
+            function openCreateCourseModal() {
+                if (!createCourseModal) return;
+                createCourseModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
             // --- Logic Đổi Giảng Viên ---
             window.openChangeInstructorModal = function() {
                 if (!selectedCourse) return;
@@ -215,7 +260,8 @@
                 if (event.target.closest('button')) return;
 
                 // 1. Highlight dòng
-                document.querySelectorAll('tr[data-course]').forEach(r => r.classList.remove('bg-slate-700/50'));
+                document.querySelectorAll('tr[data-course]').forEach(r => r.classList.remove(
+                    'bg-slate-700/50'));
                 row.classList.add('bg-slate-700/50');
 
                 // 2. Lưu thông tin selected
@@ -231,13 +277,8 @@
 
             // --- Các hàm tiện ích (Slug, Modal Create) ---
             function slugify(value) {
-                return (value || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-            }
-
-            function openCreateCourseModal() {
-                if (!createCourseModal) return;
-                createCourseModal.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
+                return (value || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
             }
 
             function closeCreateCourseModal() {
@@ -263,13 +304,14 @@
                 const course = JSON.parse(decodeURIComponent(courseEncoded));
                 document.getElementById('detail-title').innerText = course.name || 'Chi tiết khóa học';
                 document.getElementById('detail-instructor').innerText = "Giảng viên: " + course.instructor;
-                
+
                 const classesBody = document.getElementById('detail-classes-body');
                 classesBody.innerHTML = '';
 
                 if (course.classes && course.classes.length > 0) {
                     course.classes.forEach(c => {
-                        const statusColor = c.status === 'upcoming' ? 'text-blue-400' : 'text-emerald-400';
+                        const statusColor = c.status === 'upcoming' ? 'text-blue-400' :
+                            'text-emerald-400';
                         classesBody.innerHTML += `
                             <tr class="text-xs text-slate-300 hover:bg-slate-800/30 transition-colors">
                                 <td class="px-4 py-3 font-mono text-emerald-500">${c.code || 'N/A'}</td>
@@ -291,7 +333,8 @@
                             </tr>`;
                     });
                 } else {
-                    classesBody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-slate-500 italic">Khóa học này chưa mở lớp nào.</td></tr>';
+                    classesBody.innerHTML =
+                        '<tr><td colspan="4" class="px-4 py-8 text-center text-slate-500 italic">Khóa học này chưa mở lớp nào.</td></tr>';
                 }
                 detailModal.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
@@ -304,7 +347,8 @@
 
             // --- Logic Load Data ---
             window.loadCourses = function(url) {
-                tableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500 italic">Đang tải dữ liệu...</td></tr>';
+                tableBody.innerHTML =
+                    '<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500 italic">Đang tải dữ liệu...</td></tr>';
                 fetch(url)
                     .then(response => response.json())
                     .then(res => {
@@ -332,12 +376,14 @@
                                 tableBody.insertAdjacentHTML('beforeend', row);
                             });
                         } else {
-                            tableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500">Không có dữ liệu khóa học.</td></tr>';
+                            tableBody.innerHTML =
+                                '<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500">Không có dữ liệu khóa học.</td></tr>';
                         }
                         renderPagination(res);
                     })
                     .catch(err => {
-                        tableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-10 text-center text-red-400">Lỗi đồng bộ dữ liệu.</td></tr>';
+                        tableBody.innerHTML =
+                            '<tr><td colspan="7" class="px-6 py-10 text-center text-red-400">Lỗi đồng bộ dữ liệu.</td></tr>';
                     });
             };
 

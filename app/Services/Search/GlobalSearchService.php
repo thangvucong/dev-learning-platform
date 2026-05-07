@@ -3,6 +3,7 @@
 namespace App\Services\Search;
 
 use App\Repositories\Search\GlobalSearchRepository;
+use Illuminate\Support\Str;
 
 class GlobalSearchService
 {
@@ -49,7 +50,7 @@ class GlobalSearchService
             return [
                 'id' => $course->id,
                 'title' => $course->title,
-                'description' => $course->description ? \Str::limit($course->description, 80) : 'Không có mô tả',
+                'description' => $course->description ? Str::limit($course->description, 80) : 'Không có mô tả',
                 'slug' => $course->slug,
                 'thumbnail' => $course->thumbnail_url ?? asset('images/default-course.png'),
                 'type' => 'course',
@@ -75,7 +76,7 @@ class GlobalSearchService
             return [
                 'id' => $post->id,
                 'title' => $post->title,
-                'description' => $post->description ? \Str::limit($post->description, 80) : 'Không có mô tả',
+                'description' => $post->description ? Str::limit($post->description, 80) : 'Không có mô tả',
                 'slug' => $post->slug,
                 'thumbnail' => $post->thumbnail ?? asset('images/default-post.png'),
                 'type' => 'post',
@@ -83,7 +84,7 @@ class GlobalSearchService
                 'meta' => [
                     'author' => $post->user?->name ?? 'Unknown',
                     'author_avatar' => $post->user?->avatar_url ?? asset('images/default-avatar.png'),
-                    'date' => $post->published_at?->format('d/m/Y') ?? 'N/A',
+                    'date' => $post->created_at?->format('d/m/Y') ?? 'N/A',
                 ],
                 'url' => $postUrl,
             ];

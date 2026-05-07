@@ -27,11 +27,10 @@ class HomeController extends Controller
     {
         $homeData = $this->homeService->getHomePageSourceData();
 
-        // dd($homeData);
-
         return view('pages.home.index', [
             'courses' => $homeData['courses'],
             'posts' => $homeData['posts'],
+            'bannerCourses' => $homeData['bannerCourses'] ?? [],
         ]);
     }
 }

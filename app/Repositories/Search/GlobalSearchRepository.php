@@ -32,16 +32,16 @@ class GlobalSearchRepository
     public function searchPosts(string $query, int $limit = 5): Collection
     {
         return Post::query()
-            ->where('is_published', true)
+            ->where('status', Post::STATUS_PUBLISHED)
             ->where(function ($q) use ($query) {
                 $q->whereRaw('LOWER(title) LIKE ?', ["%".strtolower($query)."%"])
                   ->orWhereRaw('LOWER(description) LIKE ?', ["%".strtolower($query)."%"])
                   ->orWhereRaw('LOWER(content) LIKE ?', ["%".strtolower($query)."%"]);
             })
             ->with('user:id,name,avatar_url')
-            ->select(['id', 'title', 'slug', 'description', 'thumbnail', 'user_id', 'published_at'])
+            ->select(['id', 'title', 'slug', 'description', 'thumbnail', 'user_id', 'created_at'])
             ->limit($limit)
-            ->orderBy('published_at', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
     }
 }

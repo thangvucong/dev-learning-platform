@@ -5,29 +5,10 @@
 @section('content')
     <main class="flex-1 lg:ml-24">
         <div class="mx-auto w-full p-4 lg:p-8">
-            <div class="mb-10 overflow-hidden rounded-3xl">
-                <div class="relative">
-                    <div class="rounded-3xl bg-gradient-to-r from-[#fe5f2a] to-[#ff9820] p-8 text-white lg:p-12">
-                        <h2 class="mb-4 text-3xl font-bold lg:text-4xl">Lớp Fullstack qua Zoom</h2>
-                        <p class="mb-6 max-w-lg text-base leading-relaxed opacity-90">Học online trực tiếp qua Zoom, phù hợp
-                            nếu bạn muốn được review code, chấm bài trực tiếp bởi giảng viên và trợ giảng giàu kinh nghiệm.
-                        </p><button
-                            class="rounded-full border-2 border-white bg-transparent px-6 py-2 text-sm font-bold uppercase transition hover:bg-white hover:text-[#f05123]">NHẬN
-                            LỘ TRÌNH FULLSTACK</button>
-                    </div>
-                    <div class="mt-3 flex justify-center gap-1.5"><span
-                            class="h-1.5 rounded-full transition-all w-6 bg-[#f05123]"></span><span
-                            class="h-1.5 rounded-full transition-all w-1.5 bg-gray-300"></span><span
-                            class="h-1.5 rounded-full transition-all w-1.5 bg-gray-300"></span><span
-                            class="h-1.5 rounded-full transition-all w-1.5 bg-gray-300"></span><span
-                            class="h-1.5 rounded-full transition-all w-1.5 bg-gray-300"></span><span
-                            class="h-1.5 rounded-full transition-all w-1.5 bg-gray-300"></span><span
-                            class="h-1.5 rounded-full transition-all w-1.5 bg-gray-300"></span></div>
-                </div>
-            </div>
+            <x-home.hero-slider :items="$bannerCourses" />
             <section class="mb-12">
                 <div class="mb-6 flex items-center gap-3">
-                    <h2 class="text-2xl font-black text-gray-900">Khóa học Pro</h2><span
+                    <h2 class="text-2xl font-black text-gray-900">Khóa học</h2><span
                         class="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-600">MỚI</span>
                 </div>
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
@@ -116,7 +97,7 @@
                                     </div>
                                     <span class="whitespace-nowrap text-xs text-gray-500">
                                         <span class="font-medium text-gray-700">Ngày đăng:</span>
-                                        {{ optional($post->published_at)->format('d/m/Y') ?? 'Chưa có ngày đăng' }}
+                                        {{ optional($post->created_at)->format('d/m/Y') ?? 'Chưa có ngày đăng' }}
                                     </span>
                                 </div>
                             </div>

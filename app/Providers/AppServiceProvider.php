@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Services\Interfaces\MyPostServiceInterface;
+use App\Services\Interfaces\PostServiceInterface;
+use App\Services\MyPostService;
+use App\Services\PostService;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -14,7 +18,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bind(PostServiceInterface::class, PostService::class);
+        $this->app->bind(MyPostServiceInterface::class, MyPostService::class);
     }
 
     /**

@@ -13,6 +13,10 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
+    public const ROLE_ADMIN = 'admin';
+    public const ROLE_TEACHER = 'teacher';
+    public const ROLE_STUDENT = 'student';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -49,6 +53,30 @@ class User extends Authenticatable
         'last_login_at' => 'datetime',
         'is_active' => 'boolean',
     ];
+
+    /**
+     * @return bool
+     */
+    public function isAdmin(): bool
+    {
+        return (string) ($this->role ?? '') === self::ROLE_ADMIN;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTeacher(): bool
+    {
+        return (string) ($this->role ?? '') === self::ROLE_TEACHER;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isStudent(): bool
+    {
+        return (string) ($this->role ?? '') === self::ROLE_STUDENT;
+    }
 
     /**
      * Get the courses instructed by the user.

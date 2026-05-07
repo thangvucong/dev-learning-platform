@@ -2,6 +2,39 @@
 
 @section('title', $course['title'] . ' - Khóa học')
 
+@push('styles')
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
+    <style>
+        /* Toast UI Viewer dark theme tuning (student dashboard layout) */
+        [data-markdown-viewer] .toastui-editor-contents {
+            color: rgb(203 213 225);
+        }
+
+        [data-markdown-viewer] .toastui-editor-contents h1,
+        [data-markdown-viewer] .toastui-editor-contents h2,
+        [data-markdown-viewer] .toastui-editor-contents h3,
+        [data-markdown-viewer] .toastui-editor-contents h4 {
+            color: #fff;
+        }
+
+        [data-markdown-viewer] .toastui-editor-contents a {
+            color: rgb(110 231 183);
+        }
+
+        [data-markdown-viewer] .toastui-editor-contents code {
+            background: rgba(2, 6, 23, 0.55);
+            border: 1px solid rgba(51, 65, 85, 0.7);
+            border-radius: 6px;
+            padding: 0.1rem 0.35rem;
+        }
+
+        [data-markdown-viewer] .toastui-editor-contents pre {
+            background: rgba(2, 6, 23, 0.65);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="space-y-6">
         <section class="rounded-3xl border border-slate-700 bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#1e293b] overflow-hidden">
@@ -9,7 +42,9 @@
                 <div class="xl:col-span-2 p-6 md:p-8">
                     <p class="text-xs uppercase tracking-wider text-slate-400">Learning Journey</p>
                     <h1 class="mt-2 text-2xl md:text-3xl font-bold text-white">{{ $course['title'] }}</h1>
-                    <p class="mt-3 text-sm text-slate-300">{{ $course['description'] }}</p>
+                    <div class="mt-4">
+                        <x-markdown.viewer :value="(string) ($course['description'] ?? '')" theme="dark" />
+                    </div>
 
                     <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-300">
                         <p><i class="fa-solid fa-user mr-2"></i>{{ $course['teacher'] }}</p>
@@ -85,6 +120,25 @@
 @endsection
 
 @push('scripts')
+    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+    <script>
+        window.addEventListener('load', function () {
+            var roots = Array.prototype.slice.call(document.querySelectorAll('[data-markdown-viewer]'));
+            roots.forEach(function (root) {
+                var id = root.getAttribute('data-viewer-id');
+                var mountEl = id ? document.getElementById(id) : null;
+                var textarea = root.querySelector('[data-viewer-textarea]');
+                if (!mountEl || !textarea || !window.toastui || !window.toastui.Editor) return;
+
+                window.toastui.Editor.factory({
+                    el: mountEl,
+                    viewer: true,
+                    initialValue: textarea.value || '',
+                    usageStatistics: false
+                });
+            });
+        }, { once: true });
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var tabsNav = document.getElementById('course-tabs-nav');

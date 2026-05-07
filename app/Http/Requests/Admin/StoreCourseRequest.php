@@ -25,7 +25,7 @@ class StoreCourseRequest extends FormRequest
                 'integer',
                 Rule::exists('users', 'id')->where('role', 'teacher'),
             ],
-            'description' => ['nullable', 'string'],
+            'description' => ['required', 'string', 'min:50'],
             'thumbnail_url' => ['nullable', 'url', 'max:2048'],
             'intro_video_url' => ['nullable', 'url', 'max:2048'],
             'status' => ['required', Rule::in(['0', '1', 0, 1])],

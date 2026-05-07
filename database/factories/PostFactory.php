@@ -29,8 +29,12 @@ class PostFactory extends Factory
             'thumbnail' => $this->faker->imageUrl(640, 360, 'business', true),
             'image' => $this->faker->imageUrl(1200, 630, 'business', true),
             'views_count' => $this->faker->numberBetween(0, 5000),
-            'is_published' => $this->faker->boolean(80),
-            'published_at' => $this->faker->dateTimeBetween('-6 months', 'now'),
+            'status' => $this->faker->randomElement([
+                Post::STATUS_DRAFT,
+                Post::STATUS_PENDING,
+                Post::STATUS_PUBLISHED,
+                Post::STATUS_REJECTED,
+            ]),
         ];
     }
 
@@ -43,8 +47,7 @@ class PostFactory extends Factory
     {
         return $this->state(function () {
             return [
-                'is_published' => true,
-                'published_at' => now()->subDays($this->faker->numberBetween(1, 90)),
+                'status' => Post::STATUS_PUBLISHED,
             ];
         });
     }

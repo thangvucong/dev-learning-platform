@@ -65,6 +65,14 @@
                         class="flex items-center rounded-lg px-3 py-2 text-sm text-[#333] hover:bg-[#f6f6f6]">
                         Trang điều khiển
                     </a>
+                    <a href="{{ route('posts.create') }}"
+                        class="flex items-center rounded-lg px-3 py-2 text-sm text-[#333] hover:bg-[#f6f6f6]">
+                        Viết bài viết
+                    </a>
+                    <a href="{{ route('my-posts.index') }}"
+                        class="flex items-center rounded-lg px-3 py-2 text-sm text-[#333] hover:bg-[#f6f6f6]">
+                        Bài viết của tôi
+                    </a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit"

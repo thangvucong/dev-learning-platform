@@ -37,6 +37,12 @@ return [
                         'icon' => 'fa-solid fa-chalkboard-user',
                         'active' => ['admin.classes.*'],
                     ],
+                    [
+                        'title' => 'Quản lý bài viết',
+                        'route' => 'admin.posts.index',
+                        'icon' => 'fa-solid fa-newspaper',
+                        'active' => ['admin.posts.*'],
+                    ],
                 ],
             ],
         ],

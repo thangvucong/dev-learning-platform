@@ -9,6 +9,11 @@ class Post extends Model
 {
     use HasFactory;
 
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_PUBLISHED = 'published';
+    public const STATUS_REJECTED = 'rejected';
+
     protected $fillable = [
         'user_id',
         'title',
@@ -18,13 +23,11 @@ class Post extends Model
         'thumbnail',
         'image',
         'views_count',
-        'is_published',
-        'published_at',
+        'status',
     ];
 
     protected $casts = [
-        'is_published' => 'boolean',
-        'published_at' => 'datetime',
+        'views_count' => 'integer',
     ];
 
     /**
@@ -35,5 +38,37 @@ class Post extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDraft(): bool
+    {
+        return $this->status === self::STATUS_DRAFT;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPublished(): bool
+    {
+        return $this->status === self::STATUS_PUBLISHED;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRejected(): bool
+    {
+        return $this->status === self::STATUS_REJECTED;
     }
 }

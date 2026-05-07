@@ -18,6 +18,10 @@ use App\Http\Controllers\Student\CourseController as StudentCourseController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\Search\GlobalSearchController;
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\MyPostController;
+use App\Http\Controllers\Admin\AdminPostController;
+use App\Http\Controllers\Admin\AdminUploadController;
 
 
 /*
@@ -70,19 +74,30 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.edit');
     });
 
+    Route::prefix('posts')
+        ->name('posts.')
+        ->middleware('auth')
+        ->group(function () {
+            Route::get('/create', [PostController::class, 'create'])->name('create');
+            Route::post('/', [PostController::class, 'store'])->name('store');
+            Route::post('/editor/image', [PostController::class, 'uploadEditorImage'])->name('editor.image');
+            Route::get('/{post}/edit', [PostController::class, 'edit'])->name('edit');
+            Route::put('/{post}', [PostController::class, 'update'])->name('update');
+            Route::get('/{slug}', [PostController::class, 'show'])->name('show');
+        });
+
+    Route::prefix('my-posts')
+        ->name('my-posts.')
+        ->middleware('auth')
+        ->group(function () {
+            Route::get('/', [MyPostController::class, 'index'])->name('index');
+            Route::delete('/{postId}', [MyPostController::class, 'destroy'])->name('destroy');
+            Route::post('/{postId}/resubmit', [MyPostController::class, 'resubmit'])->name('resubmit');
+        });
+
     Route::get('/dashboard', function () {
-        $role = (string) (auth()->user()->role ?? 'user');
-
-        if ($role === 'admin') {
-            return redirect()->route('admin.dashboard');
-        }
-
-        if ($role === 'teacher') {
-            return redirect()->route('teacher.dashboard');
-        }
-
-        return redirect()->route('user.dashboard');
-    })->name('dashboard');
+        return redirect()->to(\App\Support\AuthRedirect::to(auth()->user()));
+    })->middleware('role.redirect')->name('dashboard');
 
     //  Route dành cho Admin
     Route::middleware(['role:admin'])
@@ -94,6 +109,18 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/dashboard', function () {
                 return view('components.admin.dashboard');
             })->name('dashboard');
+
+            Route::prefix('posts')->name('posts.')->group(function () {
+                Route::get('/', [AdminPostController::class, 'index'])->name('index');
+                Route::get('/{id}', [AdminPostController::class, 'show'])->name('show');
+                Route::post('/{id}/approve', [AdminPostController::class, 'approve'])->name('approve');
+                Route::post('/{id}/reject', [AdminPostController::class, 'reject'])->name('reject');
+                Route::post('/{id}/unpublish', [AdminPostController::class, 'unpublish'])->name('unpublish');
+                Route::delete('/{id}', [AdminPostController::class, 'destroy'])->name('destroy');
+            });
+
+            Route::post('/uploads/editor-image', [AdminUploadController::class, 'editorImage'])
+                ->name('uploads.editor-image');
 
         Route::get('/api/dashboard-stats', [AdminDashboardController::class, 'getStats'])->name('api.stats');
 

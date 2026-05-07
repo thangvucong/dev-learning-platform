@@ -2,6 +2,71 @@
 
 @section('title', 'Courses')
 
+@push('styles')
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
+    <style>
+        /* Toast UI Viewer light theme tuning (public course detail) */
+        [data-markdown-viewer] .toastui-editor-contents {
+            color: #242424;
+        }
+
+        [data-markdown-viewer] .toastui-editor-contents p,
+        [data-markdown-viewer] .toastui-editor-contents li {
+            color: #444;
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        [data-markdown-viewer] .toastui-editor-contents h1,
+        [data-markdown-viewer] .toastui-editor-contents h2,
+        [data-markdown-viewer] .toastui-editor-contents h3,
+        [data-markdown-viewer] .toastui-editor-contents h4 {
+            color: #242424;
+            font-weight: 800;
+        }
+
+        [data-markdown-viewer] .toastui-editor-contents a {
+            color: #f05123;
+            text-decoration: none;
+        }
+
+        [data-markdown-viewer] .toastui-editor-contents a:hover {
+            text-decoration: underline;
+        }
+
+        [data-markdown-viewer] .toastui-editor-contents blockquote {
+            border-left-color: rgba(240, 81, 35, 0.45);
+            background: rgba(240, 81, 35, 0.06);
+            color: #444;
+        }
+
+        [data-markdown-viewer] .toastui-editor-contents code {
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 6px;
+            padding: 0.1rem 0.35rem;
+        }
+
+        [data-markdown-viewer] .toastui-editor-contents pre {
+            background: #0b1020;
+            border-radius: 10px;
+            padding: 14px;
+            overflow: auto;
+        }
+
+        [data-markdown-viewer] .toastui-editor-contents pre code {
+            background: transparent;
+            border: 0;
+            padding: 0;
+            color: #e5e7eb;
+        }
+
+        [data-markdown-viewer] .toastui-editor-contents img {
+            border-radius: 12px;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="ml-[96px] flex-1 pr-8 pl-[10px]">
         <div class="mx-auto px-11 mt-6 pb-16 grid grid-cols-1 xl:grid-cols-12 gap-8 xl:gap-10 items-start">

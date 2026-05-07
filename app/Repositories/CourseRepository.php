@@ -50,11 +50,7 @@ class CourseRepository implements CourseRepositoryInterface
                 'classes' => function ($query) {
                     $query->select([
                         'id', 'course_id', 'name', 'status', 'start_at', 'end_at', 'location'
-                    ])
-                    ->whereNotNull('start_at')
-                    ->where('start_at', '>=', now())
-                    ->orderBy('start_at')
-                    ->limit(3);
+                    ]);
                 }
             ])
             ->where('status', 1)

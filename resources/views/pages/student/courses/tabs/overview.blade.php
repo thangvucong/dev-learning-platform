@@ -1,7 +1,7 @@
 <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
     <div class="xl:col-span-2 rounded-2xl border border-slate-700 bg-slate-900/40 p-5">
         <h3 class="text-lg font-semibold text-white mb-3">Mô tả khóa học</h3>
-        <p class="text-sm text-slate-300">{{ $overview['description'] }}</p>
+        <x-markdown.viewer :value="(string) ($overview['description'] ?? '')" theme="dark" />
 
         <h4 class="text-sm font-semibold text-white mt-6 mb-3">Kỹ năng đạt được</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
