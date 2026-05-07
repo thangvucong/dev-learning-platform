@@ -11,26 +11,26 @@
                 @endif
             </div>
             <div class="min-w-0">
-                <p class="text-xs uppercase tracking-widest text-slate-400">Learning Identity</p>
+                <p class="text-xs uppercase tracking-widest text-slate-400">Thông tin học viên</p>
                 <h1 class="text-2xl md:text-3xl font-bold text-white mt-1 truncate">{{ $profile['name'] }}</h1>
                 <p class="text-sm text-slate-300 mt-1 truncate">{{ $profile['email'] }}</p>
                 <p class="text-sm text-slate-400 mt-2">{{ $profile['bio'] }}</p>
-                <p class="text-xs text-slate-500 mt-2">Joined {{ $profile['join_date'] }}</p>
+                <p class="text-sm text-slate-500 mt-2">Tham gia từ {{ $profile['join_date'] }}</p>
             </div>
         </div>
 
         <div class="w-full lg:w-[360px] space-y-3">
             <div class="grid grid-cols-3 gap-2 text-xs">
                 <div class="rounded-xl border border-slate-700 bg-slate-900/50 p-3 text-center">
-                    <p class="text-slate-400">Streak</p>
+                    <p class="text-slate-400">Chuỗi học</p>
                     <p class="text-white font-semibold mt-1">{{ (int) $profile['learning_streak'] }}d</p>
                 </div>
                 <div class="rounded-xl border border-slate-700 bg-slate-900/50 p-3 text-center">
-                    <p class="text-slate-400">Attendance</p>
+                    <p class="text-slate-400">Điểm danh</p>
                     <p class="text-white font-semibold mt-1">{{ (int) $profile['attendance_rate'] }}%</p>
                 </div>
                 <div class="rounded-xl border border-slate-700 bg-slate-900/50 p-3 text-center">
-                    <p class="text-slate-400">Progress</p>
+                    <p class="text-slate-400">Tiến độ</p>
                     <p class="text-white font-semibold mt-1">{{ (int) $profile['overall_progress'] }}%</p>
                 </div>
             </div>
@@ -39,10 +39,10 @@
             </div>
             <div class="flex items-center gap-2">
                 <button type="button" class="h-10 px-4 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors">
-                    Edit profile
+                    Chỉnh sửa hồ sơ
                 </button>
                 <button type="button" class="h-10 px-4 rounded-xl border border-slate-600 text-slate-200 text-sm font-semibold hover:bg-slate-700 transition-colors">
-                    Change avatar
+                    Đổi ảnh đại diện
                 </button>
             </div>
         </div>

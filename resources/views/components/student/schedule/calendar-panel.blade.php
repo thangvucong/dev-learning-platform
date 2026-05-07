@@ -19,8 +19,8 @@
         return [
             'id' => $session['id'],
             'title' => $session['class_name'],
-            'start' => $session['start_iso'],
-            'end' => $session['end_iso'],
+            'start' => $session['start_local'] ?? $session['start_iso'],
+            'end' => $session['end_local'] ?? $session['end_iso'],
             'backgroundColor' => $color,
             'borderColor' => $color,
             'extendedProps' => $session,
@@ -37,7 +37,7 @@
             </button>
             <button type="button" data-cal-nav="today"
                 class="h-10 px-4 rounded-xl border border-slate-600 text-slate-300 text-sm font-semibold hover:bg-slate-700 transition-colors">
-                Today
+                Hôm nay
             </button>
             <button type="button" data-cal-nav="next"
                 class="h-10 px-3 rounded-xl border border-slate-600 text-slate-300 text-sm font-semibold hover:bg-slate-700 transition-colors">
@@ -49,10 +49,10 @@
 
     <div class="mt-4 flex flex-wrap gap-2">
         @foreach ([
-            'timeGridDay' => 'Day',
-            'timeGridWeek' => 'Week',
-            'dayGridMonth' => 'Month',
-            'listWeek' => 'List',
+            'timeGridDay' => 'Ngày',
+            'timeGridWeek' => 'Tuần',
+            'dayGridMonth' => 'Tháng',
+            'listWeek' => 'Danh sách',
         ] as $viewKey => $viewLabel)
             <button type="button" data-cal-view="{{ $viewKey }}"
                 class="schedule-view-btn h-9 px-3 rounded-xl border border-slate-600 text-slate-300 text-sm font-medium hover:bg-slate-700 transition-colors">
@@ -63,7 +63,12 @@
 
     <div id="student-calendar-root" class="mt-4"
         data-events='@json($events)'
+        data-week-offset="{{ (int) ($header['week_offset'] ?? 0) }}"
+        data-week-start="{{ $header['week_start'] ?? now()->toDateString() }}"
+        data-selected-session-id="{{ (string) request()->query('session_id', '') }}"
         data-initial-view="{{ $viewMap[$header['view_mode']] ?? 'timeGridWeek' }}">
+        <div id="schedule-calendar-loading" class="hidden mb-2 text-xs text-slate-400">Đang tải lịch...</div>
+        <div id="schedule-calendar-error" class="hidden mb-2 text-xs text-red-300">Không tải được dữ liệu lịch học.</div>
         <div id="student-calendar"></div>
     </div>
 </section>

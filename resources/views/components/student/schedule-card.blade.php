@@ -12,22 +12,29 @@
     <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
             <p class="text-sm font-semibold text-white">{{ $className }}</p>
-            <p class="mt-1 text-xs text-slate-400">{{ $courseName }}</p>
-            <div class="mt-3 flex flex-wrap gap-3 text-xs text-slate-300">
+            <div class="mt-2 flex flex-wrap gap-3 text-xs text-slate-300">
                 <span><i class="fa-regular fa-clock mr-1"></i>{{ $startTime }}{{ !empty($endTime) ? ' - ' . $endTime : '' }}</span>
-                <span><i class="fa-solid fa-user mr-1"></i>{{ $teacherName }}</span>
-                <span><i class="fa-solid fa-location-dot mr-1"></i>{{ $location }}</span>
+                <span><i class="fa-solid fa-user mr-1"></i>Giảng viên {{ $teacherName }}</span>
             </div>
         </div>
-        <span class="px-2 py-1 rounded-full border text-[10px] uppercase font-semibold {{ $statusInfo['class'] }}">
+        <span class="px-3 py-1 rounded-full border text-xs uppercase font-semibold {{ $statusInfo['class'] }}">
             {{ $statusInfo['label'] }}
         </span>
     </div>
     <div class="mt-4">
-        <button type="button" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-semibold hover:bg-emerald-500/25 transition-colors">
-            <i class="fa-solid fa-arrow-right-to-bracket"></i>
-            Vào học
-        </button>
+        @if (!empty($joinUrl))
+            <a href="{{ $joinUrl }}" target="_blank" rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-semibold hover:bg-emerald-500/25 transition-colors">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                Vào học
+            </a>
+        @else
+            <button type="button" disabled
+                class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-700/40 border border-slate-600 text-slate-400 text-xs font-semibold cursor-not-allowed">
+                <i class="fa-solid fa-link-slash"></i>
+                Chưa có link
+            </button>
+        @endif
     </div>
 </div>
 
