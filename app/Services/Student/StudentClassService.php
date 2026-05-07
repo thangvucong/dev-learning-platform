@@ -18,7 +18,7 @@ class StudentClassService
     public function buildList(User $user, array $filters): array
     {
         $classes = $user->assignedClasses()
-            ->with(['course.instructor'])
+            ->with(['course.instructor', 'sessions'])
             ->orderBy('start_at')
             ->get();
 
@@ -29,6 +29,7 @@ class StudentClassService
             $computedStatus = $this->computedClassStatus($classItem);
             $attendanceRate = $this->estimateAttendanceRateFromPivot($classItem);
             $progress = $this->estimateProgress($classItem);
+            $nextSessionAt = $this->resolveNextSessionStartAt($classItem);
 
             return [
                 'id' => $classItem->id,
@@ -38,7 +39,7 @@ class StudentClassService
                 'thumbnail' => optional($classItem->course)->thumbnail_url,
                 'teacher' => optional(optional($classItem->course)->instructor)->name ?: 'Giảng viên',
                 'course_title' => optional($classItem->course)->title ?: 'Khóa học',
-                'next_session' => optional($classItem->start_at)->format('d/m/Y H:i'),
+                'next_session' => optional($nextSessionAt)->format('d/m/Y H:i'),
                 'progress' => $progress,
                 'attendance_rate' => $attendanceRate,
                 'location' => $classItem->location ?: 'Online',
@@ -67,12 +68,6 @@ class StudentClassService
                 'q' => $keyword,
                 'status' => $statusFilter,
             ],
-            'stats' => [
-                'total' => $mapped->count(),
-                'ongoing' => $mapped->where('status', 'ongoing')->count(),
-                'upcoming' => $mapped->where('status', 'upcoming')->count(),
-                'completed' => $mapped->where('status', 'completed')->count(),
-            ],
             'classes' => $mapped,
         ];
     }
@@ -88,13 +83,14 @@ class StudentClassService
     {
         $courseClass = $user->assignedClasses()
             ->where('classes.id', $classId)
-            ->with(['course.instructor', 'users'])
+            ->with(['course.instructor', 'users', 'sessions'])
             ->firstOrFail();
 
         $status = $this->computedClassStatus($courseClass);
         $progress = $this->estimateProgress($courseClass);
         $attendanceRate = $this->estimateAttendanceRateFromPivot($courseClass);
         $sessions = $this->buildSessions($courseClass);
+        $nextSessionAt = $this->resolveNextSessionStartAt($courseClass);
 
         return [
             'class' => [
@@ -109,7 +105,7 @@ class StudentClassService
                 'course_title' => optional($courseClass->course)->title ?: 'Khóa học',
                 'progress' => $progress,
                 'attendance_rate' => $attendanceRate,
-                'next_session' => optional($courseClass->start_at)->format('d/m/Y H:i'),
+                'next_session' => optional($nextSessionAt)->format('d/m/Y H:i'),
                 'location' => $courseClass->location ?: 'Online',
             ],
             'overview' => [
@@ -166,6 +162,27 @@ class StudentClassService
     }
 
     /**
+     * Resolve next upcoming session time from class sessions.
+     *
+     * @param  \App\Models\CourseClass  $classItem
+     * @return mixed|null
+     */
+    protected function resolveNextSessionStartAt(CourseClass $classItem)
+    {
+        $sessions = $classItem->sessions instanceof Collection ? $classItem->sessions : collect();
+        $now = now();
+
+        $nextSession = $sessions
+            ->filter(function ($session) use ($now) {
+                return $session->start_at !== null && $session->start_at->greaterThan($now);
+            })
+            ->sortBy('start_at')
+            ->first();
+
+        return $nextSession ? $nextSession->start_at : null;
+    }
+
+    /**
      * Estimate progress from class status.
      */
     protected function estimateProgress(CourseClass $classItem): int
@@ -199,28 +216,59 @@ class StudentClassService
     }
 
     /**
-     * Build schedule list (dummy-friendly).
+     * Build schedule list from class sessions.
      *
      * @return \Illuminate\Support\Collection<int, array<string, mixed>>
      */
     protected function buildSessions(CourseClass $courseClass): Collection
     {
-        $base = $courseClass->start_at ?: now()->addDay();
+        $sessions = $courseClass->sessions instanceof Collection ? $courseClass->sessions : collect();
 
-        return collect(range(1, 8))->map(function (int $index) use ($base, $courseClass) {
-            $sessionStart = (clone $base)->addDays(($index - 1) * 2)->setTime(19, 0);
-            $sessionEnd = (clone $sessionStart)->addHours(2);
-            $status = $sessionEnd->isPast() ? 'completed' : ($sessionStart->isFuture() ? 'upcoming' : 'ongoing');
+        return $sessions
+            ->filter(function ($session) {
+                return $session->start_at !== null;
+            })
+            ->sortBy('start_at')
+            ->values()
+            ->map(function ($session, int $index) use ($courseClass) {
+                $startAt = $session->start_at;
+                $endAt = $session->end_at ?: (clone $startAt)->addHours(2);
 
-            return [
-                'title' => 'Buổi ' . $index,
-                'start_at' => $sessionStart->format('d/m/Y H:i'),
-                'end_at' => $sessionEnd->format('H:i'),
-                'status' => $status,
-                'location' => $courseClass->location ?: 'Online',
-                'join_url' => '#',
-            ];
-        });
+                return [
+                    'title' => 'Buổi ' . ($index + 1),
+                    'start_at' => optional($startAt)->format('d/m/Y H:i'),
+                    'end_at' => optional($endAt)->format('H:i'),
+                    'status' => $this->resolveSessionStatus($startAt, $endAt),
+                    'location' => $courseClass->location ?: 'Online',
+                    'join_url' => (string) ($session->join_url ?: '#'),
+                ];
+            });
+    }
+
+    /**
+     * Resolve one class session status by time.
+     *
+     * @param  mixed  $startAt
+     * @param  mixed  $endAt
+     * @return string
+     */
+    protected function resolveSessionStatus($startAt, $endAt): string
+    {
+        $now = now();
+
+        if ($endAt && $endAt->isPast()) {
+            return 'completed';
+        }
+
+        if ($startAt && $startAt->isFuture()) {
+            return 'upcoming';
+        }
+
+        if ($startAt && $endAt && $startAt->lessThanOrEqualTo($now) && $endAt->greaterThanOrEqualTo($now)) {
+            return 'ongoing';
+        }
+
+        return 'ongoing';
     }
 
     /**

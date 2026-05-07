@@ -5,7 +5,7 @@
 @section('content')
     <div class="space-y-8">
         <section
-            class="rounded-3xl border border-slate-700 bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#1e293b] p-6 md:p-8">
+            class="rounded-3xl border border-slate-700 bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#1e293b] p-4 md:p-4">
             <div class="flex flex-wrap items-start justify-between gap-5">
                 <div class="flex items-center gap-4 min-w-0">
                     <div class="h-14 w-14 rounded-2xl overflow-hidden bg-slate-800 border border-slate-700 shrink-0">
@@ -96,7 +96,7 @@
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold text-white">Lớp học sắp tới</h2>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-4 gap-4">
                 @forelse ($upcoming_classes as $classCard)
                     @include('components.student.class-card', [
                         'name' => $classCard['name'],

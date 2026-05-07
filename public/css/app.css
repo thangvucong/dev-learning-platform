@@ -802,6 +802,9 @@ input:where([type='file']):focus {
 .z-\[100\] {
   z-index: 100;
 }
+.z-\[101\] {
+  z-index: 101;
+}
 .mx-0\.5 {
   margin-left: 0.125rem;
   margin-right: 0.125rem;
@@ -1221,6 +1224,9 @@ input:where([type='file']):focus {
      -moz-user-select: none;
           user-select: none;
 }
+.list-inside {
+  list-style-position: inside;
+}
 .list-disc {
   list-style-type: disc;
 }
@@ -1531,6 +1537,9 @@ input:where([type='file']):focus {
 .border-red-500\/30 {
   border-color: rgb(239 68 68 / 0.3);
 }
+.border-red-500\/40 {
+  border-color: rgb(239 68 68 / 0.4);
+}
 .border-red-700 {
   --tw-border-opacity: 1;
   border-color: rgb(185 28 28 / var(--tw-border-opacity, 1));
@@ -1637,6 +1646,9 @@ input:where([type='file']):focus {
 }
 .bg-black\/20 {
   background-color: rgb(0 0 0 / 0.2);
+}
+.bg-black\/60 {
+  background-color: rgb(0 0 0 / 0.6);
 }
 .bg-blue-100 {
   --tw-bg-opacity: 1;
@@ -2024,6 +2036,9 @@ input:where([type='file']):focus {
 }
 .pb-16 {
   padding-bottom: 4rem;
+}
+.pb-4 {
+  padding-bottom: 1rem;
 }
 .pb-7 {
   padding-bottom: 1.75rem;
@@ -2617,6 +2632,33 @@ input:where([type='file']):focus {
 .ease-in-out {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
+.file\:mr-3::file-selector-button {
+  margin-right: 0.75rem;
+}
+.file\:h-10::file-selector-button {
+  height: 2.5rem;
+}
+.file\:rounded-xl::file-selector-button {
+  border-radius: 0.75rem;
+}
+.file\:border-0::file-selector-button {
+  border-width: 0px;
+}
+.file\:bg-emerald-500::file-selector-button {
+  --tw-bg-opacity: 1;
+  background-color: rgb(16 185 129 / var(--tw-bg-opacity, 1));
+}
+.file\:px-3::file-selector-button {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+.file\:font-semibold::file-selector-button {
+  font-weight: 600;
+}
+.file\:text-white::file-selector-button {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
 .last\:border-0:last-child {
   border-width: 0px;
 }
@@ -2807,6 +2849,10 @@ input:where([type='file']):focus {
   --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
+.hover\:file\:bg-emerald-600::file-selector-button:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(5 150 105 / var(--tw-bg-opacity, 1));
+}
 .focus\:z-10:focus {
   z-index: 10;
 }
@@ -2859,6 +2905,9 @@ input:where([type='file']):focus {
 .focus\:ring-blue-500:focus {
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(59 130 246 / var(--tw-ring-opacity, 1));
+.focus\:ring-emerald-500:focus {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(16 185 129 / var(--tw-ring-opacity, 1));
 }
 .active\:scale-95:active {
   --tw-scale-x: .95;
@@ -3060,6 +3109,10 @@ input:where([type='file']):focus {
     justify-content: space-between;
   }
 
+  .md\:p-4 {
+    padding: 1rem;
+  }
+
   .md\:p-8 {
     padding: 2rem;
   }
@@ -3232,6 +3285,10 @@ input:where([type='file']):focus {
 
   .xl\:col-span-8 {
     grid-column: span 8 / span 8;
+  }
+
+  .xl\:col-span-9 {
+    grid-column: span 9 / span 9;
   }
 
   .xl\:w-\[420px\] {
