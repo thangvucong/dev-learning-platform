@@ -56,6 +56,7 @@
                             'endTime' => $schedule['end_time'],
                             'location' => $schedule['location'],
                             'status' => $schedule['status'],
+                            'joinUrl' => $schedule['join_url'] ?? '',
                         ])
                     @empty
                         <div
@@ -104,6 +105,8 @@
                         'nextSession' => $classCard['next_session'],
                         'thumbnail' => $classCard['thumbnail'],
                         'progress' => $classCard['progress'],
+                        'status' => $classCard['status'] ?? 'upcoming',
+                        'joinUrl' => $classCard['join_url'] ?? '',
                     ])
                 @empty
                     <div

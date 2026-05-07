@@ -3,58 +3,27 @@
 @section('title', 'Lớp học của tôi')
 
 @section('content')
-    <div class="space-y-7">
+    <div class="space-y-6">
         <section class="rounded-3xl border border-slate-700 bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#1e293b] p-6 md:p-8">
             <div class="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                    <p class="text-sm text-slate-400">Learning Workspace</p>
                     <h1 class="text-2xl md:text-3xl font-bold text-white mt-1">Lớp học của tôi</h1>
-                    <p class="text-sm text-slate-300 mt-2">Theo dõi lịch học, tiến độ và tham gia lớp nhanh chóng.</p>
+                    <p class="text-sm text-slate-300 mt-2">Xem lớp hiện tại và vào lớp nhanh khi đến giờ.</p>
                 </div>
             </div>
         </section>
 
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            @include('components.student.stat-card', [
-                'title' => 'Tổng lớp',
-                'value' => $stats['total'] ?? 0,
-                'suffix' => 'lớp',
-                'icon' => 'fa-solid fa-layer-group',
-                'tone' => 'blue',
-            ])
-            @include('components.student.stat-card', [
-                'title' => 'Đang học',
-                'value' => $stats['ongoing'] ?? 0,
-                'suffix' => 'lớp',
-                'icon' => 'fa-solid fa-chalkboard-user',
-                'tone' => 'emerald',
-            ])
-            @include('components.student.stat-card', [
-                'title' => 'Sắp bắt đầu',
-                'value' => $stats['upcoming'] ?? 0,
-                'suffix' => 'lớp',
-                'icon' => 'fa-regular fa-clock',
-                'tone' => 'violet',
-            ])
-            @include('components.student.stat-card', [
-                'title' => 'Hoàn thành',
-                'value' => $stats['completed'] ?? 0,
-                'suffix' => 'lớp',
-                'icon' => 'fa-solid fa-circle-check',
-                'tone' => 'amber',
-            ])
-        </section>
-
         <section class="rounded-2xl border border-slate-700 bg-[#111827] p-4">
+            <p class="text-sm font-semibold text-white mb-3">Bộ lọc lớp học</p>
             <form method="GET" action="{{ route('user.classes.index') }}" class="grid grid-cols-1 md:grid-cols-6 gap-3">
                 <div class="md:col-span-4">
-                    <label class="text-xs uppercase tracking-wider text-slate-400 mb-2 block">Tìm kiếm lớp học</label>
+                    <label class="text-sm text-slate-300 mb-2 block">Tìm kiếm lớp học</label>
                     <input type="text" name="q" value="{{ $filters['q'] ?? '' }}"
                         placeholder="Tên lớp, khóa học, mentor..."
                         class="w-full h-11 rounded-xl bg-slate-900/60 border border-slate-700 text-slate-100 px-4 focus:outline-none focus:border-emerald-500">
                 </div>
                 <div class="md:col-span-2">
-                    <label class="text-xs uppercase tracking-wider text-slate-400 mb-2 block">Trạng thái</label>
+                    <label class="text-sm text-slate-300 mb-2 block">Trạng thái</label>
                     <select name="status"
                         class="w-full h-11 rounded-xl bg-slate-900/60 border border-slate-700 text-slate-100 px-4 focus:outline-none focus:border-emerald-500">
                         <option value="">Tất cả trạng thái</option>
@@ -66,7 +35,7 @@
                 <div class="md:col-span-6 flex items-center gap-2">
                     <button type="submit"
                         class="h-10 px-4 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors">
-                        Áp dụng
+                        Áp dụng lọc
                     </button>
                     <a href="{{ route('user.classes.index') }}"
                         class="h-10 px-4 rounded-xl border border-slate-600 text-slate-300 text-sm font-semibold hover:bg-slate-700 transition-colors inline-flex items-center">
