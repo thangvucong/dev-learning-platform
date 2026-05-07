@@ -45,12 +45,12 @@ return [
             [
                 'section' => 'Giảng viên',
                 'items' => [
-                    [
-                        'title' => 'Dashboard',
-                        'route' => 'teacher.dashboard',
-                        'icon' => 'fa-solid fa-gauge-high',
-                        'active' => ['teacher.dashboard'],
-                    ],
+                    // [
+                    //     'title' => 'Dashboard',
+                    //     'route' => 'teacher.dashboard',
+                    //     'icon' => 'fa-solid fa-gauge-high',
+                    //     'active' => ['teacher.dashboard'],
+                    // ],
                     [
                         'title' => 'Lịch giảng dạy',
                         'route' => 'teacher.schedule.index',
@@ -63,18 +63,18 @@ return [
                         'icon' => 'fa-solid fa-chalkboard',
                         'active' => ['teacher.classes.*'],
                         'children' => [
-                            [
-                                'title' => 'Danh sách lớp',
-                                'route' => 'teacher.classes.index',
-                                'icon' => 'fa-regular fa-rectangle-list',
-                                'active' => ['teacher.classes.index'],
-                            ],
-                            [
-                                'title' => 'Điểm danh',
-                                'route' => 'teacher.attendance.index',
-                                'icon' => 'fa-solid fa-clipboard-check',
-                                'active' => ['teacher.attendance.*'],
-                            ],
+                            // [
+                            //     'title' => 'Danh sách lớp',
+                            //     'route' => 'teacher.classes.index',
+                            //     'icon' => 'fa-regular fa-rectangle-list',
+                            //     'active' => ['teacher.classes.index'],
+                            // ],
+                            // [
+                            //     'title' => 'Điểm danh',
+                            //     'route' => 'teacher.attendance.index',
+                            //     'icon' => 'fa-solid fa-clipboard-check',
+                            //     'active' => ['teacher.attendance.*'],
+                            // ],
                         ],
                     ],
                     [
