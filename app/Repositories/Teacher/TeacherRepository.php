@@ -19,6 +19,30 @@ class TeacherRepository
             ->select('classes.*', 'courses.title as course_name')
             ->get();
     }
+  public function getMonthlySchedule(int $teacherId)
+{
+    $startOfMonth = \Carbon\Carbon::now()->startOfMonth();
+    $endOfMonth = \Carbon\Carbon::now()->endOfMonth();
+
+    return DB::table('class_sessions')
+        ->join('classes', 'class_sessions.class_id', '=', 'classes.id')
+        ->join('courses', 'classes.course_id', '=', 'courses.id')
+        ->where('courses.instructor_id', $teacherId)
+       
+        ->whereBetween('class_sessions.start_at', [$startOfMonth, $endOfMonth]) 
+        ->select(
+            'class_sessions.id',
+            'class_sessions.title as session_title',
+            'class_sessions.start_at',
+            'class_sessions.end_at',
+            'class_sessions.status',
+            'class_sessions.join_url',
+            'class_sessions.meeting_type',
+            'classes.name as class_name'
+        )
+        ->orderBy('class_sessions.start_at', 'asc')
+        ->get();
+}
     public function getClassesWithStudents(int $teacherId)
 {
  

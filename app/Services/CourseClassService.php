@@ -23,7 +23,7 @@ class CourseClassService
                 'name'       => $class->name,
                 'code'       => $class->code,
                 'course'     => $class->course->name ?? 'N/A',
-                // Lớp học hiện tại không lưu instructor_id theo schema hiện tại.
+              
                 'mode'       => $class->mode ?? 'offline',
                 'status'     => $class->status ?? 'upcoming',
                 'capacity'   => (int) ($class->capacity ?? 30),

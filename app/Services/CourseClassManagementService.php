@@ -56,9 +56,7 @@ class CourseClassManagementService
         // Normalize status
         $status = Arr::get($payload, 'status');
         if (is_string($status)) {
-            $payload['status'] = in_array($status, ['upcoming', 'ongoing', 'completed'], true)
-                ? $status
-                : 'upcoming';
+           $payload['status'] = 'upcoming';
         }
 
         $scheduleConfig = (array) Arr::pull($payload, 'schedule_config', []);

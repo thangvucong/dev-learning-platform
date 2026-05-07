@@ -19,12 +19,12 @@
                     <div>
                         <p class="text-sm text-slate-400">{{ $welcome['greeting'] ?? 'Xin chào' }}</p>
                         <h1 class="text-2xl md:text-3xl font-bold text-white">{{ $welcome['name'] ?? 'Teacher' }}</h1>
-                        <p class="text-sm text-slate-300 mt-1">Hôm nay bạn có {{ $welcome['today_classes'] }} buổi dạy trong lịch.</p>
+                        <p class="text-sm text-slate-300 mt-1">Hôm nay bạn có <span id="today-count">{{ $welcome['today_classes'] }}</span> buổi dạy trong lịch.</p>
                     </div>
                 </div>
-                <button class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-emerald-500/20">
+                <!-- <button class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-emerald-500/20">
                     <i class="fa-solid fa-plus mr-2"></i> Tạo bài giảng mới
-                </button>
+                </button> -->
             </div>
         </section>
 
@@ -41,8 +41,9 @@
                     <span class="text-xs text-slate-400">{{ now()->format('d/m/Y') }}</span>
                 </div>
                 <div class="space-y-3" id="today-schedule">
-                    <div class="rounded-2xl border border-dashed border-slate-600 bg-[#111827] p-8 text-center text-slate-400">
-                        <p>Đang tải lịch dạy...</p>
+                    <div class="animate-pulse space-y-3">
+                        <div class="h-20 bg-slate-800/50 rounded-2xl border border-slate-700"></div>
+                        <div class="h-20 bg-slate-800/50 rounded-2xl border border-slate-700"></div>
                     </div>
                 </div>
             </div>
@@ -51,11 +52,11 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-white">Lớp học của tôi</h2>
                     <button id="btn-load-classes" class="text-xs text-emerald-400 hover:underline bg-transparent border-none cursor-pointer">
-                        Danh sách lớp học
+                        Làm mới danh sách
                     </button>
                 </div>
                 <div class="space-y-3" id="my-classes-list">
-                    <div class="p-4 text-slate-500 text-sm italic">Nhấn "Danh sách lớp học" để xem dữ liệu...</div>
+                    <div class="p-4 text-slate-500 text-sm italic">Đang tải danh sách lớp...</div>
                 </div>
             </div>
         </section>
@@ -67,36 +68,119 @@
                 <h3 id="modal-class-name" class="text-xl font-bold text-white">Chi tiết lớp học</h3>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <div id="modal-student-list" class="p-6 overflow-y-auto max-h-[60vh] space-y-4">
-                </div>
+            <div id="modal-student-list" class="p-6 overflow-y-auto max-h-[60vh] space-y-4"></div>
         </div>
     </div>
 
     <script>
         let classData = [];
 
-        document.getElementById('btn-load-classes').addEventListener('click', function(e) {
-            e.preventDefault();
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTodaySchedule();
+            loadClasses();
+        });
+
+     
+        function loadTodaySchedule() {
+            const scheduleContainer = document.getElementById('today-schedule');
+            
+            fetch("{{ route('teacher.api.schedule') }}")
+                .then(response => response.json())
+                .then(res => {
+                    if (res.success) {
+                        renderSchedule(res.data);
+                        document.getElementById('today-count').innerText = res.data.length;
+                    }
+                })
+                .catch(err => {
+                    scheduleContainer.innerHTML = '<p class="text-red-400 p-4">Không thể tải lịch dạy.</p>';
+                });
+        }
+
+       function renderSchedule(data) {
+    const container = document.getElementById('today-schedule');
+    
+    // Cập nhật lại tiêu đề khu vực nếu muốn
+    const titleElement = document.querySelector('h2.text-lg.font-semibold.text-white');
+    if (titleElement && titleElement.innerText === "Lịch dạy hôm nay") {
+        titleElement.innerText = "Lịch dạy trong tháng";
+    }
+
+    if (data.length === 0) {
+        container.innerHTML = `
+            <div class="rounded-2xl border border-dashed border-slate-600 bg-[#111827] p-8 text-center text-slate-400">
+                <p>Không có lịch dạy nào trong tháng này.</p>
+            </div>`;
+        return;
+    }
+
+    let html = '';
+    data.forEach(item => {
+        const dateObj = new Date(item.start_at);
+        
+        const joinLink = item.join_url ? item.join_url : '#';
+        const dateStr = dateObj.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit'});
+   
+        const startTime = dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+        const endTime = new Date(item.end_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+        
+        const statusColor = item.status === 'completed' ? 'emerald' : 'amber';
+
+        html += `
+            <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700 flex items-center justify-between group hover:bg-slate-800/60 transition-all">
+                <div class="flex items-center gap-4">
+                    <div class="h-12 w-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col items-center justify-center text-emerald-400">
+                        <span class="text-[10px] font-bold uppercase">${dateStr}</span>
+                        <span class="text-[8px] opacity-70">${item.meeting_type || 'ROOM'}</span>
+                    </div>
+                    <div>
+                        <h4 class="text-white font-medium text-sm capitalize">${item.session_title}</h4>
+                        <p class="text-xs text-slate-400">${item.class_name}</p>
+                        <div class="flex items-center gap-3 mt-1">
+                            <span class="text-[10px] text-emerald-400 font-mono">
+                                <i class="fa-regular fa-clock mr-1"></i> ${startTime} - ${endTime}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="hidden md:block text-[10px] px-2 py-1 rounded-md bg-${statusColor}-500/10 text-${statusColor}-400 border border-${statusColor}-500/20 uppercase font-bold">
+                        ${item.status}
+                    </span>
+                   <button onclick="joinClass('${joinLink}')" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl transition-all">
+        Vào lớp
+    </button>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+     
+        document.getElementById('btn-load-classes').addEventListener('click', loadClasses);
+
+        function loadClasses() {
             const container = document.getElementById('my-classes-list');
-            container.innerHTML = '<div class="p-4 text-emerald-400 animate-pulse">Đang tải dữ liệu ...</div>';
+            container.innerHTML = '<div class="p-4 text-emerald-400 animate-pulse">Đang tải dữ liệu...</div>';
 
             fetch("{{ route('teacher.api.classes') }}")
                 .then(response => response.json())
                 .then(res => {
                     if (res.success) {
-                        classData = res.data; // Lưu dữ liệu để dùng cho modal
+                        classData = res.data;
                         renderClasses(res.data);
                     }
                 })
                 .catch(err => {
                     container.innerHTML = '<p class="text-red-400">Lỗi kết nối API.</p>';
                 });
-        });
+        }
 
         function renderClasses(data) {
             const container = document.getElementById('my-classes-list');
             if (data.length === 0) {
-                container.innerHTML = '<p class="p-4 text-slate-500">Trống.</p>';
+                container.innerHTML = '<p class="p-4 text-slate-500 italic">Chưa có lớp học nào.</p>';
                 return;
             }
 
@@ -109,7 +193,7 @@
                                 <h4 class="text-white font-medium group-hover:text-emerald-400 transition-colors truncate">
                                     ${item.name}
                                 </h4>
-                                <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">
+                                <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold truncate">
                                     ${item.course_name}
                                 </p>
                                 <div class="flex items-center mt-2 text-xs text-slate-500">
@@ -141,7 +225,7 @@
                 item.students.forEach(st => {
                     html += `
                         <div class="flex items-center gap-4 p-3 rounded-xl bg-slate-800/30 border border-slate-700">
-                            <img src="${st.avatar || 'https://ui-avatars.com/api/?name='+st.name}" class="h-10 w-10 rounded-full border border-slate-600">
+                            <img src="${st.avatar || 'https://ui-avatars.com/api/?name='+encodeURIComponent(st.name)}" class="h-10 w-10 rounded-full border border-slate-600">
                             <div>
                                 <p class="text-white font-medium text-sm">${st.name}</p>
                                 <p class="text-xs text-slate-500">${st.email}</p>
@@ -158,10 +242,16 @@
             document.getElementById('student-modal').classList.add('hidden');
         }
 
-        // Close modal when clicking outside
         window.onclick = function(event) {
             const modal = document.getElementById('student-modal');
             if (event.target == modal) closeModal();
         }
+        function joinClass(url) {
+    if (url === '#' || !url) {
+        alert("Link lớp học chưa được cập nhật!");
+        return;
+    }
+    window.open(url, '_blank'); // Mở link dạy học ở tab mới
+}
     </script>
 @endsection
