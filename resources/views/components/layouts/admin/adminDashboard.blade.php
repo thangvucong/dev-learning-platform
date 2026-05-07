@@ -32,7 +32,7 @@
             <div class="p-4 h-full flex flex-col">
                 <div class="flex items-center gap-2 mb-8">
                     <div class="w-8 h-8 bg-emerald-500 rounded-lg"></div>
-                    <span class="text-xl font-bold tracking-tight text-white">Manager Admin</span>
+                    <span class="text-xl font-bold tracking-tight text-white">LMS Admin</span>
                 </div>
 
                 <nav class="space-y-5 flex-1 overflow-y-auto pr-1">

@@ -43,14 +43,14 @@ class StudentProfileService
                 'name' => (string) $user->name,
                 'email' => (string) $user->email,
                 'avatar' => $user->avatar_url,
-                'bio' => 'Building consistent learning habits through roadmap-based practice.',
+                'bio' => data_get($user, 'bio', 'Xây dựng thói quen học tập nhất quán thông qua thực hành dựa trên lộ trình.'),
                 'phone' => data_get($user, 'phone', 'Đang cập nhật'),
                 'dob' => data_get($user, 'date_of_birth', 'Đang cập nhật'),
                 'join_date' => optional($user->created_at)->format('d/m/Y') ?: now()->format('d/m/Y'),
                 'socials' => [
-                    ['label' => 'GitHub', 'url' => '#'],
-                    ['label' => 'LinkedIn', 'url' => '#'],
-                    ['label' => 'Portfolio', 'url' => '#'],
+                    ['label' => 'GitHub', 'url' => data_get($user, 'social_github', '#')],
+                    ['label' => 'LinkedIn', 'url' => data_get($user, 'social_linkedin', '#')],
+                    ['label' => 'Portfolio', 'url' => data_get($user, 'social_portfolio', '#')],
                 ],
                 'learning_streak' => $studyStreak,
                 'attendance_rate' => $attendanceRate,
@@ -59,10 +59,10 @@ class StudentProfileService
             'stats' => [
                 ['label' => 'Khóa đang học', 'value' => $ongoingCourses->count(), 'icon' => 'fa-solid fa-book-open', 'tone' => 'emerald'],
                 ['label' => 'Tổng lớp học', 'value' => $assignedClasses->count(), 'icon' => 'fa-solid fa-chalkboard-user', 'tone' => 'blue'],
-                ['label' => 'Attendance', 'value' => $attendanceRate . '%', 'icon' => 'fa-solid fa-user-check', 'tone' => 'violet'],
-                ['label' => 'Study streak', 'value' => $studyStreak . ' ngày', 'icon' => 'fa-solid fa-fire', 'tone' => 'amber'],
+                ['label' => 'Điểm danh', 'value' => $attendanceRate . '%', 'icon' => 'fa-solid fa-user-check', 'tone' => 'violet'],
+                ['label' => 'Chuỗi học tập', 'value' => $studyStreak . ' ngày', 'icon' => 'fa-solid fa-fire', 'tone' => 'amber'],
                 ['label' => 'Buổi đã học', 'value' => $completedSessions . '/' . $totalSessions, 'icon' => 'fa-solid fa-list-check', 'tone' => 'emerald'],
-                ['label' => 'Completion', 'value' => $completionRate . '%', 'icon' => 'fa-solid fa-flag-checkered', 'tone' => 'blue'],
+                ['label' => 'Hoàn thành', 'value' => $completionRate . '%', 'icon' => 'fa-solid fa-flag-checkered', 'tone' => 'blue'],
             ],
             'learning' => [
                 'courses' => $ongoingCourses->map(function ($course) {
@@ -110,6 +110,11 @@ class StudentProfileService
                     ['device' => 'Mobile Safari', 'ip' => '127.0.0.1', 'time' => now()->subDay()->format('d/m/Y H:i')],
                 ]),
                 'sessions_placeholder' => 'Session management sẽ được tích hợp ở iteration tiếp theo.',
+            ],
+            'settings' => [
+                'timezone' => 'Asia/Ho_Chi_Minh',
+                'notifications_enabled' => true,
+                'weekly_report' => false,
             ],
         ];
     }

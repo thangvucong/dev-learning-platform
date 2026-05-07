@@ -14,7 +14,7 @@
     </div>
 
     <div class="xl:col-span-1 rounded-2xl border border-slate-700 bg-slate-900/40 p-5">
-        <h3 class="text-lg font-semibold text-white">Thông tin mentor</h3>
+        <h3 class="text-lg font-semibold text-white">Thông tin giảng viên</h3>
         <p class="mt-3 text-sm text-slate-300">{{ $course['teacher'] }}</p>
         <p class="text-xs text-slate-500">{{ $course['teacher_email'] ?: 'Đang cập nhật' }}</p>
 
@@ -28,4 +28,3 @@
         </div>
     </div>
 </div>
-

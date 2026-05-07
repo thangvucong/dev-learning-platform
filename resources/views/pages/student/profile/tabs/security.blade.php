@@ -4,10 +4,10 @@
         <p class="text-sm text-slate-300 mt-2">Bạn có thể đổi mật khẩu và theo dõi hoạt động đăng nhập gần đây để bảo vệ không gian học tập.</p>
 
         <div class="mt-4 flex flex-wrap items-center gap-2">
-            <button type="button" class="h-10 px-4 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors">
+            <button type="button" data-modal-open="change-password-modal" class="h-10 px-4 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors">
                 Đổi mật khẩu
             </button>
-            <button type="button" class="h-10 px-4 rounded-xl border border-slate-600 text-slate-200 text-sm font-semibold hover:bg-slate-700 transition-colors">
+            <button type="button" data-modal-open="account-settings-modal" class="h-10 px-4 rounded-xl border border-slate-600 text-slate-200 text-sm font-semibold hover:bg-slate-700 transition-colors">
                 Cài đặt tài khoản
             </button>
         </div>
