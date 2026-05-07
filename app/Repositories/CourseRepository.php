@@ -154,4 +154,12 @@ class CourseRepository implements CourseRepositoryInterface
     {
         return Course::query()->create($attributes);
     }
+    public function update(int $id, array $attributes): bool
+{
+    $course = Course::find($id);
+    if ($course) {
+        return $course->update($attributes);
+    }
+    return false;
+}
 }
