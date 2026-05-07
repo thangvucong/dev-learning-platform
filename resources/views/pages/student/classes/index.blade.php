@@ -4,7 +4,8 @@
 
 @section('content')
     <div class="space-y-6">
-        <section class="rounded-3xl border border-slate-700 bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#1e293b] p-6 md:p-8">
+        <section
+            class="rounded-3xl border border-slate-700 bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#1e293b] p-4 md:p-4">
             <div class="flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <h1 class="text-2xl md:text-3xl font-bold text-white mt-1">Lớp học của tôi</h1>
@@ -60,7 +61,8 @@
                         'attendanceRate' => $classCard['attendance_rate'],
                     ])
                 @empty
-                    <div class="md:col-span-2 xl:col-span-3 rounded-2xl border border-dashed border-slate-600 bg-[#111827] p-10 text-center text-slate-400">
+                    <div
+                        class="md:col-span-2 xl:col-span-3 rounded-2xl border border-dashed border-slate-600 bg-[#111827] p-10 text-center text-slate-400">
                         <i class="fa-regular fa-folder-open text-3xl mb-3"></i>
                         <p>Không có lớp học phù hợp với bộ lọc hiện tại.</p>
                     </div>
@@ -69,4 +71,3 @@
         </section>
     </div>
 @endsection
-

@@ -5,7 +5,7 @@
 @section('content')
     <div class="space-y-8">
         <section
-            class="rounded-3xl border border-slate-700 bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#1e293b] p-6 md:p-8">
+            class="rounded-3xl border border-slate-700 bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#1e293b] p-4 md:p-4">
             <div class="flex flex-wrap items-start justify-between gap-5">
                 <div class="flex items-center gap-4 min-w-0">
                     <div class="h-14 w-14 rounded-2xl overflow-hidden bg-slate-800 border border-slate-700 shrink-0">

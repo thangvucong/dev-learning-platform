@@ -1,4 +1,5 @@
-<section class="rounded-3xl border border-slate-700 bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#1e293b] p-6 md:p-8">
+<section
+    class="rounded-3xl border border-slate-700 bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#1e293b] p-4 md:p-4">
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
         <div class="flex items-center gap-4 min-w-0">
             <div class="h-20 w-20 rounded-2xl overflow-hidden bg-slate-800 border border-slate-700 shrink-0">
@@ -35,17 +36,19 @@
                 </div>
             </div>
             <div class="h-2 rounded-full bg-slate-700 overflow-hidden">
-                <div class="h-full bg-gradient-to-r from-emerald-400 to-cyan-400" style="width: {{ (int) $profile['overall_progress'] }}%"></div>
+                <div class="h-full bg-gradient-to-r from-emerald-400 to-cyan-400"
+                    style="width: {{ (int) $profile['overall_progress'] }}%"></div>
             </div>
             <div class="flex items-center gap-2">
-                <button type="button" class="h-10 px-4 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors">
+                <button type="button"
+                    class="h-10 px-4 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors">
                     Chỉnh sửa hồ sơ
                 </button>
-                <button type="button" class="h-10 px-4 rounded-xl border border-slate-600 text-slate-200 text-sm font-semibold hover:bg-slate-700 transition-colors">
+                <button type="button"
+                    class="h-10 px-4 rounded-xl border border-slate-600 text-slate-200 text-sm font-semibold hover:bg-slate-700 transition-colors">
                     Đổi ảnh đại diện
                 </button>
             </div>
         </div>
     </div>
 </section>
-
