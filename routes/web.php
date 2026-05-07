@@ -121,6 +121,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/', [AdminCourseController::class, 'index'])->name('courses.managerCourses');
                 Route::post('/', [AdminCourseController::class, 'store'])->name('courses.store');
                 Route::get('/api/list', [AdminCourseController::class, 'getListData'])->name('courses.api.list');
+                Route::put('/{course}/instructor', [AdminCourseController::class, 'updateInstructor'])->name('courses.updateInstructor');
                 // Route::delete('/api/delete/{id}', [AdminCourseController::class, 'destroy'])->name('courses.api.delete');
             });
         });

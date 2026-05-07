@@ -24,4 +24,14 @@ interface CourseRepositoryInterface
      * @param  array<string, mixed>  $attributes
      */
     public function createCourse(array $attributes): Course;
+
+
+    
+/**
+ * Cập nhật khóa học
+ * @param int $id
+ * @param array $attributes
+ * @return bool
+ */
+public function update(int $id, array $attributes): bool;
 }

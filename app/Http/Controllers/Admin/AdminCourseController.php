@@ -6,7 +6,7 @@ use App\Http\Requests\Admin\StoreCourseRequest;
 use App\Services\CourseService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
+use App\Models\Course;
 class AdminCourseController extends Controller
 {
     protected $courseService;
@@ -38,4 +38,16 @@ class AdminCourseController extends Controller
             ->route('admin.courses.managerCourses')
             ->with('success', 'Tạo khóa học thành công.');
     }
+    public function updateInstructor(Request $request, $id)
+{
+    $request->validate([
+        'instructor_id' => 'required|exists:users,id', // Kiểm tra ID giảng viên có tồn tại không
+    ]);
+
+    $course = Course::findOrFail($id);
+    $course->instructor_id = $request->instructor_id;
+    $course->save();
+
+    return redirect()->back()->with('success', 'Đã cập nhật giảng viên thành công!');
+}
 }

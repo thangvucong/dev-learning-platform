@@ -58,43 +58,72 @@ class CourseService
             return [];
         }
     }
+public function getManagerListData(int $perPage = 10)
+{
+    try {
+        // Đảm bảo Repository đã eager load: instructor và classes
+        $courses = $this->courseRepository->getAllCoursesPaginated($perPage);
 
-    public function getManagerListData(int $perPage = 10)
-    {
-        try {
-            /** @var \Illuminate\Pagination\LengthAwarePaginator $courses */
-            $courses = $this->courseRepository->getAllCoursesPaginated($perPage);
+        $courses->getCollection()->transform(function ($course) {
+            return [
+                'id'          => $course->id,
+                'name'        => $course->title,
+                'instructor'  => $course->instructor->name ?? 'N/A',
+                'price'       => number_format($course->price, 0, ',', '.') . 'đ',
+                'class_count' => $course->classes->count(),
+                'status'      => $course->status == 1 ? 'Hiển thị' : 'Ẩn',
+                'classes'     => $course->classes->map(fn($class) => [
+                    'code'             => $class->code ?? 'N/A',
+                    'name'             => $class->name,
+                    'capacity'         => $class->capacity ?? 0,
+                    'current_students' => $class->users_count ?? 0,
+                    'start_date'       => $class->start_at ? $class->start_at->format('d/m/Y') : 'N/A',
+                ])->values()->all(),
+            ];
+        });
 
-            $items = $courses->getCollection()->map(function ($course) {
-                return [
-                    'id' => $course->id,
-                    'name' => $course->title,
-                    'instructor' => $course->instructor->name ?? 'N/A',
-                    'price' => number_format($course->price, 0, ',', '.') . 'đ',
-                    'class_count' => $course->classes->count(),
-                    'status' => $course->status == 1 ? 'Hiển thị' : 'Ẩn',
-                    'classes' => $course->classes->map(function ($class) {
-                        return [
-                            'code' => $class->code ?? 'N/A',
-                            'name' => $class->name,
-                            'status' => $class->status,
-                            'capacity' => $class->capacity ?? 0,
-                            'current_students' => $class->users_count ?? 0,
-                            'location' => $class->location ?? 'Chưa xác định',
-                            'start_date' => $class->start_at ? date('d/m/Y', strtotime($class->start_at)) : 'N/A',
-                        ];
-                    })->values()->all(),
-                ];
-            });
-
-            $courses->setCollection($items);
-
-            return $courses;
-        } catch (\Exception $e) {
-            Log::error('Lỗi tại CourseService@getManagerListData: ' . $e->getMessage());
-            throw $e;
-        }
+        return $courses;
+    } catch (\Exception $e) {
+        Log::error('Lỗi tại CourseService@getManagerListData: ' . $e->getMessage());
+        throw $e;
     }
+}
+    // public function getManagerListData(int $perPage = 10)
+    // {
+    //     try {
+    //         /** @var \Illuminate\Pagination\LengthAwarePaginator $courses */
+    //         $courses = $this->courseRepository->getAllCoursesPaginated($perPage);
+
+    //         $items = $courses->getCollection()->map(function ($course) {
+    //             return [
+    //                 'id' => $course->id,
+    //                 'name' => $course->title,
+    //                 'instructor' => $course->instructor->name ?? 'N/A',
+    //                 'price' => number_format($course->price, 0, ',', '.') . 'đ',
+    //                 'class_count' => $course->classes->count(),
+    //                 'status' => $course->status == 1 ? 'Hiển thị' : 'Ẩn',
+    //                 'classes' => $course->classes->map(function ($class) {
+    //                     return [
+    //                         'code' => $class->code ?? 'N/A',
+    //                         'name' => $class->name,
+    //                         'status' => $class->status,
+    //                         'capacity' => $class->capacity ?? 0,
+    //                         'current_students' => $class->users_count ?? 0,
+    //                         'location' => $class->location ?? 'Chưa xác định',
+    //                         'start_date' => $class->start_at ? date('d/m/Y', strtotime($class->start_at)) : 'N/A',
+    //                     ];
+    //                 })->values()->all(),
+    //             ];
+    //         });
+
+    //         $courses->setCollection($items);
+
+    //         return $courses;
+    //     } catch (\Exception $e) {
+    //         Log::error('Lỗi tại CourseService@getManagerListData: ' . $e->getMessage());
+    //         throw $e;
+    //     }
+    // }
 
     /**
      * Tạo khóa học (admin), chỉ ghi vào bảng courses.
@@ -132,4 +161,26 @@ class CourseService
             return $course->fresh(['instructor']);
         });
     }
+    
+
+
+   
+
+/**
+ * Thay đổi giảng viên cho khóa học
+ * * @param int $courseId
+ * @param int $instructorId
+ * @return bool
+ */
+public function updateCourseInstructor(int $courseId, int $instructorId): bool
+{
+    try {
+        return $this->courseRepository->update($courseId, [
+            'instructor_id' => $instructorId
+        ]);
+    } catch (\Exception $e) {
+        Log::error("Lỗi thay đổi giảng viên tại CourseService: " . $e->getMessage());
+        return false;
+    }
+}
 }
