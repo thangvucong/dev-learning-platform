@@ -9,7 +9,7 @@
 @section('content')
     <div class="space-y-5">
         <section
-            class="rounded-3xl border border-slate-700 bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#1e293b] p-6 md:p-8">
+            class="rounded-3xl border border-slate-700 bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#1e293b] p-4 md:p-4">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h1 class="text-2xl md:text-3xl font-bold text-white mt-1">{{ $header['title'] }}</h1>
