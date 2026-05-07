@@ -18,6 +18,7 @@ class ClassSession extends Model
         'status',
         'meeting_type',
         'meeting_info',
+        'join_url',
         'description',
     ];
 

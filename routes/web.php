@@ -139,6 +139,7 @@ Route::middleware(['auth'])->group(function () {
         ->group(function () {
             Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
             Route::get('/schedule', [StudentScheduleController::class, 'index'])->name('schedule.index');
+            Route::get('/schedule/data', [StudentScheduleController::class, 'data'])->name('schedule.data');
             Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.index');
             Route::get('/courses', [StudentCourseController::class, 'index'])->name('courses.index');
             Route::get('/courses/{id}', [StudentCourseController::class, 'show'])->name('courses.show');
