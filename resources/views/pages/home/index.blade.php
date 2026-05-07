@@ -70,13 +70,11 @@
                     @foreach ($posts as $post)
                         <div
                             class="group h-full cursor-pointer overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-lg hover:-translate-y-1 flex flex-col">
-                            <a href="/" class="block">
+                            <a href="{{ route('posts.show', $post['slug']) }}" class="block">
                                 <div class="relative overflow-hidden">
                                     <img alt="{{ $post['title'] }}"
                                         class="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                        src="{{ !empty($post['thumbnail_url'])
-                                            ? $post['thumbnail_url']
-                                            : 'https://files.f8.edu.vn/f8-prod/courses/15/62f13d2424a47.png' }}" />
+                                        src="{{ !empty($post['thumbnail']) ? Storage::url($post['thumbnail']) : asset('images/default-post.png') }}" />
                                 </div>
                             </a>
                             <div class="p-4 flex flex-col flex-1">
