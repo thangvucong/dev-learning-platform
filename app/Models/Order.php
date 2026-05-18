@@ -9,35 +9,39 @@ class Order extends Model
 {
     use HasFactory;
 
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_PAID = 'paid';
+    public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_FAILED = 'failed';
+
+    public const PAYMENT_ONEPAY_DOMESTIC = 'onepay_dom_card';
+    public const PAYMENT_ONEPAY_INTERNATIONAL = 'onepay_int_card';
+    public const PAYMENT_SEPAY_QR = 'sepay_qr';
+
     protected $fillable = [
         'user_id',
-        'course_id',
+        'subtotal_amount',
+        'discount_amount',
         'total_amount',
         'status',
         'payment_method',
-        'note',
         'payment_reference',
+        'note',
         'paid_at',
+        'cancelled_at',
     ];
 
     protected $casts = [
+        'subtotal_amount' => 'integer',
+        'discount_amount' => 'integer',
+        'total_amount' => 'integer',
         'paid_at' => 'datetime',
-        'total_amount' => 'decimal:2',
+        'cancelled_at' => 'datetime',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * Khóa học chính của đơn (backfill từ order_items; có thể null với đơn cũ).
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function course()
-    {
-        return $this->belongsTo(Course::class);
     }
 
     public function items()

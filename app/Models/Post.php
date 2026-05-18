@@ -24,6 +24,7 @@ class Post extends Model
         'image',
         'views_count',
         'status',
+        'reject_reason',
     ];
 
     protected $casts = [

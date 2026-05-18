@@ -9,6 +9,15 @@ class ClassSession extends Model
 {
     use HasFactory;
 
+    public const STATUS_UPCOMING = 'upcoming';
+    public const STATUS_LIVE = 'live';
+    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_MISSED = 'missed';
+    public const STATUS_CANCELLED = 'cancelled';
+
+    public const MEETING_ZOOM = 'zoom';
+    public const MEETING_OFFLINE = 'offline';
+
     protected $fillable = [
         'class_id',
         'session_no',
@@ -38,4 +47,3 @@ class ClassSession extends Model
         return $this->belongsTo(CourseClass::class, 'class_id');
     }
 }
-

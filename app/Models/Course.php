@@ -4,37 +4,35 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Course extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
+    public const STATUS_DRAFT = 0;
+    public const STATUS_PUBLISHED = 1;
 
     protected $fillable = [
-        'instructor_id',
         'title',
         'slug',
         'description',
         'thumbnail_url',
         'intro_video_url',
-        'price',
         'status',
+        'original_price',
+        'rating_avg',
+        'rating_count',
         'published_at',
     ];
 
     protected $casts = [
+        'status' => 'integer',
+        'original_price' => 'integer',
+        'rating_avg' => 'decimal:1',
+        'rating_count' => 'integer',
         'published_at' => 'datetime',
-        'price' => 'decimal:2',
     ];
-
-    /**
-     * Get the instructor of the course.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function instructor()
-    {
-        return $this->belongsTo(User::class, 'instructor_id');
-    }
 
     /**
      * Get the enrollments of the course.
@@ -53,7 +51,7 @@ class Course extends Model
      */
     public function students()
     {
-        return $this->belongsToMany(User::class, 'course_user')
+        return $this->belongsToMany(User::class, 'enrollments')
             ->withPivot(['status', 'enrolled_at', 'completed_at'])
             ->withTimestamps();
     }
@@ -89,13 +87,13 @@ class Course extends Model
     }
 
     /**
-     * Get the prices of the course.
+     * Get the discounts of the course.
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function prices()
+    public function discounts()
     {
-        return $this->hasMany(CoursePrice::class);
+        return $this->hasMany(CourseDiscount::class);
     }
 
     /**
@@ -106,5 +104,15 @@ class Course extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    /**
+     * Get active discounts of the course.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function activeDiscounts()
+    {
+        return $this->discounts()->where('is_active', true);
     }
 }

@@ -25,10 +25,9 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
-        'role',
-        'is_active',
         'avatar_url',
         'email_verified_at',
+        'is_active',
         'last_login_at',
         'password',
     ];
@@ -59,7 +58,7 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return (string) ($this->role ?? '') === self::ROLE_ADMIN;
+        return $this->hasRole(self::ROLE_ADMIN);
     }
 
     /**
@@ -67,7 +66,7 @@ class User extends Authenticatable
      */
     public function isTeacher(): bool
     {
-        return (string) ($this->role ?? '') === self::ROLE_TEACHER;
+        return $this->hasRole(self::ROLE_TEACHER);
     }
 
     /**
@@ -75,7 +74,7 @@ class User extends Authenticatable
      */
     public function isStudent(): bool
     {
-        return (string) ($this->role ?? '') === self::ROLE_STUDENT;
+        return $this->hasRole(self::ROLE_STUDENT);
     }
 
     /**
@@ -85,7 +84,24 @@ class User extends Authenticatable
      */
     public function instructedCourses()
     {
-        return $this->hasMany(Course::class, 'instructor_id');
+        return $this->hasManyThrough(
+            Course::class,
+            CourseClass::class,
+            'instructor_id',
+            'id',
+            'id',
+            'course_id'
+        );
+    }
+
+    /**
+     * Get the classes instructed by the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function instructedClasses()
+    {
+        return $this->hasMany(CourseClass::class, 'instructor_id');
     }
 
     /**
@@ -105,7 +121,7 @@ class User extends Authenticatable
      */
     public function enrolledCourses()
     {
-        return $this->belongsToMany(Course::class, 'course_user')
+        return $this->belongsToMany(Course::class, 'enrollments')
             ->withPivot(['status', 'enrolled_at', 'completed_at'])
             ->withTimestamps();
     }
@@ -117,9 +133,29 @@ class User extends Authenticatable
      */
     public function assignedClasses()
     {
-        return $this->belongsToMany(CourseClass::class, 'class_user', 'user_id', 'class_id')
+        return $this->belongsToMany(CourseClass::class, 'class_enrollments', 'user_id', 'class_id')
             ->withPivot(['status', 'assigned_at'])
             ->withTimestamps();
+    }
+
+    /**
+     * Get the class enrollment records of the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function classEnrollments()
+    {
+        return $this->hasMany(ClassEnrollment::class);
+    }
+
+    /**
+     * Get the course discounts created by the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function createdCourseDiscounts()
+    {
+        return $this->hasMany(CourseDiscount::class, 'created_by');
     }
 
     /**

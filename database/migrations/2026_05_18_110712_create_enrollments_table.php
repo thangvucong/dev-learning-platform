@@ -21,8 +21,9 @@ class CreateEnrollmentsTable extends Migration
             $table->timestamp('enrolled_at')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
-
             $table->unique(['course_id', 'user_id']);
+            $table->index(['user_id', 'status']);
+            $table->index(['course_id', 'status']);
         });
     }
 

@@ -4,11 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\ClassSession;
 
 class CourseClass extends Model
 {
     use HasFactory;
+
+    public const MODE_ZOOM = 'zoom';
+    public const MODE_OFFLINE = 'offline';
+    public const MODE_HYBRID = 'hybrid';
+
+    public const STATUS_UPCOMING = 'upcoming';
+    public const STATUS_ONGOING = 'ongoing';
+    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_CANCELLED = 'cancelled';
 
     /**
      * Classes table
@@ -19,6 +27,7 @@ class CourseClass extends Model
 
     protected $fillable = [
         'course_id',
+        'instructor_id',
         'name',
         'code',
         'mode',
@@ -46,13 +55,23 @@ class CourseClass extends Model
     }
 
     /**
+     * Get the instructor assigned to the class.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function instructor()
+    {
+        return $this->belongsTo(User::class, 'instructor_id');
+    }
+
+    /**
      * Get the students assigned to the class.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function users()
     {
-        return $this->belongsToMany(User::class, 'class_user', 'class_id', 'user_id')
+        return $this->belongsToMany(User::class, 'class_enrollments', 'class_id', 'user_id')
             ->withPivot(['status', 'assigned_at'])
             ->withTimestamps();
     }
@@ -70,5 +89,15 @@ class CourseClass extends Model
     public function sessions()
     {
         return $this->hasMany(ClassSession::class, 'class_id')->orderBy('start_at');
+    }
+
+    /**
+     * Get the class enrollment records.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function classEnrollments()
+    {
+        return $this->hasMany(ClassEnrollment::class, 'class_id');
     }
 }

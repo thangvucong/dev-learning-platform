@@ -24,8 +24,8 @@ class CreateClassSessionsTable extends Migration
             $table->string('meeting_type')->nullable();
             $table->string('meeting_info')->nullable();
             $table->text('description')->nullable();
+            $table->string('join_url')->nullable();
             $table->timestamps();
-
             $table->unique(['class_id', 'session_no']);
             $table->index(['class_id', 'start_at']);
         });

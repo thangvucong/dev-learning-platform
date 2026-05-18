@@ -9,11 +9,14 @@ class CourseAttribute extends Model
 {
     use HasFactory;
 
+    public const TYPE_REQUIREMENT = 'requirement';
+    public const TYPE_BENEFIT = 'benefit';
+    public const TYPE_TARGET = 'target';
+
     protected $fillable = [
         'course_id',
         'type',
         'content',
-        'position',
     ];
 
     public function course()

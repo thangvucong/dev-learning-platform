@@ -23,9 +23,11 @@ class CreatePostsTable extends Migration
             $table->string('thumbnail')->nullable();
             $table->string('image')->nullable();
             $table->unsignedBigInteger('views_count')->default(0);
-            $table->boolean('is_published')->default(false);
-            $table->timestamp('published_at')->nullable();
+            $table->string('status', 20)->default('draft');
+            $table->text('reject_reason')->nullable();
             $table->timestamps();
+            $table->index(['user_id', 'status']);
+            $table->index(['status', 'created_at']);
         });
     }
 

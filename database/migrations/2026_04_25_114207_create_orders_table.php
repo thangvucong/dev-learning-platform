@@ -15,15 +15,19 @@ class CreateOrdersTable extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->decimal('total_amount', 12, 2);
-            $table->foreignId('currency_id')->constrained()->cascadeOnDelete();
-            $table->string('status');
-            $table->string('payment_method');
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->unsignedBigInteger('subtotal_amount')->default(0);
+            $table->unsignedBigInteger('discount_amount')->default(0);
+            $table->unsignedBigInteger('total_amount')->default(0);
+            $table->string('status', 30)->default('pending');
+            $table->string('payment_method', 30)->nullable();
+            $table->string('payment_reference', 100)->nullable()->unique();
             $table->text('note')->nullable();
-            $table->string('payment_reference', 64)->nullable()->unique();
             $table->timestamp('paid_at')->nullable();
+            $table->timestamp('cancelled_at')->nullable();
             $table->timestamps();
+            $table->index(['user_id', 'status']);
+            $table->index('paid_at');
         });
     }
 
