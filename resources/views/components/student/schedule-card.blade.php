@@ -2,6 +2,7 @@
     $status = $status ?? 'upcoming';
     $statusMap = [
         'ongoing' => ['label' => 'Đang diễn ra', 'class' => 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'],
+        'live' => ['label' => 'Đang diễn ra', 'class' => 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'],
         'upcoming' => ['label' => 'Sắp diễn ra', 'class' => 'bg-blue-500/10 text-blue-300 border-blue-500/30'],
         'completed' => ['label' => 'Đã kết thúc', 'class' => 'bg-slate-500/10 text-slate-300 border-slate-500/30'],
     ];

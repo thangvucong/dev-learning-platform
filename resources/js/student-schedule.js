@@ -250,6 +250,7 @@ document.addEventListener('DOMContentLoaded', function () {
         initialView,
         initialDate: weekStart,
         events: initialEvents,
+        firstDay: 1,
         timeZone: 'local',
         height: 'auto',
         headerToolbar: false,

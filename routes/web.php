@@ -40,6 +40,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [GlobalSearchController::class, 'index'])->name('search');
 Route::get('/courses/{slug}', [CourseController::class, 'show'])->name('courses.show');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+Route::get('/{slug}', [PostController::class, 'show'])->name('posts.show');
 
 Route::post('/payment/onepay/ipn', [OnePayController::class, 'ipn'])
     ->name('payment.onepay.ipn');
@@ -83,7 +84,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/editor/image', [PostController::class, 'uploadEditorImage'])->name('editor.image');
             Route::get('/{post}/edit', [PostController::class, 'edit'])->name('edit');
             Route::put('/{post}', [PostController::class, 'update'])->name('update');
-            Route::get('/{slug}', [PostController::class, 'show'])->name('show');
+
         });
 
     Route::prefix('my-posts')

@@ -25,6 +25,7 @@
     @include('components.footer')
     <script src="{{ mix('js/app.js') }}" defer></script>
     @stack('scripts')
+    @flasher_render
 </body>
 
 </html>

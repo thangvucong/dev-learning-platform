@@ -39,9 +39,6 @@ class StudentScheduleService
         }
 
         $sessions = $this->buildSessionsFromClasses($classes, $weekStart, $weekEnd);
-        if ($sessions->isEmpty()) {
-            $sessions = $this->buildMockSessions($weekStart, $weekEnd);
-        }
 
         $selectedSession = $this->resolveSelectedSession($sessions, $sessionId);
 
@@ -147,49 +144,6 @@ class StudentScheduleService
                 return $session['start_iso'];
             })
             ->values();
-    }
-
-    /**
-     * Build mock sessions when database has no records.
-     *
-     * @param  \Illuminate\Support\Carbon  $weekStart
-     * @param  \Illuminate\Support\Carbon  $weekEnd
-     * @return \Illuminate\Support\Collection
-     */
-    protected function buildMockSessions(Carbon $weekStart, Carbon $weekEnd): Collection
-    {
-        $mock = collect([
-            ['offset' => 1, 'hour' => 19, 'name' => 'PHP Backend Intensive', 'teacher' => 'Nguyen Van Teacher 1', 'status' => 'upcoming'],
-            ['offset' => 2, 'hour' => 20, 'name' => 'Laravel Architecture', 'teacher' => 'Tran Thi Teacher 2', 'status' => 'live'],
-            ['offset' => 4, 'hour' => 19, 'name' => 'System Design Practice', 'teacher' => 'Le Van Teacher 3', 'status' => 'completed'],
-            ['offset' => 5, 'hour' => 18, 'name' => 'Mock Interview Session', 'teacher' => 'Nguyen Van Teacher 1', 'status' => 'missed'],
-        ]);
-
-        return $mock->map(function (array $item, int $index) use ($weekStart) {
-            $startAt = (clone $weekStart)->addDays($item['offset'])->setTime($item['hour'], 0);
-            $endAt = (clone $startAt)->addHours(2);
-
-            return [
-                'id' => 'mock-' . $index,
-                'class_id' => 0,
-                'class_name' => $item['name'],
-                'teacher' => $item['teacher'],
-                'course' => 'Mock learning class',
-                'description' => 'Dữ liệu mẫu để demo timeline học tập.',
-                'day_key' => $startAt->format('Y-m-d'),
-                'start_iso' => $startAt->toIso8601String(),
-                'end_iso' => $endAt->toIso8601String(),
-                'start_local' => $startAt->format('Y-m-d\TH:i:s'),
-                'end_local' => $endAt->format('Y-m-d\TH:i:s'),
-                'time' => $startAt->format('H:i') . ' - ' . $endAt->format('H:i'),
-                'start_at' => $startAt->format('d/m/Y H:i'),
-                'meeting_type' => 'zoom',
-                'meeting_info' => 'https://zoom.us/j/123456789',
-                'status' => $item['status'],
-                'relative' => $this->resolveRelativeText($startAt, $endAt),
-                'join_url' => '#',
-            ];
-        });
     }
 
     /**

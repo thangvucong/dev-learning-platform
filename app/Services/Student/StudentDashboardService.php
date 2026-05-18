@@ -47,7 +47,7 @@ class StudentDashboardService
                                 'start_time' => optional($session->start_at)->format('H:i'),
                                 'end_time' => optional($session->end_at)->format('H:i'),
                                 'location' => $classItem->location ?: 'Online',
-                                'status' => $this->resolveClassStatus(null, $session->start_at, $session->end_at),
+                                'status' => $this->resolveSessionStatus($session->start_at, $session->end_at),
                                 'join_url' => (string) ($session->join_url ?? ''),
                             ];
                         });
@@ -217,6 +217,26 @@ class StudentDashboardService
         }
 
         return 'ongoing';
+    }
+
+    /**
+     * Resolve status of one session for dashboard card.
+     *
+     * @param  \Illuminate\Support\Carbon|null  $startAt
+     * @param  \Illuminate\Support\Carbon|null  $endAt
+     * @return string
+     */
+    protected function resolveSessionStatus(?Carbon $startAt, ?Carbon $endAt): string
+    {
+        if ($startAt && $startAt->isFuture()) {
+            return 'upcoming';
+        }
+
+        if ($endAt && $endAt->isPast()) {
+            return 'completed';
+        }
+
+        return 'live';
     }
 
     /**

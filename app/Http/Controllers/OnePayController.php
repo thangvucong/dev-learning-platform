@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course;
 use App\Repositories\OrderRepository;
 use App\Services\CheckoutService;
 use App\Services\OnePay\OnePayGatewayService;
@@ -33,14 +34,23 @@ class OnePayController extends Controller
             'method' => ['required', 'in:' . OnePayGatewayService::METHOD_INTERNATIONAL . ',' . OnePayGatewayService::METHOD_DOMESTIC],
         ]);
 
+        $user = $request->user();
+        $courseId = (int) $validated['course_id'];
+        if ($user->enrolledCourses()->whereKey($courseId)->exists() || $orderRepository->hasPaidOrderForCourse((int) $user->id, $courseId)) {
+            /** @var \App\Models\Course|null $course */
+            $course = Course::query()->select(['id', 'slug'])->find($courseId);
+
+            toastr('Bạn đã sở hữu khóa học này.', 'error');
+
+            return redirect()->route('courses.show', ['slug' => (string) optional($course)->slug]);
+        }
+
         $checkout = $checkoutService->buildCheckoutViewData((int) $validated['course_id'], null)['checkout'];
         if (!empty($checkout['is_free']) || (int) $checkout['amount_vnd'] <= 0) {
             return back()->with('onepay_error', 'Khóa học miễn phí hoặc số tiền không hợp lệ.');
         }
 
-        $user = $request->user();
         $method = (string) $validated['method'];
-        $courseId = (int) $validated['course_id'];
         $saleAmount = (float) $checkout['sale_amount'];
 
         $order = $orderRepository->findPendingOnepayOrderForCourse((int) $user->id, $courseId, $method);

@@ -26,22 +26,22 @@
         }
     @endphp
     <div class="space-y-5" id="student-profile-root" data-initial-modal="{{ $initialModal }}">
-        @if (session('success'))
-            <div class="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-                {{ session('success') }}
-            </div>
-        @endif
+        @php
+            if (session('success')) {
+                toastr((string) session('success'), 'success');
+            }
 
-        @if ($errors->any())
-            <div class="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                <p class="font-semibold mb-1">Có lỗi xảy ra, vui lòng kiểm tra lại thông tin.</p>
-                <ul class="list-disc list-inside space-y-1">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+            if ($errors->any()) {
+                $messages = $errors->all();
+                $maxToasts = 3;
+                foreach (array_slice($messages, 0, $maxToasts) as $message) {
+                    toastr((string) $message, 'error');
+                }
+                if (count($messages) > $maxToasts) {
+                    toastr('Còn lỗi khác, vui lòng kiểm tra lại các trường nhập.', 'error');
+                }
+            }
+        @endphp
 
         <section class="grid grid-cols-1 xl:grid-cols-12 gap-4">
             <div class="xl:col-span-9">

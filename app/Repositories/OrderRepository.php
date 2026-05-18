@@ -9,6 +9,27 @@ use Illuminate\Support\Facades\DB;
 class OrderRepository
 {
     /**
+     * Check whether user already has a paid order for course.
+     *
+     * @param  int  $userId
+     * @param  int  $courseId
+     * @return bool
+     */
+    public function hasPaidOrderForCourse(int $userId, int $courseId): bool
+    {
+        return Order::query()
+            ->where('user_id', $userId)
+            ->where('status', 'paid')
+            ->where(function ($query) use ($courseId) {
+                $query->where('course_id', $courseId)
+                    ->orWhereHas('items', function ($sub) use ($courseId) {
+                        $sub->where('course_id', $courseId);
+                    });
+            })
+            ->exists();
+    }
+
+    /**
      * Find a pending SePay QR order for user + course (reuse on refresh).
      *
      * @param  int  $userId
