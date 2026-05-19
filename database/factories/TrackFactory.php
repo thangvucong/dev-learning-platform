@@ -26,6 +26,7 @@ class TrackFactory extends Factory
         return $this->state(function () {
             return [
                 'parent_id' => null,
+                'position' => $this->faker->numberBetween(1, 10),
             ];
         });
     }
@@ -36,6 +37,7 @@ class TrackFactory extends Factory
             return [
                 'course_id' => $track->course_id,
                 'parent_id' => $track->id,
+                'position' => ((int) $track->position * 10) + $this->faker->numberBetween(1, 9),
             ];
         });
     }

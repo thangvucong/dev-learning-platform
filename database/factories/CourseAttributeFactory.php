@@ -14,9 +14,12 @@ class CourseAttributeFactory extends Factory
     {
         return [
             'course_id' => Course::factory(),
-            'type' => $this->faker->randomElement(['requirement', 'benefit', 'target']),
+            'type' => $this->faker->randomElement([
+                CourseAttribute::TYPE_REQUIREMENT,
+                CourseAttribute::TYPE_BENEFIT,
+                CourseAttribute::TYPE_TARGET,
+            ]),
             'content' => $this->faker->sentence(10),
-           
         ];
     }
 
@@ -30,7 +33,7 @@ class CourseAttributeFactory extends Factory
 
         return $this->state(function () use ($contents) {
             return [
-                'type' => 'requirement',
+                'type' => CourseAttribute::TYPE_REQUIREMENT,
                 'content' => $this->faker->randomElement($contents),
             ];
         });
@@ -46,7 +49,7 @@ class CourseAttributeFactory extends Factory
 
         return $this->state(function () use ($contents) {
             return [
-                'type' => 'benefit',
+                'type' => CourseAttribute::TYPE_BENEFIT,
                 'content' => $this->faker->randomElement($contents),
             ];
         });
@@ -62,7 +65,7 @@ class CourseAttributeFactory extends Factory
 
         return $this->state(function () use ($contents) {
             return [
-                'type' => 'target',
+                'type' => CourseAttribute::TYPE_TARGET,
                 'content' => $this->faker->randomElement($contents),
             ];
         });

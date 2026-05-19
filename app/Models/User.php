@@ -14,7 +14,7 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     public const ROLE_ADMIN = 'admin';
-    public const ROLE_TEACHER = 'teacher';
+    public const ROLE_INSTRUCTOR = 'instructor';
     public const ROLE_STUDENT = 'student';
 
     /**
@@ -64,23 +64,23 @@ class User extends Authenticatable
     /**
      * @return bool
      */
-    public function isTeacher(): bool
-    {
-        return $this->hasRole(self::ROLE_TEACHER);
-    }
-
-    /**
-     * @return bool
-     */
     public function isStudent(): bool
     {
         return $this->hasRole(self::ROLE_STUDENT);
     }
 
     /**
+     * @return bool
+     */
+    public function isInstructor(): bool
+    {
+        return $this->hasRole(self::ROLE_INSTRUCTOR);
+    }
+
+    /**
      * Get the courses instructed by the user.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany | \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
     public function instructedCourses()
     {
