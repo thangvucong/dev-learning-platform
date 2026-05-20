@@ -25,11 +25,14 @@ class PermissionSeeder extends Seeder
         'view own courses',
         'view own classes',
         'view own schedule',
+        'view own attendance',
         'manage own profile',
         'create posts',
         'manage own posts',
         'checkout courses',
         'view own orders',
+        'mark class attendance',
+        'manage class attendance',
     ];
 
     /**

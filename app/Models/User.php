@@ -148,6 +148,11 @@ class User extends Authenticatable
         return $this->hasMany(ClassEnrollment::class);
     }
 
+    public function sessionAttendances()
+    {
+        return $this->hasMany(SessionAttendance::class, 'student_id');
+    }
+
     /**
      * Get the course discounts created by the user.
      *

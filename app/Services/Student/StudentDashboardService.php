@@ -17,12 +17,16 @@ class StudentDashboardService
     public function build(User $user): array
     {
         $user->loadMissing([
-            'assignedClasses' => function ($query) {
-                $query->with(['course.instructor', 'sessions'])->orderBy('start_at');
+            'assignedClasses' => function ($query) use ($user) {
+                $query->with([
+                    'course',
+                    'instructor',
+                    'sessions.attendances' => function ($attendanceQuery) use ($user) {
+                        $attendanceQuery->where('student_id', $user->id);
+                    },
+                ])->orderBy('start_at');
             },
-            'enrolledCourses' => function ($query) {
-                $query->with(['instructor'])->orderByDesc('published_at');
-            },
+            'enrolledCourses',
         ]);
 
         $assignedClasses = $user->assignedClasses instanceof Collection ? $user->assignedClasses : collect();
@@ -43,7 +47,7 @@ class StudentDashboardService
                                 'id' => $session->id,
                                 'class_name' => $classItem->name,
                                 'course_name' => optional($classItem->course)->title ?: 'Lớp học',
-                                'teacher_name' => optional(optional($classItem->course)->instructor)->name ?: 'Giảng viên',
+                                'teacher_name' => optional($classItem->instructor)->name ?: 'Giảng viên',
                                 'start_time' => optional($session->start_at)->format('H:i'),
                                 'end_time' => optional($session->end_at)->format('H:i'),
                                 'location' => $classItem->location ?: 'Online',
@@ -58,7 +62,7 @@ class StudentDashboardService
                         'id' => $classItem->id,
                         'class_name' => $classItem->name,
                         'course_name' => optional($classItem->course)->title ?: 'Lớp học',
-                        'teacher_name' => optional(optional($classItem->course)->instructor)->name ?: 'Giảng viên',
+                        'teacher_name' => optional($classItem->instructor)->name ?: 'Giảng viên',
                         'start_time' => optional($classItem->start_at)->format('H:i'),
                         'end_time' => optional($classItem->end_at)->format('H:i'),
                         'location' => $classItem->location ?: 'Online',
@@ -98,10 +102,10 @@ class StudentDashboardService
                     'id' => $classItem->id,
                     'name' => $classItem->name,
                     'course' => optional($classItem->course)->title ?: 'Khóa học',
-                    'teacher' => optional(optional($classItem->course)->instructor)->name ?: 'Giảng viên',
+                    'teacher' => optional($classItem->instructor)->name ?: 'Giảng viên',
                     'next_session' => optional($classItem->dashboard_next_session_at)->format('d/m/Y H:i'),
                     'thumbnail' => optional($classItem->course)->thumbnail_url,
-                    'progress' => $this->estimateClassProgress($classItem),
+                    'progress' => $this->calculateClassProgress($classItem),
                     'status' => $this->resolveClassStatus($classItem->status, $classItem->dashboard_next_session_at, null),
                     'join_url' => (string) data_get($nextSession, 'join_url', ''),
                 ];
@@ -110,13 +114,17 @@ class StudentDashboardService
         $learningCourses = $enrolledCourses
             ->take(6)
             ->values()
-            ->map(function ($courseItem) use ($user) {
-                $progress = $this->estimateCourseProgress($courseItem->pivot->status ?? null);
+            ->map(function ($courseItem) use ($assignedClasses) {
+                $courseClasses = $assignedClasses
+                    ->where('course_id', $courseItem->id)
+                    ->values();
+                $firstClass = $courseClasses->first();
+                $progress = $this->calculateCourseProgress($courseItem->pivot->status ?? null, $courseClasses);
 
                 return [
                     'id' => $courseItem->id,
                     'title' => $courseItem->title,
-                    'teacher' => optional($courseItem->instructor)->name ?: 'Giảng viên',
+                    'teacher' => optional(optional($firstClass)->instructor)->name ?: 'Giảng viên',
                     'thumbnail' => $courseItem->thumbnail_url,
                     'status' => (string) ($courseItem->pivot->status ?? 'learning'),
                     'progress' => $progress,
@@ -130,7 +138,7 @@ class StudentDashboardService
             ->count();
 
         $progressAverage = (int) round($learningCourses->avg('progress') ?: 0);
-        $attendanceRate = $this->estimateAttendanceRate($assignedClasses);
+        $attendanceRate = $this->calculateAttendanceRate($assignedClasses);
 
         return [
             'welcome' => [
@@ -162,7 +170,7 @@ class StudentDashboardService
                     'tone' => 'violet',
                 ],
                 [
-                    'title' => 'Attendance',
+                    'title' => 'Điểm danh',
                     'value' => $attendanceRate,
                     'suffix' => '%',
                     'icon' => 'fa-solid fa-user-check',
@@ -240,22 +248,99 @@ class StudentDashboardService
     }
 
     /**
-     * Estimate progress for one class card.
+     * Calculate progress for one class card from real sessions.
      *
      * @param  mixed  $classItem
      * @return int
      */
-    protected function estimateClassProgress($classItem): int
+    protected function calculateClassProgress($classItem): int
     {
-        if ($classItem->status === 'completed') {
-            return 100;
-        }
+        $sessions = $classItem->sessions instanceof Collection ? $classItem->sessions : collect();
 
-        if ($classItem->start_at && $classItem->start_at->isFuture()) {
+        if ($sessions->isEmpty()) {
+            if ($classItem->status === 'completed') {
+                return 100;
+            }
+
             return 0;
         }
 
-        return 60;
+        $completedSessions = $sessions->filter(function ($session) {
+            return $this->isCompletedSession($session);
+        })->count();
+
+        return (int) round(($completedSessions / max(1, $sessions->count())) * 100);
+    }
+
+    /**
+     * Determine if one session should count as completed for progress.
+     *
+     * @param  mixed  $session
+     * @return bool
+     */
+    protected function isCompletedSession($session): bool
+    {
+        if ((string) ($session->status ?? '') === 'completed') {
+            return true;
+        }
+
+        return $session->end_at instanceof Carbon && $session->end_at->isPast();
+    }
+
+    /**
+     * Calculate course progress from assigned class sessions.
+     *
+     * @param  string|null  $enrollmentStatus
+     * @param  \Illuminate\Support\Collection  $courseClasses
+     * @return int
+     */
+    protected function calculateCourseProgress(?string $enrollmentStatus, Collection $courseClasses): int
+    {
+        $sessions = $courseClasses
+            ->flatMap(function ($classItem) {
+                return $classItem->sessions instanceof Collection ? $classItem->sessions : collect();
+            })
+            ->values();
+
+        if ($sessions->isEmpty()) {
+            return $enrollmentStatus === 'completed' ? 100 : 0;
+        }
+
+        $completedSessions = $sessions->filter(function ($session) {
+            return $this->isCompletedSession($session);
+        })->count();
+
+        return (int) round(($completedSessions / max(1, $sessions->count())) * 100);
+    }
+
+    /**
+     * Calculate attendance percentage from saved attendance records.
+     *
+     * @param  \Illuminate\Support\Collection  $assignedClasses
+     * @return int
+     */
+    protected function calculateAttendanceRate(Collection $assignedClasses): int
+    {
+        $attendanceRecords = $assignedClasses
+            ->flatMap(function ($classItem) {
+                $sessions = $classItem->sessions instanceof Collection ? $classItem->sessions : collect();
+
+                return $sessions->flatMap(function ($session) {
+                    return $session->attendances instanceof Collection ? $session->attendances : collect();
+                });
+            })
+            ->values();
+
+        if ($attendanceRecords->isEmpty()) {
+            return 0;
+        }
+
+        $attendedStatuses = ['present', 'late'];
+        $attendedCount = $attendanceRecords->filter(function ($attendance) use ($attendedStatuses) {
+            return in_array((string) $attendance->status, $attendedStatuses, true);
+        })->count();
+
+        return (int) round(($attendedCount / max(1, $attendanceRecords->count())) * 100);
     }
 
     /**
@@ -283,49 +368,4 @@ class StudentDashboardService
 
         return null;
     }
-
-    /**
-     * Estimate course progress based on enrollment status.
-     *
-     * @param  string|null  $enrollmentStatus
-     * @return int
-     */
-    protected function estimateCourseProgress(?string $enrollmentStatus): int
-    {
-        if ($enrollmentStatus === 'completed') {
-            return 100;
-        }
-
-        if ($enrollmentStatus === 'active') {
-            return 65;
-        }
-
-        if ($enrollmentStatus === 'pending') {
-            return 10;
-        }
-
-        return 45;
-    }
-
-    /**
-     * Estimate attendance percentage.
-     *
-     * @param  \Illuminate\Support\Collection  $assignedClasses
-     * @return int
-     */
-    protected function estimateAttendanceRate(Collection $assignedClasses): int
-    {
-        if ($assignedClasses->isEmpty()) {
-            return 0;
-        }
-
-        $presentCount = $assignedClasses->filter(function ($classItem) {
-            $pivotStatus = (string) optional($classItem->pivot)->status;
-
-            return in_array($pivotStatus, ['active', 'present', 'completed'], true);
-        })->count();
-
-        return (int) round(($presentCount / max(1, $assignedClasses->count())) * 100);
-    }
 }
-

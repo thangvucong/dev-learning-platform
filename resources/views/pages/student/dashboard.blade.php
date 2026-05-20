@@ -99,6 +99,7 @@
             <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-4 gap-4">
                 @forelse ($upcoming_classes as $classCard)
                     @include('components.student.class-card', [
+                        'id' => $classCard['id'],
                         'name' => $classCard['name'],
                         'course' => $classCard['course'],
                         'teacher' => $classCard['teacher'],
