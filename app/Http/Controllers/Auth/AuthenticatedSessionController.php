@@ -36,7 +36,6 @@ class AuthenticatedSessionController extends Controller
 
         $redirectTo = $user ? AuthRedirect::to($user) : '/';
 
-        // Always prioritize role-based redirect to prevent admin/teacher landing on user pages.
         return redirect()->to($redirectTo);
     }
 

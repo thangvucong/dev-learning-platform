@@ -10,7 +10,7 @@ class CourseClassEnrollmentRepository
 {
     public function getActiveStudentCount(int $classId): int
     {
-        return (int) DB::table('class_user')
+        return (int) DB::table('class_enrollments')
             ->where('class_id', $classId)
             ->where('status', 'active')
             ->count();
@@ -25,7 +25,7 @@ class CourseClassEnrollmentRepository
             return [];
         }
 
-        $rows = DB::table('class_user')
+        $rows = DB::table('class_enrollments')
             ->select(['user_id', 'status'])
             ->where('class_id', $classId)
             ->whereIn('user_id', $userIds)
@@ -64,7 +64,7 @@ class CourseClassEnrollmentRepository
             return 0;
         }
 
-        return (int) DB::table('class_user')
+        return (int) DB::table('class_enrollments')
             ->where('class_id', $classId)
             ->whereIn('user_id', $userIds)
             ->update([
@@ -92,9 +92,8 @@ class CourseClassEnrollmentRepository
             ];
         }, $userIds);
 
-        DB::table('class_user')->insert($rows);
+        DB::table('class_enrollments')->insert($rows);
 
         return count($rows);
     }
 }
-

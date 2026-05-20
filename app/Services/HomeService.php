@@ -2,13 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\CourseDiscount;
 use App\Repositories\Interfaces\CourseRepositoryInterface;
 use App\Repositories\PostRepository;
 use Illuminate\Support\Facades\Log;
 
 class HomeService
 {
-    protected const COURSE_LIMIT = 8;
+    protected const COURSE_LIMIT = 10;
 
     protected const POST_LIMIT = 10;
 
@@ -40,8 +41,14 @@ class HomeService
     public function getHomePageSourceData(): array|null
     {
         try {
-            $courses = $this->courseRepository->getPublishedCourses(self::COURSE_LIMIT);
-            $posts = $this->postRepository->getPublishedPosts(self::POST_LIMIT);
+            $courseModels = $this->courseRepository->getPublishedCourses(self::COURSE_LIMIT);
+            $postModels = $this->postRepository->getPublishedPosts(self::POST_LIMIT);
+            $courses = $courseModels->map(function ($course) {
+                return $this->mapCourseCard($course);
+            })->values();
+            $posts = $postModels->map(function ($post) {
+                return $this->mapPostCard($post);
+            })->values();
 
             return [
                 'courses' => $courses,
@@ -57,6 +64,98 @@ class HomeService
                 'bannerCourses' => $this->buildHeroBannerCourses(collect()),
             ];
         }
+    }
+
+    /**
+     * @param  \App\Models\Course  $course
+     * @return array<string, mixed>
+     */
+    protected function mapCourseCard($course): array
+    {
+        $originalPrice = (int) ($course->original_price ?? 0);
+        $salePrice = $this->resolveCourseSalePrice($course, $originalPrice);
+        $primaryClass = $course->classes->first();
+        $instructor = $primaryClass ? $primaryClass->instructor : null;
+
+        return [
+            'id' => (int) $course->id,
+            'title' => (string) $course->title,
+            'slug' => (string) $course->slug,
+            'description' => (string) ($course->description ?: ''),
+            'thumbnail_url' => $course->thumbnail_url,
+            'original_price' => $originalPrice,
+            'sale_price' => $salePrice,
+            'has_discount' => $salePrice < $originalPrice,
+            'rating_avg' => (float) $course->rating_avg,
+            'rating_count' => (int) $course->rating_count,
+            'instructor_name' => optional($instructor)->name ?: 'Giảng viên',
+            'instructor_avatar_url' => optional($instructor)->avatar_url
+                ?: 'https://files.f8.edu.vn/f8-prod/avatars/699286a5e7330.png',
+            'next_class_start_at' => optional($primaryClass)->start_at,
+            'published_at' => $course->published_at,
+        ];
+    }
+
+    /**
+     * @param  \App\Models\Post  $post
+     * @return array<string, mixed>
+     */
+    protected function mapPostCard($post): array
+    {
+        return [
+            'id' => (int) $post->id,
+            'title' => (string) $post->title,
+            'slug' => (string) $post->slug,
+            'description' => (string) ($post->description ?: ''),
+            'thumbnail' => $post->thumbnail,
+            'image' => $post->image,
+            'views_count' => (int) $post->views_count,
+            'author_name' => optional($post->user)->name ?: 'Tác giả',
+            'author_avatar_url' => optional($post->user)->avatar_url
+                ?: 'https://files.f8.edu.vn/f8-prod/avatars/699286a5e7330.png',
+            'created_at' => $post->created_at,
+        ];
+    }
+
+    /**
+     * @param  \App\Models\Course  $course
+     */
+    protected function resolveCourseSalePrice($course, int $originalPrice): int
+    {
+        if ($originalPrice <= 0 || $course->activeDiscounts->isEmpty()) {
+            return max(0, $originalPrice);
+        }
+
+        return (int) $course->activeDiscounts
+            ->map(function ($discount) use ($originalPrice) {
+                return $this->applyDiscount($originalPrice, $discount);
+            })
+            ->filter(function (int $price) {
+                return $price >= 0;
+            })
+            ->min();
+    }
+
+    /**
+     * @param  \App\Models\CourseDiscount  $discount
+     */
+    protected function applyDiscount(int $originalPrice, $discount): int
+    {
+        $amount = (int) $discount->amount;
+
+        if ($discount->type === CourseDiscount::TYPE_PERCENT) {
+            return max(0, $originalPrice - (int) round($originalPrice * min($amount, 100) / 100));
+        }
+
+        if ($discount->type === CourseDiscount::TYPE_FIXED) {
+            return max(0, $originalPrice - $amount);
+        }
+
+        if ($discount->type === CourseDiscount::TYPE_FINAL_PRICE) {
+            return max(0, min($originalPrice, $amount));
+        }
+
+        return $originalPrice;
     }
 
     /**

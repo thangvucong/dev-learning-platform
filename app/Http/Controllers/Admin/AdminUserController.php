@@ -65,6 +65,7 @@ class AdminUserController extends Controller
      */
     public function show(User $user): View
     {
+        $user->load('roles:id,name');
         $user->loadCount([
             'orders as purchased_courses_count' => function ($query) {
                 $query->where('status', 'paid');
@@ -85,6 +86,8 @@ class AdminUserController extends Controller
      */
     public function edit(User $user): View
     {
+        $user->load('roles:id,name');
+
         return view('components.admin.user-edit', [
             'user' => $user,
         ]);
@@ -102,11 +105,16 @@ class AdminUserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'role' => ['required', 'in:admin,teacher,student'],
+            'role' => ['required', 'in:admin,instructor,student'],
             'is_active' => ['required', 'boolean'],
         ]);
 
-        $user->update($validated);
+        $user->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'is_active' => (bool) $validated['is_active'],
+        ]);
+        $user->syncRoles([$validated['role']]);
 
         toastr('Cập nhật người dùng thành công.', 'success');
 
@@ -150,4 +158,3 @@ class AdminUserController extends Controller
         return redirect()->route('admin.users.index');
     }
 }
-

@@ -55,6 +55,9 @@
                 </thead>
                 <tbody class="divide-y divide-slate-700">
                     @forelse ($users as $user)
+                        @php
+                            $roleName = $user->getRoleNames()->first() ?: 'student';
+                        @endphp
                         <tr class="hover:bg-slate-800/40 transition-colors">
                             <td class="px-5 py-4">
                                 @if (!empty($user->avatar_url))
@@ -76,12 +79,12 @@
                             <td class="px-5 py-4">
                                 <span
                                     class="px-2 py-1 rounded-md text-[10px] uppercase font-bold border
-                                    {{ $user->role === 'admin'
+                                    {{ $roleName === 'admin'
                                         ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20'
-                                        : ($user->role === 'teacher'
+                                        : ($roleName === 'instructor'
                                             ? 'bg-sky-500/10 text-sky-300 border-sky-500/20'
                                             : 'bg-slate-700/80 text-slate-300 border-slate-600') }}">
-                                    {{ $user->role ?: 'student' }}
+                                    {{ $roleName }}
                                 </span>
                             </td>
                             <td class="py-4">

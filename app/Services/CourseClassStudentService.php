@@ -44,7 +44,7 @@ class CourseClassStudentService
       
         $validStudentIds = \App\Models\User::query()
             ->whereIn('id', $userIds)
-            ->where('role', 'student') 
+            ->role(\App\Models\User::ROLE_STUDENT)
             ->pluck('id')
             ->toArray();
 

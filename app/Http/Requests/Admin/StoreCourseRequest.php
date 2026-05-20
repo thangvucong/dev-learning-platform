@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Models\User;
 
 class StoreCourseRequest extends FormRequest
 {
@@ -23,7 +24,16 @@ class StoreCourseRequest extends FormRequest
             'instructor_id' => [
                 'required',
                 'integer',
-                Rule::exists('users', 'id')->where('role', 'teacher'),
+                function ($attribute, $value, $fail) {
+                    $exists = User::query()
+                        ->role(User::ROLE_INSTRUCTOR)
+                        ->whereKey((int) $value)
+                        ->exists();
+
+                    if (!$exists) {
+                        $fail('Giảng viên được chọn không hợp lệ.');
+                    }
+                },
             ],
             'description' => ['required', 'string', 'min:50'],
             'thumbnail_url' => ['nullable', 'url', 'max:2048'],

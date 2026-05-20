@@ -18,11 +18,14 @@ class AuthRedirect
             return '/admin/dashboard';
         }
 
-        if ($user->isTeacher()) {
+        if ($user->isInstructor()) {
             return '/teacher/dashboard';
+        }
+
+        if ($user->isStudent()) {
+            return '/user/dashboard';
         }
 
         return '/';
     }
 }
-

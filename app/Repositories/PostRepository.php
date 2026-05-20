@@ -19,8 +19,21 @@ class PostRepository implements PostRepositoryInterface
     public function getPublishedPosts(int $limit): Collection
     {
         return Post::query()
+            ->select([
+                'id',
+                'user_id',
+                'title',
+                'slug',
+                'description',
+                'thumbnail',
+                'image',
+                'views_count',
+                'status',
+                'created_at',
+            ])
             ->with('user:id,name,email,avatar_url')
             ->where('status', Post::STATUS_PUBLISHED)
+            ->orderByDesc('views_count')
             ->orderByDesc('created_at')
             ->limit($limit)
             ->get();

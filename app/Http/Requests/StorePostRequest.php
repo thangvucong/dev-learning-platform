@@ -13,7 +13,7 @@ class StorePostRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return (bool) $this->user();
+        return (bool) $this->user()?->can('create posts');
     }
 
     /**
@@ -53,4 +53,3 @@ class StorePostRequest extends FormRequest
         ];
     }
 }
-

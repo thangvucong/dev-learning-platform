@@ -41,13 +41,13 @@ class EnrollmentClassSyncService
     {
         $status = $enrollment->status === 'active' ? 'active' : 'inactive';
 
-        DB::table('class_user')
-            ->join('classes', 'classes.id', '=', 'class_user.class_id')
+        DB::table('class_enrollments')
+            ->join('classes', 'classes.id', '=', 'class_enrollments.class_id')
             ->where('classes.course_id', $enrollment->course_id)
-            ->where('class_user.user_id', $enrollment->user_id)
+            ->where('class_enrollments.user_id', $enrollment->user_id)
             ->update([
-                'class_user.status' => $status,
-                'class_user.updated_at' => now(),
+                'class_enrollments.status' => $status,
+                'class_enrollments.updated_at' => now(),
             ]);
     }
 
@@ -67,7 +67,7 @@ class EnrollmentClassSyncService
             ->where('course_id', $enrollment->course_id)
             ->whereHas('students', function ($query) use ($enrollment) {
                 $query->where('users.id', $enrollment->user_id)
-                    ->where('class_user.status', 'active');
+                    ->where('class_enrollments.status', 'active');
             })
             ->orderBy('start_at')
             ->first();
@@ -118,4 +118,3 @@ class EnrollmentClassSyncService
         }
     }
 }
-

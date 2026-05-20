@@ -4,7 +4,7 @@
     $authUser = auth()->user();
     $sidebarSections = SidebarMenuBuilder::forUser($authUser);
     $displayName = trim((string) data_get($authUser, 'name', 'User'));
-    $displayRole = strtoupper((string) data_get($authUser, 'role', 'user'));
+    $displayRole = strtoupper((string) optional($authUser)->getRoleNames()->first() ?: 'student');
     $initial = strtoupper(substr($displayName, 0, 1));
 @endphp
 <!DOCTYPE html>

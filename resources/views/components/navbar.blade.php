@@ -1,16 +1,17 @@
 <header
     class="fixed top-0 left-0 right-0 h-[66px] bg-white border-b border-gray-200 z-50 flex items-center justify-between px-6">
-    <a href="{{ url('/') }}" class="flex items-center gap-4">
+    <div class="flex items-center gap-4">
         <div
             class="w-[38px] h-[38px] bg-[#f05123] rounded-lg text-white font-bold flex items-center justify-center text-sm">
-            CST
+            <a href="{{ route('home') }}" class="flex h-full w-full items-center justify-center">CST</a>
         </div>
-        @if (request()->is('/'))
-            <span class="flex items-center text-[#808080] hover:text-[#292929] text-lg font-bold transition-colors">
+        @if (request()->routeIs('home'))
+            <a href="{{ route('home') }}"
+                class="flex items-center text-[#808080] hover:text-[#292929] text-lg font-bold transition-colors">
                 HỌC ĐỂ ĐI LÀM
-            </span>
+            </a>
         @else
-            <button
+            <button type="button" data-topbar-back
                 class="flex items-center text-[#808080] hover:text-[#292929] text-sm font-semibold transition-colors"><svg
                     xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -19,20 +20,22 @@
                 </svg>QUAY LẠI</button>
         @endif
 
-    </a>
+    </div>
     <div class="flex-1 max-w-[420px] mx-8">
         <x-search.topbar-search />
     </div>
     @auth
         @php
-            $name = trim(Auth::user()->name ?? 'User');
+            $authUser = Auth::user();
+            $name = trim($authUser->name ?? 'User');
             $segments = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY) ?: ['U'];
             $first = mb_substr($segments[0], 0, 1);
             $last = mb_substr($segments[count($segments) - 1], 0, 1);
             $initials = strtoupper($first . $last);
-            $role = (string) (Auth::user()->role ?? 'user');
+            $avatarUrl = media_url($authUser->avatar_url ?? null);
+            $role = (string) $authUser->getRoleNames()->first();
             $dashboardRouteName =
-                $role === 'admin' ? 'admin.dashboard' : ($role === 'teacher' ? 'teacher.dashboard' : 'user.dashboard');
+                $role === 'admin' ? 'admin.dashboard' : ($role === 'instructor' ? 'teacher.dashboard' : 'user.dashboard');
         @endphp
         <div class="flex items-center gap-4">
             <button type="button"
@@ -47,17 +50,33 @@
 
             <details class="relative group">
                 <summary
-                    class="list-none cursor-pointer w-9 h-9 rounded-full bg-[#f6ad55] text-white text-sm font-bold flex items-center justify-center select-none shadow-sm">
-                    {{ $initials }}
+                    class="list-none cursor-pointer w-9 h-9 overflow-hidden rounded-full bg-[#f6ad55] text-white text-sm font-bold flex items-center justify-center select-none shadow-sm ring-1 ring-black/5">
+                    @if ($avatarUrl)
+                        <img src="{{ $avatarUrl }}" alt="{{ $name }}" class="h-full w-full object-cover">
+                    @else
+                        {{ $initials }}
+                    @endif
                 </summary>
 
                 <div
                     class="absolute right-0 mt-3 w-56 rounded-xl border border-gray-200 bg-white p-2 shadow-[0_10px_30px_rgba(0,0,0,0.12)]">
                     <div class="px-3 py-2 border-b border-gray-100">
-                        <p class="text-sm font-semibold text-[#242424]">{{ Auth::user()->name }}</p>
-                        <p class="text-xs text-[#777]">{{ Auth::user()->email }}</p>
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[#f6ad55] text-white text-sm font-bold flex items-center justify-center">
+                                @if ($avatarUrl)
+                                    <img src="{{ $avatarUrl }}" alt="{{ $name }}" class="h-full w-full object-cover">
+                                @else
+                                    {{ $initials }}
+                                @endif
+                            </div>
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-semibold text-[#242424]">{{ $authUser->name }}</p>
+                                <p class="truncate text-xs text-[#777]">{{ $authUser->email }}</p>
+                            </div>
+                        </div>
                     </div>
-                    <a href="{{ route('user.profile.index') }}"
+                    <a href="{{ route($authUser->hasRole('student') ? 'user.profile.index' : $dashboardRouteName) }}"
                         class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm text-[#333] hover:bg-[#f6f6f6]">
                         Trang cá nhân
                     </a>
@@ -96,3 +115,30 @@
         </div>
     @endauth
 </header>
+
+@once
+    @push('scripts')
+        <script>
+            document.addEventListener('click', function(event) {
+                const trigger = event.target.closest('[data-topbar-back]');
+                if (!trigger) {
+                    return;
+                }
+
+                const fallbackUrl = @json(route('home'));
+                const referrer = document.referrer ? new URL(document.referrer) : null;
+                const canGoBack = referrer &&
+                    referrer.origin === window.location.origin &&
+                    referrer.href !== window.location.href &&
+                    window.history.length > 1;
+
+                if (canGoBack) {
+                    window.history.back();
+                    return;
+                }
+
+                window.location.href = fallbackUrl;
+            });
+        </script>
+    @endpush
+@endonce

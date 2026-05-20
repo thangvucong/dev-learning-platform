@@ -20,7 +20,51 @@ if (! function_exists('format_price')) {
         $numericAmount = (float) $amount;
         $formattedAmount = number_format($numericAmount, $decimals, ',', '.');
 
-        return trim($formattedAmount . ' ' . $currencySymbol);
+        return trim($formattedAmount . $currencySymbol);
+    }
+}
+
+if (! function_exists('media_url')) {
+    /**
+     * Normalize stored media paths for browser rendering.
+     *
+     * @param  mixed  $path
+     * @param  string|null  $fallback
+     * @return string|null
+     */
+    function media_url($path, ?string $fallback = null): ?string
+    {
+        $value = trim((string) $path);
+
+        if ($value === '') {
+            return $fallback;
+        }
+
+        if (preg_match('/^(https?:)?\/\//i', $value) || strpos($value, 'data:') === 0) {
+            return $value;
+        }
+
+        if (strpos($value, '/storage/') === 0) {
+            return url($value);
+        }
+
+        if (strpos($value, 'storage/') === 0) {
+            return asset($value);
+        }
+
+        if (strpos($value, 'public/') === 0) {
+            return asset(substr($value, 7));
+        }
+
+        if (preg_match('/^(avatars|posts|courses|uploads)\//', $value)) {
+            return asset('storage/' . $value);
+        }
+
+        if (strpos($value, '/') === 0) {
+            return url($value);
+        }
+
+        return asset($value);
     }
 }
 

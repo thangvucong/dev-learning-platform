@@ -15,7 +15,7 @@ class TeacherRepository
     {
         return DB::table('classes')
             ->join('courses', 'classes.course_id', '=', 'courses.id')
-            ->where('courses.instructor_id', $teacherId)
+            ->where('classes.instructor_id', $teacherId)
             ->select('classes.*', 'courses.title as course_name')
             ->get();
     }
@@ -27,7 +27,7 @@ class TeacherRepository
     return DB::table('class_sessions')
         ->join('classes', 'class_sessions.class_id', '=', 'classes.id')
         ->join('courses', 'classes.course_id', '=', 'courses.id')
-        ->where('courses.instructor_id', $teacherId)
+        ->where('classes.instructor_id', $teacherId)
        
         ->whereBetween('class_sessions.start_at', [$startOfMonth, $endOfMonth]) 
         ->select(
@@ -48,9 +48,9 @@ class TeacherRepository
  
     return DB::table('classes')
         ->join('courses', 'classes.course_id', '=', 'courses.id')
-        ->leftJoin('class_user', 'classes.id', '=', 'class_user.class_id')
-        ->leftJoin('users', 'class_user.user_id', '=', 'users.id')
-        ->where('courses.instructor_id', $teacherId)
+        ->leftJoin('class_enrollments', 'classes.id', '=', 'class_enrollments.class_id')
+        ->leftJoin('users', 'class_enrollments.user_id', '=', 'users.id')
+        ->where('classes.instructor_id', $teacherId)
         ->select(
             'classes.id as class_id',
             'classes.name as class_name',

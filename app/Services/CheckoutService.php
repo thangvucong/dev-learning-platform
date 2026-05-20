@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Course;
+use App\Models\CourseDiscount;
 use App\Models\User;
 use App\Repositories\CourseRepository;
 use App\Services\CheckoutOrderService;
@@ -54,29 +55,66 @@ class CheckoutService
         return $viewData;
     }
 
-    /**
-     * Map course price into checkout presentation (no course_prices/discount).
-     *
-     * @param  \App\Models\Course  $course
-     * @return array<string, mixed>
-     */
     protected function buildCheckoutPresentation(Course $course): array
     {
         $currencySymbol = 'đ';
-        $coursePrice = $course->price !== null ? (float) $course->price : 0.0;
-        $saleAmount = max(0.0, $coursePrice);
+        $originalAmount = max(0, (int) ($course->original_price ?? 0));
+        $saleAmount = $this->resolveCourseSalePrice($course, $originalAmount);
+        $discountAmount = max(0, $originalAmount - $saleAmount);
         $amountVnd = (int) round($saleAmount);
+        $hasDiscount = $discountAmount > 0;
 
         return [
             'course_id' => $course->id,
             'title' => $course->title,
             'thumbnail_url' => $course->thumbnail_url,
+            'original_amount' => $originalAmount,
+            'discount_amount' => $discountAmount,
             'sale_amount' => $saleAmount,
             'amount_vnd' => $amountVnd,
+            'is_free' => $amountVnd <= 0,
+            'has_discount' => $hasDiscount,
             'currency_symbol' => $currencySymbol,
-            'list_price_formatted' => (string) format_price($saleAmount, $currencySymbol),
+            'original_price_formatted' => (string) format_price($originalAmount, $currencySymbol),
+            'discount_formatted' => (string) format_price($discountAmount, $currencySymbol),
+            'list_price_formatted' => (string) format_price($originalAmount, $currencySymbol),
             'total_formatted' => (string) format_price($saleAmount, $currencySymbol),
             'line_price_formatted' => (string) format_price($saleAmount, $currencySymbol),
         ];
+    }
+
+    protected function resolveCourseSalePrice(Course $course, int $originalPrice): int
+    {
+        if ($originalPrice <= 0 || $course->activeDiscounts->isEmpty()) {
+            return max(0, $originalPrice);
+        }
+
+        return (int) $course->activeDiscounts
+            ->map(function ($discount) use ($originalPrice) {
+                return $this->applyDiscount($originalPrice, $discount);
+            })
+            ->filter(function (int $price) {
+                return $price >= 0;
+            })
+            ->min();
+    }
+
+    protected function applyDiscount(int $originalPrice, $discount): int
+    {
+        $amount = (int) $discount->amount;
+
+        if ($discount->type === CourseDiscount::TYPE_PERCENT) {
+            return max(0, $originalPrice - (int) round($originalPrice * min($amount, 100) / 100));
+        }
+
+        if ($discount->type === CourseDiscount::TYPE_FIXED) {
+            return max(0, $originalPrice - $amount);
+        }
+
+        if ($discount->type === CourseDiscount::TYPE_FINAL_PRICE) {
+            return max(0, min($originalPrice, $amount));
+        }
+
+        return $originalPrice;
     }
 }

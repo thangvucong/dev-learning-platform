@@ -3,6 +3,9 @@
 @section('title', 'Chi tiết người dùng')
 
 @section('content')
+    @php
+        $roleName = $user->getRoleNames()->first() ?: 'student';
+    @endphp
     <div class="max-w-4xl">
         <div class="mb-6">
             <a href="{{ route('admin.users.index') }}" class="text-sm text-emerald-400 hover:text-emerald-300">
@@ -34,7 +37,7 @@
                 </div>
                 <div class="bg-slate-900/40 rounded-xl border border-slate-700 p-4">
                     <dt class="text-slate-400 mb-1">Vai trò</dt>
-                    <dd class="text-slate-100 font-semibold">{{ $user->role ?: 'student' }}</dd>
+                    <dd class="text-slate-100 font-semibold">{{ $roleName }}</dd>
                 </div>
                 <div class="bg-slate-900/40 rounded-xl border border-slate-700 p-4">
                     <dt class="text-slate-400 mb-1">Trạng thái</dt>
@@ -66,4 +69,3 @@
         </div>
     </div>
 @endsection
-

@@ -51,15 +51,23 @@ class OnePayController extends Controller
         }
 
         $method = (string) $validated['method'];
-        $saleAmount = (float) $checkout['sale_amount'];
+        $originalAmount = (int) $checkout['original_amount'];
+        $discountAmount = (int) $checkout['discount_amount'];
+        $finalAmount = (int) $checkout['amount_vnd'];
 
         $order = $orderRepository->findPendingOnepayOrderForCourse((int) $user->id, $courseId, $method);
-        if (!$order || (float) $order->total_amount !== $saleAmount) {
+        if (
+            !$order
+            || (int) $order->subtotal_amount !== $originalAmount
+            || (int) $order->discount_amount !== $discountAmount
+            || (int) $order->total_amount !== $finalAmount
+        ) {
             $order = $orderRepository->createPendingOnepayOrderWithCourse(
                 (int) $user->id,
-                $saleAmount,
+                $originalAmount,
+                $discountAmount,
+                $finalAmount,
                 $courseId,
-                $saleAmount,
                 $method
             );
         }
@@ -124,7 +132,14 @@ class OnePayController extends Controller
         }
 
         if ($order) {
-            return redirect()->route('checkout', ['course_id' => $order->course_id])
+            $courseId = optional($order->items()->select('course_id')->first())->course_id;
+
+            if (!$courseId) {
+                return redirect()->route('home')
+                    ->with('onepay_error', $result['message']);
+            }
+
+            return redirect()->route('checkout', ['course_id' => $courseId])
                 ->with('onepay_error', $result['message']);
         }
 

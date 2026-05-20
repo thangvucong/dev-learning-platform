@@ -14,7 +14,7 @@
                 class="w-full bg-slate-900/60 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-emerald-500">
                 <option value="" @selected((string) ($filters['role'] ?? '') === '')>Tất cả</option>
                 <option value="admin" @selected((string) ($filters['role'] ?? '') === 'admin')>Admin</option>
-                <option value="teacher" @selected((string) ($filters['role'] ?? '') === 'teacher')>Teacher</option>
+                <option value="instructor" @selected((string) ($filters['role'] ?? '') === 'instructor')>Instructor</option>
                 <option value="student" @selected((string) ($filters['role'] ?? '') === 'student')>Student</option>
             </select>
         </div>

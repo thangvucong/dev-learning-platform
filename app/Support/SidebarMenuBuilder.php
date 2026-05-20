@@ -4,6 +4,7 @@ namespace App\Support;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Route;
+use Spatie\Permission\Traits\HasRoles;
 
 class SidebarMenuBuilder
 {
@@ -17,7 +18,7 @@ class SidebarMenuBuilder
     {
         $rolesConfig = (array) config('sidebar.roles', []);
         $role = self::resolveRole($user);
-        $sections = (array) ($rolesConfig[$role] ?? $rolesConfig[config('sidebar.default_role', 'user')] ?? []);
+        $sections = (array) ($rolesConfig[$role] ?? $rolesConfig[config('sidebar.default_role', 'student')] ?? []);
 
         return array_values(array_map(function (array $section) {
             $items = array_map([self::class, 'normalizeItem'], (array) ($section['items'] ?? []));
@@ -38,9 +39,15 @@ class SidebarMenuBuilder
      */
     protected static function resolveRole(?Authenticatable $user): string
     {
-        $role = (string) data_get($user, 'role', config('sidebar.default_role', 'user'));
+        if ($user && in_array(HasRoles::class, class_uses_recursive($user), true)) {
+            $role = (string) $user->getRoleNames()->first();
 
-        return $role !== '' ? $role : (string) config('sidebar.default_role', 'user');
+            return $role !== '' ? $role : (string) config('sidebar.default_role', 'student');
+        }
+
+        $role = (string) config('sidebar.default_role', 'student');
+
+        return $role !== '' ? $role : (string) config('sidebar.default_role', 'student');
     }
 
     /**
@@ -125,4 +132,3 @@ class SidebarMenuBuilder
         return $routeName !== '' && Route::has($routeName);
     }
 }
-

@@ -20,6 +20,7 @@ class UserRepository implements UserRepositoryInterface
     public function getAdminUsersPaginated(array $filters, int $perPage = 10): LengthAwarePaginator
     {
         return User::query()
+            ->with('roles:id,name')
             ->withCount([
                 'orders as purchased_courses_count' => function (Builder $query) {
                     $query->where('status', 'paid');
@@ -34,7 +35,7 @@ class UserRepository implements UserRepositoryInterface
                 });
             })
             ->when(!empty($filters['role']), function (Builder $query) use ($filters) {
-                $query->where('role', (string) $filters['role']);
+                $query->role((string) $filters['role']);
             })
             ->when(isset($filters['status']) && $filters['status'] !== '', function (Builder $query) use ($filters) {
                 $query->where('is_active', (int) $filters['status'] === 1);
@@ -59,7 +60,7 @@ class UserRepository implements UserRepositoryInterface
         return [
             'total_users' => User::query()->count(),
             'active_users' => User::query()->where('is_active', true)->count(),
-            'admins' => User::query()->where('role', 'admin')->count(),
+            'admins' => User::query()->role(User::ROLE_ADMIN)->count(),
             'new_users_this_month' => User::query()
                 ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
                 ->count(),
@@ -85,19 +86,20 @@ class UserRepository implements UserRepositoryInterface
     public function getRecentUsers($limit = 5)
     {
         return User::query()
-            ->select('id', 'name', 'email', 'role', 'created_at')
+            ->with('roles:id,name')
+            ->select('id', 'name', 'email', 'created_at')
             ->latest()
             ->take((int) $limit)
             ->get();
     }
 
     /**
-     * Giảng viên cho form quản lý khóa học (theo cột users.role).
+     * Giảng viên cho form quản lý khóa học.
      */
     public function findTeachersForSelect(): Collection
     {
         return User::query()
-            ->where('role', 'teacher')
+            ->role(User::ROLE_INSTRUCTOR)
             ->select(['id', 'name', 'email'])
             ->orderBy('name')
             ->get();

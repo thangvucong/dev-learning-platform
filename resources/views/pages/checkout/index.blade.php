@@ -3,6 +3,13 @@
 @section('title', 'Thanh toán — ' . ($checkout['title'] ?? ''))
 
 @section('content')
+    @php
+        $checkoutThumbnailUrl = media_url(
+            $checkout['thumbnail_url'] ?? null,
+            'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=480&q=80'
+        );
+    @endphp
+
     <main class="ml-0 sm:ml-[96px] flex-1 flex justify-center items-start min-h-[calc(100vh-66px)]">
         <div class="w-full max-w-[1100px] flex flex-col lg:flex-row px-4 sm:px-6 lg:px-10 py-10">
 
@@ -223,16 +230,30 @@
 
                 <div class="mt-10">
                     <h3 class="text-[16px] font-bold text-[#2d2f31] mb-6">Chi tiết đơn hàng (1 khóa học)</h3>
-                    <div class="flex gap-4 items-start">
+                    <div class="flex gap-4 items-start rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
                         <img alt="{{ $checkout['title'] }}"
-                            class="w-12 h-12 object-cover border border-[#d1d7dc] flex-shrink-0"
-                            src="{{ $checkout['thumbnail_url'] ?: 'https://img-c.udemycdn.com/course/100x100/6566789_2e8a_10.jpg' }}">
+                            class="w-16 h-16 rounded-lg object-cover border border-[#d1d7dc] flex-shrink-0"
+                            src="{{ $checkoutThumbnailUrl }}">
                         <div class="flex-1 min-w-0">
                             <h4 class="text-[15px] font-bold leading-tight text-[#2d2f31] mb-1 line-clamp-2">
                                 {{ $checkout['title'] }}
                             </h4>
+                            @if (!empty($checkout['has_discount']))
+                                <span
+                                    class="inline-flex items-center rounded-full bg-[#fff1e8] px-2 py-0.5 text-[12px] font-bold text-[#f05123]">
+                                    Đã giảm {{ $checkout['discount_formatted'] }}
+                                </span>
+                            @endif
                         </div>
-                        <div class="text-[15px] text-[#2d2f31] flex-shrink-0">{{ $checkout['line_price_formatted'] }}
+                        <div class="flex-shrink-0 text-right">
+                            @if (!empty($checkout['has_discount']))
+                                <div class="text-[13px] text-[#6a6f73]"
+                                    style="text-decoration: line-through; text-decoration-thickness: 1px;">
+                                    {{ $checkout['original_price_formatted'] }}
+                                </div>
+                            @endif
+                            <div class="text-[16px] font-bold text-[#2d2f31]">{{ $checkout['line_price_formatted'] }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -241,16 +262,32 @@
             <div
                 class="w-full lg:w-[380px] xl:w-[420px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-[#d1d7dc] pt-8 lg:pt-0 lg:pl-10">
                 <div class="lg:sticky lg:top-[98px]">
-                    <h2 class="text-[22px] sm:text-[24px] font-bold text-[#2d2f31] mb-6">Tổng quan đơn hàng</h2>
+                    <div class="rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+                        <h2 class="text-[22px] sm:text-[24px] font-bold text-[#2d2f31] mb-6">Tổng quan đơn hàng</h2>
 
-                    <div class="flex justify-between items-center mb-4 text-[15px]">
-                        <span class="text-[#2d2f31]">Giá khóa học:</span>
-                        <span class="text-[#2d2f31]">{{ $checkout['list_price_formatted'] }}</span>
-                    </div>
-                    <hr class="border-[#d1d7dc] my-4">
-                    <div class="flex justify-between items-center mb-8">
-                        <span class="text-[16px] font-bold text-[#2d2f31]">Tổng cộng (1 khóa học):</span>
-                        <span class="text-[16px] font-bold text-[#2d2f31]">{{ $checkout['total_formatted'] }}</span>
+                        <div class="space-y-4 text-[15px]">
+                            <div class="flex justify-between items-center gap-4">
+                                <span class="text-[#6a6f73]">Giá gốc:</span>
+                                <span class="text-[#2d2f31]">{{ $checkout['original_price_formatted'] }}</span>
+                            </div>
+                            @if (!empty($checkout['has_discount']))
+                                <div class="flex justify-between items-center gap-4">
+                                    <span class="text-[#6a6f73]">Giảm giá:</span>
+                                    <span
+                                        class="font-semibold text-[#16a34a]">-{{ $checkout['discount_formatted'] }}</span>
+                                </div>
+                            @endif
+                        </div>
+
+                        <hr class="border-[#d1d7dc] my-5">
+
+                        <div class="flex justify-between items-start gap-4 mb-2">
+                            <span class="text-[16px] font-bold text-[#2d2f31]">Tổng cộng</span>
+                            <span
+                                class="text-[24px] font-black leading-none text-[#f05123]">{{ $checkout['total_formatted'] }}</span>
+                        </div>
+                        <p class="text-[13px] text-[#6a6f73]">Áp dụng cho 1 khóa học. Bạn sẽ được chuyển sang cổng thanh
+                            toán sau khi xác nhận.</p>
                     </div>
                 </div>
             </div>

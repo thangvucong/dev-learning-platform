@@ -1,5 +1,12 @@
-<div class="absolute top-full w-[700px] mx-auto left-0 right-0 mt-2 bg-white border border-[#e8e8e8] rounded-xl shadow-lg overflow-hidden z-50"
-    x-show="showDropdown" x-transition @click.outside="showDropdown = false" @keydown.escape.window="showDropdown = false">
+<div class="absolute left-1/2 top-full mt-2 max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-hidden rounded-xl border border-[#e8e8e8] bg-white shadow-lg z-50"
+    style="width: min(700px, calc(100vw - 2rem));" x-show="showDropdown"
+    x-transition:enter="transition-opacity ease-out duration-150"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition-opacity ease-in duration-100"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    @click.outside="showDropdown = false" @keydown.escape.window="showDropdown = false">
 
     <!-- Loading State -->
     <template x-if="isLoading">
@@ -23,8 +30,15 @@
         </div>
     </template>
 
+    <!-- Error State -->
+    <template x-if="!isLoading && errorMessage">
+        <div class="px-4 py-5 text-center">
+            <p class="text-sm font-semibold text-[#b32d2d]" x-text="errorMessage"></p>
+        </div>
+    </template>
+
     <!-- Results State -->
-    <template x-if="!isLoading && results">
+    <template x-if="!isLoading && !errorMessage && results">
         <div>
             <!-- Empty State -->
             <template x-if="results.total === 0">
@@ -43,6 +57,8 @@
                             <div>
                                 <template x-for="item in results.courses" :key="item.id">
                                     <a :href="item.url"
+                                        @mousedown.prevent="goToResult(item.url)"
+                                        @click.prevent="goToResult(item.url)"
                                         class="flex items-start gap-3 px-4 py-3 hover:bg-[#f9f9f9] transition-colors duration-150 border-b border-[#e8e8e8] last:border-b-0 cursor-pointer group">
                                         <div
                                             class="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-br from-[#f0f0f0] to-[#e0e0e0]">
@@ -60,12 +76,21 @@
                                             </div>
                                             <p x-text="item.description" class="text-xs text-[#666] line-clamp-2 mb-2">
                                             </p>
-                                            <div class="flex items-center gap-2 text-xs text-[#808080]">
-                                                <div class="flex items-center gap-1">
+                                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#808080]">
+                                                <div class="flex min-w-0 items-center gap-1">
                                                     <img :src="item.meta.instructor_avatar" :alt="item.meta.instructor"
-                                                        class="w-4 h-4 rounded-full object-cover">
-                                                    <span x-text="item.meta.instructor"></span>
+                                                        class="w-4 h-4 flex-shrink-0 rounded-full object-cover">
+                                                    <span class="truncate" x-text="item.meta.instructor"></span>
                                                 </div>
+                                                <template x-if="item.meta.rating">
+                                                    <div class="flex items-center gap-1 text-[#f6c343]">
+                                                        <span>★</span>
+                                                        <span class="font-semibold text-[#6a6f73]"
+                                                            x-text="Number(item.meta.rating).toFixed(1)"></span>
+                                                        <span class="text-[#a0a0a0]"
+                                                            x-text="'(' + Number(item.meta.rating_count || 0).toLocaleString('vi-VN') + ')'"></span>
+                                                    </div>
+                                                </template>
                                             </div>
                                         </div>
                                         <div
@@ -96,6 +121,8 @@
                             <div>
                                 <template x-for="item in results.posts" :key="item.id">
                                     <a :href="item.url"
+                                        @mousedown.prevent="goToResult(item.url)"
+                                        @click.prevent="goToResult(item.url)"
                                         class="flex items-start gap-3 px-4 py-3 hover:bg-[#f9f9f9] transition-colors duration-150 border-b border-[#e8e8e8] last:border-b-0 cursor-pointer group">
                                         <div
                                             class="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-br from-[#f0f0f0] to-[#e0e0e0]">
@@ -114,12 +141,16 @@
                                             <p x-text="item.description" class="text-xs text-[#666] line-clamp-2 mb-2">
                                             </p>
                                             <div class="flex items-center gap-2 text-xs text-[#808080]">
-                                                <div class="flex items-center gap-2">
+                                                <div class="flex min-w-0 items-center gap-2">
                                                     <img :src="item.meta.author_avatar" :alt="item.meta.author"
-                                                        class="w-4 h-4 rounded-full object-cover">
-                                                    <span x-text="item.meta.author"></span>
+                                                        class="w-4 h-4 flex-shrink-0 rounded-full object-cover">
+                                                    <span class="truncate" x-text="item.meta.author"></span>
                                                     <span class="text-[#d0d0d0]">•</span>
                                                     <span x-text="item.meta.date"></span>
+                                                    <template x-if="item.meta.views_count !== undefined">
+                                                        <span class="text-[#a0a0a0]"
+                                                            x-text="Number(item.meta.views_count || 0).toLocaleString('vi-VN') + ' lượt xem'"></span>
+                                                    </template>
                                                 </div>
                                             </div>
                                         </div>
@@ -138,6 +169,7 @@
                             </div>
                         </div>
                     </template>
+
                 </div>
             </template>
 

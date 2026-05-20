@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\CourseService;
-use Illuminate\Http\Request;
+use App\Models\User;
+
 class CourseController extends Controller
 {
     protected CourseService $courseService;
@@ -28,34 +29,46 @@ class CourseController extends Controller
     {
         $courseDetailData = $this->courseService->getCourseDetailSourceData($slug);
 
+        abort_if(empty($courseDetailData), 404);
+
         return view('pages.courses.index', [
             'course' => $courseDetailData['course'],
             'instructor' => $courseDetailData['instructor'],
             'classes' => $courseDetailData['classes'],
+            'courseDetailData' => $courseDetailData['courseDetailData'],
         ]);
     }
 
+    /**
+     * Update instructor new for course
+     * * @param \Illuminate\Http\Request $request
+     * @param int $id
+     */
+    public function updateInstructor(\Illuminate\Http\Request $request, $id)
+    {
+        $request->validate([
+            'instructor_id' => [
+                'required',
+                'integer',
+                function ($attribute, $value, $fail) {
+                    $exists = User::query()
+                        ->role(User::ROLE_INSTRUCTOR)
+                        ->whereKey((int) $value)
+                        ->exists();
 
-    // Thêm vào trong class CourseController
+                    if (!$exists) {
+                        $fail('Giảng viên được chọn không hợp lệ.');
+                    }
+                },
+            ],
+        ]);
 
-/**
- * Cập nhật giảng viên mới cho khóa học
- * * @param \Illuminate\Http\Request $request
- * @param int $id (ID của khóa học)
- */
-public function updateInstructor(\Illuminate\Http\Request $request, $id)
-{
-   
-    $request->validate([
-        'instructor_id' => 'required|exists:users,id', 
-    ]);
+        $result = $this->courseService->updateCourseInstructor($id, $request->instructor_id);
 
-    $result = $this->courseService->updateCourseInstructor($id, $request->instructor_id);
+        if ($result) {
+            return back()->with('success', 'Đã thay đổi giảng viên thành công!');
+        }
 
-    if ($result) {
-        return back()->with('success', 'Đã thay đổi giảng viên thành công!');
+        return back()->with('error', 'Có lỗi xảy ra khi cập nhật.');
     }
-
-    return back()->with('error', 'Có lỗi xảy ra khi cập nhật.');
-}
 }

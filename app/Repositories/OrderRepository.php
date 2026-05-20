@@ -20,11 +20,8 @@ class OrderRepository
         return Order::query()
             ->where('user_id', $userId)
             ->where('status', 'paid')
-            ->where(function ($query) use ($courseId) {
-                $query->where('course_id', $courseId)
-                    ->orWhereHas('items', function ($sub) use ($courseId) {
-                        $sub->where('course_id', $courseId);
-                    });
+            ->whereHas('items', function ($sub) use ($courseId) {
+                $sub->where('course_id', $courseId);
             })
             ->exists();
     }
@@ -39,15 +36,12 @@ class OrderRepository
     public function findPendingSepayOrderForCourse(int $userId, int $courseId): ?Order
     {
         return Order::query()
+            ->whereHas('items', function ($sub) use ($courseId) {
+                $sub->where('course_id', $courseId);
+            })
             ->where('user_id', $userId)
             ->where('status', 'pending')
             ->where('payment_method', 'sepay_qr')
-            ->where(function ($query) use ($courseId) {
-                $query->where('course_id', $courseId)
-                    ->orWhereHas('items', function ($sub) use ($courseId) {
-                        $sub->where('course_id', $courseId);
-                    });
-            })
             ->orderByDesc('id')
             ->first();
     }
@@ -63,8 +57,10 @@ class OrderRepository
     public function findPendingOnepayOrderForCourse(int $userId, int $courseId, string $paymentMethod): ?Order
     {
         return Order::query()
+            ->whereHas('items', function ($sub) use ($courseId) {
+                $sub->where('course_id', $courseId);
+            })
             ->where('user_id', $userId)
-            ->where('course_id', $courseId)
             ->where('status', 'pending')
             ->where('payment_method', $paymentMethod)
             ->orderByDesc('id')
@@ -75,22 +71,25 @@ class OrderRepository
      * Create pending order with one course line and set payment_reference to ORDER_{id}.
      *
      * @param  int  $userId
-     * @param  float  $totalAmount
+     * @param  int  $originalAmount
+     * @param  int  $discountAmount
+     * @param  int  $finalAmount
      * @param  int  $courseId
-     * @param  float  $linePrice
      * @return \App\Models\Order
      */
     public function createPendingSepayOrderWithCourse(
         int $userId,
-        float $totalAmount,
-        int $courseId,
-        float $linePrice
+        int $originalAmount,
+        int $discountAmount,
+        int $finalAmount,
+        int $courseId
     ): Order {
-        return DB::transaction(function () use ($userId, $totalAmount, $courseId, $linePrice) {
+        return DB::transaction(function () use ($userId, $originalAmount, $discountAmount, $finalAmount, $courseId) {
             $order = Order::query()->create([
                 'user_id' => $userId,
-                'course_id' => $courseId,
-                'total_amount' => $totalAmount,
+                'subtotal_amount' => $originalAmount,
+                'discount_amount' => $discountAmount,
+                'total_amount' => $finalAmount,
                 'status' => 'pending',
                 'payment_method' => 'sepay_qr',
                 'note' => null,
@@ -100,7 +99,9 @@ class OrderRepository
             OrderItem::query()->create([
                 'order_id' => $order->id,
                 'course_id' => $courseId,
-                'price' => $linePrice,
+                'original_price' => $originalAmount,
+                'discount_amount' => $discountAmount,
+                'final_price' => $finalAmount,
             ]);
 
             $reference = 'ORDER_' . $order->id;
@@ -114,24 +115,27 @@ class OrderRepository
      * Create pending OnePay card order with one course line.
      *
      * @param  int  $userId
-     * @param  float  $totalAmount
+     * @param  int  $originalAmount
+     * @param  int  $discountAmount
+     * @param  int  $finalAmount
      * @param  int  $courseId
-     * @param  float  $linePrice
      * @param  string  $paymentMethod
      * @return \App\Models\Order
      */
     public function createPendingOnepayOrderWithCourse(
         int $userId,
-        float $totalAmount,
+        int $originalAmount,
+        int $discountAmount,
+        int $finalAmount,
         int $courseId,
-        float $linePrice,
         string $paymentMethod
     ): Order {
-        return DB::transaction(function () use ($userId, $totalAmount, $courseId, $linePrice, $paymentMethod) {
+        return DB::transaction(function () use ($userId, $originalAmount, $discountAmount, $finalAmount, $courseId, $paymentMethod) {
             $order = Order::query()->create([
                 'user_id' => $userId,
-                'course_id' => $courseId,
-                'total_amount' => $totalAmount,
+                'subtotal_amount' => $originalAmount,
+                'discount_amount' => $discountAmount,
+                'total_amount' => $finalAmount,
                 'status' => 'pending',
                 'payment_method' => $paymentMethod,
                 'note' => null,
@@ -141,7 +145,9 @@ class OrderRepository
             OrderItem::query()->create([
                 'order_id' => $order->id,
                 'course_id' => $courseId,
-                'price' => $linePrice,
+                'original_price' => $originalAmount,
+                'discount_amount' => $discountAmount,
+                'final_price' => $finalAmount,
             ]);
 
             return $order->fresh(['items']);

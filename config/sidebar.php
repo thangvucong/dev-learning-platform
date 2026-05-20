@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'default_role' => 'user',
+    'default_role' => 'student',
 
     'roles' => [
         'admin' => [
@@ -47,7 +47,7 @@ return [
             ],
         ],
 
-        'teacher' => [
+        'instructor' => [
             [
                 'section' => 'Giảng viên',
                 'items' => [
@@ -93,7 +93,7 @@ return [
             ],
         ],
 
-        'user' => [
+        'student' => [
             [
                 'section' => 'Học tập',
                 'items' => [
@@ -132,4 +132,3 @@ return [
         ],
     ],
 ];
-

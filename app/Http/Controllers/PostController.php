@@ -29,6 +29,18 @@ class PostController extends Controller
     }
 
     /**
+     * Display post index page.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function index(): View
+    {
+        return view('pages.posts.index', [
+            'posts' => $this->postRepository->getPublishedPosts(10),
+        ]);
+    }
+
+    /**
      * Display post create page.
      *
      * @return \Illuminate\View\View
@@ -47,9 +59,7 @@ class PostController extends Controller
      */
     public function edit(Request $request, Post $post)
     {
-        if ((int) $post->user_id !== (int) $request->user()->id) {
-            abort(403);
-        }
+        $this->authorize('update', $post);
 
         if ($post->status === Post::STATUS_PUBLISHED) {
             return redirect()->route('posts.show', $post->slug);
@@ -69,9 +79,7 @@ class PostController extends Controller
      */
     public function update(UpdatePostRequest $request, Post $post): RedirectResponse
     {
-        if ((int) $post->user_id !== (int) $request->user()->id) {
-            abort(403);
-        }
+        $this->authorize('update', $post);
 
         if ($post->status === Post::STATUS_PUBLISHED) {
             toastr('Không thể chỉnh sửa bài đã xuất bản.', 'error');
@@ -163,4 +171,3 @@ class PostController extends Controller
         ]);
     }
 }
-

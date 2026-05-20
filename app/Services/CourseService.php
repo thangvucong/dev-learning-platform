@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Course;
+use App\Models\CourseAttribute;
+use App\Models\CourseDiscount;
 use App\Repositories\Interfaces\CourseRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use Illuminate\Support\Arr;
@@ -46,17 +48,160 @@ class CourseService
     {
         try {
             $course = $this->courseRepository->findPublishedCourseDetailBySlug($slug);
+            $detail = $this->mapCourseDetail($course);
 
             return [
-                'course' => $course,
-                'instructor' => $course->instructor,
-                'classes' => $course->classes ?? [],
+                'course' => $detail['course'],
+                'instructor' => $detail['instructor'],
+                'classes' => $detail['classes'],
+                'courseDetailData' => $detail,
             ];
         } catch (\Throwable $th) {
             Log::error('Error getting course detail source data: ' . $th->getMessage());
 
             return [];
         }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function mapCourseDetail(Course $course): array
+    {
+        $originalPrice = (int) ($course->original_price ?? 0);
+        $salePrice = $this->resolveCourseSalePrice($course, $originalPrice);
+        $classes = $course->classes->values();
+        $primaryClass = $classes->first();
+        $instructor = $primaryClass ? $primaryClass->instructor : null;
+        $tracks = $this->mapTracks($course);
+        $lessonsCount = $tracks->sum(function (array $track) {
+            return $track['children']->count();
+        });
+
+        return [
+            'course' => [
+                'id' => (int) $course->id,
+                'title' => (string) $course->title,
+                'slug' => (string) $course->slug,
+                'description' => (string) ($course->description ?: ''),
+                'thumbnail_url' => $course->thumbnail_url,
+                'intro_video_url' => $course->intro_video_url,
+                'original_price' => $originalPrice,
+                'sale_price' => $salePrice,
+                'has_discount' => $salePrice < $originalPrice,
+                'rating_avg' => (float) $course->rating_avg,
+                'rating_count' => (int) $course->rating_count,
+                'chapters_count' => $tracks->count(),
+                'lessons_count' => $lessonsCount,
+                'published_at' => $course->published_at,
+            ],
+            'instructor' => [
+                'name' => optional($instructor)->name ?: 'Giảng viên',
+                'email' => optional($instructor)->email ?: null,
+                'avatar_url' => optional($instructor)->avatar_url
+                    ?: 'https://files.f8.edu.vn/f8-prod/avatars/699286a5e7330.png',
+            ],
+            'classes' => $classes,
+            'tracks' => $tracks,
+            'benefits' => $this->mapAttributesByType($course, CourseAttribute::TYPE_BENEFIT),
+            'requirements' => $this->mapAttributesByType($course, CourseAttribute::TYPE_REQUIREMENT),
+            'targets' => $this->mapAttributesByType($course, CourseAttribute::TYPE_TARGET),
+            'summary' => [
+                'chapters_count' => $tracks->count(),
+                'lessons_count' => $lessonsCount,
+                'classes_count' => $classes->count(),
+                'next_class_start_at' => optional($primaryClass)->start_at,
+            ],
+        ];
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    protected function mapTracks(Course $course)
+    {
+        $tracks = $course->tracks->sortBy([
+            ['position', 'asc'],
+            ['id', 'asc'],
+        ])->values();
+        $childrenByParent = $tracks->whereNotNull('parent_id')->groupBy('parent_id');
+
+        return $tracks
+            ->whereNull('parent_id')
+            ->map(function ($track) use ($childrenByParent) {
+                return [
+                    'id' => (int) $track->id,
+                    'title' => (string) $track->title,
+                    'description' => (string) ($track->description ?: ''),
+                    'position' => (int) $track->position,
+                    'children' => $childrenByParent
+                        ->get($track->id, collect())
+                        ->sortBy([
+                            ['position', 'asc'],
+                            ['id', 'asc'],
+                        ])
+                        ->values()
+                        ->map(function ($child) {
+                            return [
+                                'id' => (int) $child->id,
+                                'title' => (string) $child->title,
+                                'description' => (string) ($child->description ?: ''),
+                                'position' => (int) $child->position,
+                            ];
+                        }),
+                ];
+            })
+            ->values();
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, array<string, string>>
+     */
+    protected function mapAttributesByType(Course $course, string $type)
+    {
+        return $course->attributes
+            ->where('type', $type)
+            ->values()
+            ->map(function ($attribute) {
+                return [
+                    'content' => (string) $attribute->content,
+                ];
+            });
+    }
+
+    protected function resolveCourseSalePrice(Course $course, int $originalPrice): int
+    {
+        if ($originalPrice <= 0 || $course->activeDiscounts->isEmpty()) {
+            return max(0, $originalPrice);
+        }
+
+        return (int) $course->activeDiscounts
+            ->map(function ($discount) use ($originalPrice) {
+                return $this->applyDiscount($originalPrice, $discount);
+            })
+            ->filter(function (int $price) {
+                return $price >= 0;
+            })
+            ->min();
+    }
+
+    protected function applyDiscount(int $originalPrice, $discount): int
+    {
+        $amount = (int) $discount->amount;
+
+        if ($discount->type === CourseDiscount::TYPE_PERCENT) {
+            return max(0, $originalPrice - (int) round($originalPrice * min($amount, 100) / 100));
+        }
+
+        if ($discount->type === CourseDiscount::TYPE_FIXED) {
+            return max(0, $originalPrice - $amount);
+        }
+
+        if ($discount->type === CourseDiscount::TYPE_FINAL_PRICE) {
+            return max(0, min($originalPrice, $amount));
+        }
+
+        return $originalPrice;
     }
 public function getManagerListData(int $perPage = 10)
 {
@@ -65,11 +210,13 @@ public function getManagerListData(int $perPage = 10)
         $courses = $this->courseRepository->getAllCoursesPaginated($perPage);
 
         $courses->getCollection()->transform(function ($course) {
+            $primaryClass = $course->classes->first();
+
             return [
                 'id'          => $course->id,
                 'name'        => $course->title,
-                'instructor'  => $course->instructor->name ?? 'N/A',
-                'price'       => number_format($course->price, 0, ',', '.') . 'đ',
+                'instructor'  => optional(optional($primaryClass)->instructor)->name ?? 'N/A',
+                'price'       => number_format((int) $course->original_price, 0, ',', '.') . 'đ',
                 'class_count' => $course->classes->count(),
                 'status'      => $course->status == 1 ? 'Hiển thị' : 'Ẩn',
                 'classes'     => $course->classes->map(fn($class) => [
@@ -144,21 +291,18 @@ public function getManagerListData(int $perPage = 10)
                 $publishedAt = now();
             }
 
-            $price = (float) Arr::get($payload, 'price', 0);
-
             $course = $this->courseRepository->createCourse([
-                'instructor_id' => (int) Arr::get($payload, 'instructor_id'),
                 'title' => $title,
                 'slug' => $slug !== '' ? $slug : $generatedSlug,
                 'description' => Arr::get($payload, 'description'),
                 'thumbnail_url' => Arr::get($payload, 'thumbnail_url'),
                 'intro_video_url' => Arr::get($payload, 'intro_video_url'),
-                'price' => $price,
+                'original_price' => (int) Arr::get($payload, 'price', 0),
                 'status' => $status,
                 'published_at' => $publishedAt ?: null,
             ]);
 
-            return $course->fresh(['instructor']);
+            return $course->fresh(['classes.instructor']);
         });
     }
     
@@ -175,9 +319,9 @@ public function getManagerListData(int $perPage = 10)
 public function updateCourseInstructor(int $courseId, int $instructorId): bool
 {
     try {
-        return $this->courseRepository->update($courseId, [
-            'instructor_id' => $instructorId
-        ]);
+        return DB::table('classes')
+            ->where('course_id', $courseId)
+            ->update(['instructor_id' => $instructorId]) > 0;
     } catch (\Exception $e) {
         Log::error("Lỗi thay đổi giảng viên tại CourseService: " . $e->getMessage());
         return false;

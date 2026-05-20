@@ -1,17 +1,28 @@
-<div class="w-[96px] fixed left-0 top-[66px] bottom-0 flex flex-col items-center py-6 gap-6 z-40 bg-white">
-    <a href="{{ route('home') }}"
-        class="flex flex-col items-center gap-2 group w-full cursor-pointer text-[#444] hover:text-[#f05123]">
-        <div class="w-11 h-11 rounded-full flex items-center justify-center group-hover:bg-[#e8e8e8] transition-colors">
-            <i class="fa-solid fa-house text-[20px]" aria-hidden="true"></i>
-        </div>
-        <span class="text-[11px] font-semibold tracking-wide">Trang chủ</span>
-    </a>
+@php
+    $items = [
+        [
+            'label' => 'Trang chủ',
+            'route' => 'home',
+            'href' => route('home'),
+            'icon' => 'fa-solid fa-house',
+            'active' => request()->routeIs('home'),
+        ],
+        [
+            'label' => 'Bài viết',
+            'route' => 'posts.index',
+            'href' => route('posts.index'),
+            'icon' => 'fa-regular fa-newspaper',
+            'active' => request()->routeIs('posts.*') || request()->routeIs('my-posts.*'),
+        ],
+    ];
+@endphp
 
-    <a href="{{ route('home') }}"
-        class="flex flex-col items-center gap-2 group w-full cursor-pointer text-[#444] hover:text-[#f05123]">
-        <div class="w-11 h-11 rounded-full flex items-center justify-center group-hover:bg-[#e8e8e8] transition-colors">
-            <i class="fa-regular fa-file-lines text-[20px]" aria-hidden="true"></i>
-        </div>
-        <span class="text-[11px] font-semibold tracking-wide">Bài viết</span>
-    </a>
+<div class="w-[96px] fixed left-0 top-[66px] bottom-0 flex flex-col items-center py-6 gap-4 z-40 bg-white">
+    @foreach ($items as $item)
+        <a href="{{ $item['href'] }}"
+            class="flex h-[72px] w-[72px] flex-col items-center justify-center gap-2 rounded-2xl text-[#444] transition-colors hover:bg-[#f1f2f4] hover:text-[#242424] {{ $item['active'] ? 'bg-[#e8ebee] text-[#242424]' : '' }}">
+            <i class="{{ $item['icon'] }} text-[17px]" aria-hidden="true"></i>
+            <span class="text-[11px] font-semibold leading-none tracking-normal">{{ $item['label'] }}</span>
+        </a>
+    @endforeach
 </div>

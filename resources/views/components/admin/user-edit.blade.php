@@ -26,6 +26,9 @@
             <form action="{{ route('admin.users.update', $user) }}" method="POST" class="space-y-4">
                 @csrf
                 @method('PUT')
+                @php
+                    $selectedRole = old('role', $user->getRoleNames()->first() ?: 'student');
+                @endphp
 
                 <div>
                     <label class="block text-xs uppercase tracking-wider text-slate-400 mb-2">Họ tên</label>
@@ -44,9 +47,9 @@
                         <label class="block text-xs uppercase tracking-wider text-slate-400 mb-2">Vai trò</label>
                         <select name="role"
                             class="w-full bg-slate-900/60 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-emerald-500">
-                            <option value="admin">Admin</option>
-                            <option value="teacher">Teacher</option>
-                            <option value="student">Student</option>
+                            <option value="admin" @selected($selectedRole === 'admin')>Admin</option>
+                            <option value="instructor" @selected($selectedRole === 'instructor')>Instructor</option>
+                            <option value="student" @selected($selectedRole === 'student')>Student</option>
                         </select>
                     </div>
                     <div>

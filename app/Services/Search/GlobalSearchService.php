@@ -19,8 +19,8 @@ class GlobalSearchService
      */
     public function search(string $query, int $limit = 5): array
     {
-        // Trim and validate query
         $query = trim($query);
+        $limit = max(1, min(8, $limit));
 
         if (empty($query) || strlen($query) < 2) {
             return [
@@ -30,7 +30,6 @@ class GlobalSearchService
             ];
         }
 
-        // Search both types
         $courses = $this->repository->searchCourses($query, $limit);
         $posts = $this->repository->searchPosts($query, $limit);
 
@@ -47,17 +46,27 @@ class GlobalSearchService
     private function transformCourses($courses): array
     {
         return $courses->map(function ($course) {
+            $instructor = optional($course->classes->first())->instructor;
+
             return [
                 'id' => $course->id,
                 'title' => $course->title,
                 'description' => $course->description ? Str::limit($course->description, 80) : 'Không có mô tả',
                 'slug' => $course->slug,
-                'thumbnail' => $course->thumbnail_url ?? asset('images/default-course.png'),
+                'thumbnail' => media_url(
+                    $course->thumbnail_url,
+                    'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=240&q=80'
+                ),
                 'type' => 'course',
                 'type_label' => 'Khóa học',
                 'meta' => [
-                    'instructor' => $course->instructor?->name ?? 'Unknown',
-                    'instructor_avatar' => $course->instructor?->avatar_url ?? asset('images/default-avatar.png'),
+                    'instructor' => optional($instructor)->name ?: 'Đang cập nhật',
+                    'instructor_avatar' => media_url(
+                        optional($instructor)->avatar_url,
+                        'https://ui-avatars.com/api/?name=' . urlencode((string) (optional($instructor)->name ?: 'GV'))
+                    ),
+                    'rating' => $course->rating_avg,
+                    'rating_count' => $course->rating_count,
                 ],
                 'url' => route('courses.show', $course->slug),
             ];
@@ -70,23 +79,27 @@ class GlobalSearchService
     private function transformPosts($posts): array
     {
         return $posts->map(function ($post) {
-            // Temporary URL - update route name when PostController is created
-            $postUrl = route('home') . '/posts/' . $post->slug;
-            
             return [
                 'id' => $post->id,
                 'title' => $post->title,
                 'description' => $post->description ? Str::limit($post->description, 80) : 'Không có mô tả',
                 'slug' => $post->slug,
-                'thumbnail' => $post->thumbnail ?? asset('images/default-post.png'),
+                'thumbnail' => media_url(
+                    $post->thumbnail ?: $post->image,
+                    'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=240&q=80'
+                ),
                 'type' => 'post',
                 'type_label' => 'Bài viết',
                 'meta' => [
-                    'author' => $post->user?->name ?? 'Unknown',
-                    'author_avatar' => $post->user?->avatar_url ?? asset('images/default-avatar.png'),
+                    'author' => optional($post->user)->name ?: 'Ẩn danh',
+                    'author_avatar' => media_url(
+                        optional($post->user)->avatar_url,
+                        'https://ui-avatars.com/api/?name=' . urlencode((string) (optional($post->user)->name ?: 'TG'))
+                    ),
                     'date' => $post->created_at?->format('d/m/Y') ?? 'N/A',
+                    'views_count' => $post->views_count,
                 ],
-                'url' => $postUrl,
+                'url' => route('posts.show', ['slug' => $post->slug]),
             ];
         })->toArray();
     }

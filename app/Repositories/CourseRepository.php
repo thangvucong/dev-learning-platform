@@ -16,46 +16,98 @@ class CourseRepository implements CourseRepositoryInterface
      * @param int $perPage
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
- public function getAllCoursesPaginated(int $perPage = 10): LengthAwarePaginator
-{
-   return Course::query()
-    ->with([
-        'instructor:id,name',
-        'classes' => function($q) {
-
-            $q->select(['id', 'course_id', 'name', 'status', 'start_at', 'code', 'capacity', 'location'])
-              ->withCount('users'); 
-        },
-        'attributes:id,course_id,type,content'
-    ])
-    ->latest()
-  
-    ->paginate($perPage);
-}
+    public function getAllCoursesPaginated(int $perPage = 10): LengthAwarePaginator
+    {
+        return Course::query()
+            ->with([
+                'classes' => function ($query) {
+                    $query->select([
+                        'id',
+                        'course_id',
+                        'instructor_id',
+                        'name',
+                        'status',
+                        'start_at',
+                        'code',
+                        'capacity',
+                        'location',
+                    ])
+                        ->with('instructor:id,name')
+                        ->withCount('users');
+                },
+                'attributes:id,course_id,type,content'
+            ])
+            ->latest()
+            ->paginate($perPage);
+    }
 
     /**
-     * Get published courses sorted by latest published date (Dành cho Client).
+     * Get published courses sorted by latest published date.
      *
      * @param int $limit
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getPublishedCourses(int $limit): Collection
     {
+        $now = now();
+
         return Course::query()
             ->select([
-                'id', 'title', 'slug', 'thumbnail_url', 'price', 'published_at', 'instructor_id'
+                'id',
+                'title',
+                'slug',
+                'description',
+                'thumbnail_url',
+                'original_price',
+                'rating_avg',
+                'rating_count',
+                'published_at',
             ])
             ->with([
-                'instructor:id,name,email,avatar_url',
                 'classes' => function ($query) {
                     $query->select([
-                        'id', 'course_id', 'name', 'status', 'start_at', 'end_at', 'location'
-                    ]);
-                }
+                        'id',
+                        'course_id',
+                        'instructor_id',
+                        'name',
+                        'status',
+                        'start_at',
+                        'end_at',
+                        'location',
+                    ])
+                        ->with('instructor:id,name,email,avatar_url')
+                        ->orderByRaw('CASE WHEN start_at IS NULL THEN 1 ELSE 0 END')
+                        ->orderBy('start_at')
+                        ->orderBy('id');
+                },
+                'activeDiscounts' => function ($query) use ($now) {
+                    $query->select([
+                        'id',
+                        'course_id',
+                        'type',
+                        'amount',
+                        'starts_at',
+                        'ends_at',
+                        'repeat_type',
+                        'day_of_week',
+                        'is_active',
+                    ])
+                        ->where(function ($subQuery) use ($now) {
+                            $subQuery->whereNull('starts_at')
+                                ->orWhere('starts_at', '<=', $now);
+                        })
+                        ->where(function ($subQuery) use ($now) {
+                            $subQuery->whereNull('ends_at')
+                                ->orWhere('ends_at', '>=', $now);
+                        });
+                },
             ])
-            ->where('status', 1)
+            ->where('status', Course::STATUS_PUBLISHED)
             ->whereNotNull('published_at')
-            ->where('published_at', '<=', now())
+            ->where('published_at', '<=', $now)
+            ->where('rating_avg', '>', 4.5)
+            ->orderByDesc('rating_count')
+            ->orderByDesc('rating_avg')
             ->orderByDesc('published_at')
             ->limit($limit)
             ->get();
@@ -70,19 +122,62 @@ class CourseRepository implements CourseRepositoryInterface
      */
     public function findPublishedCourseDetailBySlug(string $slug): Course
     {
+        $now = now();
+
         $course = Course::query()
             ->with([
-                'instructor:id,name,email,avatar_url',
                 'classes' => function ($query) {
                     $query->select([
-                        'id', 'course_id', 'name', 'status', 'start_at', 'end_at', 'location'
-                    ]);
-                }
+                        'id',
+                        'course_id',
+                        'instructor_id',
+                        'name',
+                        'code',
+                        'mode',
+                        'status',
+                        'capacity',
+                        'start_at',
+                        'end_at',
+                        'location',
+                    ])
+                        ->with('instructor:id,name,email,avatar_url')
+                        ->withCount('sessions')
+                        ->orderByRaw('CASE WHEN start_at IS NULL THEN 1 ELSE 0 END')
+                        ->orderBy('start_at')
+                        ->orderBy('id');
+                },
+                'attributes:id,course_id,type,content',
+                'tracks' => function ($query) {
+                    $query->select(['id', 'course_id', 'parent_id', 'title', 'description', 'position'])
+                        ->orderBy('position')
+                        ->orderBy('id');
+                },
+                'activeDiscounts' => function ($query) use ($now) {
+                    $query->select([
+                        'id',
+                        'course_id',
+                        'type',
+                        'amount',
+                        'starts_at',
+                        'ends_at',
+                        'repeat_type',
+                        'day_of_week',
+                        'is_active',
+                    ])
+                        ->where(function ($subQuery) use ($now) {
+                            $subQuery->whereNull('starts_at')
+                                ->orWhere('starts_at', '<=', $now);
+                        })
+                        ->where(function ($subQuery) use ($now) {
+                            $subQuery->whereNull('ends_at')
+                                ->orWhere('ends_at', '>=', $now);
+                        });
+                },
             ])
             ->where('slug', $slug)
-            ->where('status', 1)
+            ->where('status', Course::STATUS_PUBLISHED)
             ->whereNotNull('published_at')
-            ->where('published_at', '<=', now())
+            ->where('published_at', '<=', $now)
             ->first();
 
         if (!$course) {
@@ -93,7 +188,7 @@ class CourseRepository implements CourseRepositoryInterface
     }
 
     /**
-     * Đếm tổng số khóa học cho Dashboard.
+     * Count sum course
      */
     public function countAll(): int
     {
@@ -104,13 +199,19 @@ class CourseRepository implements CourseRepositoryInterface
     public function getRecentCourses(int $limit): Collection
     {
         return Course::query()
-            ->with(['instructor:id,name'])
+            ->with([
+                'classes' => function ($query) {
+                    $query->select(['id', 'course_id', 'instructor_id', 'start_at'])
+                        ->with('instructor:id,name')
+                        ->orderByRaw('CASE WHEN start_at IS NULL THEN 1 ELSE 0 END')
+                        ->orderBy('start_at')
+                        ->orderBy('id');
+                },
+            ])
             ->latest()
             ->take($limit)
             ->get();
     }
-
-    
     
     /**
      * Find a published course by id for checkout (active price window, currency).
@@ -130,10 +231,34 @@ class CourseRepository implements CourseRepositoryInterface
                 'title',
                 'slug',
                 'thumbnail_url',
-                'price'
+                'original_price',
+            ])
+            ->selectRaw('original_price as price')
+            ->with([
+                'activeDiscounts' => function ($query) use ($now) {
+                    $query->select([
+                        'id',
+                        'course_id',
+                        'type',
+                        'amount',
+                        'starts_at',
+                        'ends_at',
+                        'repeat_type',
+                        'day_of_week',
+                        'is_active',
+                    ])
+                        ->where(function ($subQuery) use ($now) {
+                            $subQuery->whereNull('starts_at')
+                                ->orWhere('starts_at', '<=', $now);
+                        })
+                        ->where(function ($subQuery) use ($now) {
+                            $subQuery->whereNull('ends_at')
+                                ->orWhere('ends_at', '>=', $now);
+                        });
+                },
             ])
             ->whereKey($courseId)
-            ->where('status', 1)
+            ->where('status', Course::STATUS_PUBLISHED)
             ->whereNotNull('published_at')
             ->where('published_at', '<=', $now)
             ->firstOrFail();

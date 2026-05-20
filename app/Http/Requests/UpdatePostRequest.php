@@ -11,7 +11,7 @@ class UpdatePostRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return (bool) $this->user();
+        return (bool) $this->user()?->can('manage own posts');
     }
 
     /**
@@ -47,4 +47,3 @@ class UpdatePostRequest extends FormRequest
         ];
     }
 }
-

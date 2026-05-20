@@ -21,13 +21,16 @@ class TeacherClassController extends Controller
     $teacherId = $user->id;
 
  
-    $courseCount = \App\Models\Course::where('instructor_id', $teacherId)->count();
+    $courseCount = \App\Models\Course::query()
+        ->whereHas('classes', function ($query) use ($teacherId) {
+            $query->where('instructor_id', $teacherId);
+        })
+        ->count();
     
  
-    $studentCount = DB::table('class_user')
-        ->join('classes', 'class_user.class_id', '=', 'classes.id')
-        ->join('courses', 'classes.course_id', '=', 'courses.id')
-        ->where('courses.instructor_id', $teacherId)
+    $studentCount = DB::table('class_enrollments')
+        ->join('classes', 'class_enrollments.class_id', '=', 'classes.id')
+        ->where('classes.instructor_id', $teacherId)
         ->count();
 
     $welcome = [

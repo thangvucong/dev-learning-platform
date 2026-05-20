@@ -1,4 +1,4 @@
-<div class="w-full max-w-md" x-data="globalSearch()" x-init="init()">
+<div class="relative w-full max-w-md" x-data="globalSearch()" x-init="init()">
 
     <!-- Search Input Container -->
     <div class="relative">
@@ -11,8 +11,9 @@
             </svg>
         </div>
 
-        <input type="text" x-model="query" @input="handleInput()" @focus="showDropdown = query.length > 0"
-            @keydown.escape="showDropdown = false" placeholder="Tìm kiếm khóa học, bài viết..."
+        <input type="text" x-model="query" @input="handleInput()" @focus="showDropdown = query.trim().length >= 2"
+            @keydown.enter.prevent="goToFirstResult()" @keydown.escape="showDropdown = false"
+            placeholder="Tìm kiếm khóa học, bài viết..."
             class="w-full pl-10 pr-10 py-2.5 bg-white border border-[#e8e8e8] 
                       rounded-full text-sm text-[#292929] placeholder-[#a0a0a0]
                       focus:outline-none focus:border-[#f05123] focus:ring-2 focus:ring-[#f05123]/20
@@ -20,7 +21,7 @@
 
         <!-- Clear Button -->
         <button type="button" x-show="query.length > 0"
-            @click="query = ''; results = null; showDropdown = false; isLoading = false"
+            @click="clearSearch()"
             class="absolute inset-y-0 right-0 pr-3 flex items-center text-[#a0a0a0] 
                        hover:text-[#606060] transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -43,6 +44,7 @@
             results: null,
             showDropdown: false,
             isLoading: false,
+            errorMessage: '',
             searchTimeout: null,
             debounceDelay: 300,
 
@@ -57,14 +59,16 @@
 
             handleInput() {
                 clearTimeout(this.searchTimeout);
+                this.errorMessage = '';
+                const keyword = this.query.trim();
 
-                if (this.query.length === 0) {
+                if (keyword.length === 0) {
                     this.showDropdown = false;
                     this.results = null;
                     return;
                 }
 
-                if (this.query.length < 2) {
+                if (keyword.length < 2) {
                     this.showDropdown = false;
                     return;
                 }
@@ -80,7 +84,17 @@
 
             async performSearch() {
                 try {
-                    const response = await fetch(`{{ route('search') }}?q=${encodeURIComponent(this.query)}`);
+                    const keyword = this.query.trim();
+                    if (keyword.length < 2) {
+                        return;
+                    }
+
+                    const response = await fetch(`{{ route('search') }}?q=${encodeURIComponent(keyword)}&limit=6`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
 
                     if (!response.ok) {
                         throw new Error('Search failed');
@@ -92,12 +106,51 @@
                         this.results = data.data;
                         this.isLoading = false;
                         this.showDropdown = true;
+                        return;
                     }
+
+                    this.errorMessage = data.message || 'Không thể tìm kiếm lúc này.';
+                    this.isLoading = false;
+                    this.showDropdown = true;
                 } catch (error) {
                     console.error('Search error:', error);
+                    this.errorMessage = 'Không thể tìm kiếm lúc này. Vui lòng thử lại.';
+                    this.results = null;
                     this.isLoading = false;
-                    this.showDropdown = false;
+                    this.showDropdown = true;
                 }
+            },
+
+            clearSearch() {
+                clearTimeout(this.searchTimeout);
+                this.query = '';
+                this.results = null;
+                this.errorMessage = '';
+                this.showDropdown = false;
+                this.isLoading = false;
+            },
+
+            goToFirstResult() {
+                if (!this.results || this.results.total === 0) {
+                    return;
+                }
+
+                const firstCourse = this.results.courses && this.results.courses.length ? this.results.courses[0] : null;
+                const firstPost = this.results.posts && this.results.posts.length ? this.results.posts[0] : null;
+                const firstResult = firstCourse || firstPost;
+
+                if (firstResult && firstResult.url) {
+                    window.location.href = firstResult.url;
+                }
+            },
+
+            goToResult(url) {
+                if (!url) {
+                    return;
+                }
+
+                this.showDropdown = false;
+                window.location.href = url;
             },
         };
     }
