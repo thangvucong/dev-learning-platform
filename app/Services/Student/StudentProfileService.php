@@ -16,22 +16,31 @@ class StudentProfileService
     public function build(User $user): array
     {
         $user->loadMissing([
-            'enrolledCourses.instructor',
-            'assignedClasses.course.instructor',
+            'enrolledCourses',
+            'assignedClasses' => function ($query) use ($user) {
+                $query->with([
+                    'course',
+                    'instructor',
+                    'sessions.attendances' => function ($attendanceQuery) use ($user) {
+                        $attendanceQuery->where('student_id', $user->id);
+                    },
+                ])->orderBy('start_at');
+            },
         ]);
 
         $learningCourses = $user->enrolledCourses instanceof Collection ? $user->enrolledCourses : collect();
         $assignedClasses = $user->assignedClasses instanceof Collection ? $user->assignedClasses : collect();
+        $classesByCourse = $assignedClasses->groupBy('course_id');
 
         $ongoingCourses = $learningCourses->filter(function ($course) {
             return (string) optional($course->pivot)->status !== 'completed';
         })->values();
 
-        $attendanceRate = $assignedClasses->isEmpty() ? 0 : 84;
-        $overallProgress = $ongoingCourses->isEmpty() ? 0 : 68;
-        $studyStreak = $ongoingCourses->isEmpty() ? 0 : 11;
-        $totalSessions = max(0, $assignedClasses->count() * 4);
-        $completedSessions = (int) floor(($overallProgress / 100) * $totalSessions);
+        $attendanceRate = $this->calculateAttendanceRate($assignedClasses);
+        $totalSessions = $this->sessionsFromClasses($assignedClasses)->count();
+        $completedSessions = $this->completedSessionsCount($assignedClasses);
+        $overallProgress = $totalSessions > 0 ? (int) round(($completedSessions / $totalSessions) * 100) : 0;
+        $studyStreak = $this->calculateStudyStreak($assignedClasses);
         $completionRate = $learningCourses->count() > 0
             ? (int) round(($learningCourses->filter(function ($course) {
                 return (string) optional($course->pivot)->status === 'completed';
@@ -60,45 +69,44 @@ class StudentProfileService
                 ['label' => 'Khóa đang học', 'value' => $ongoingCourses->count(), 'icon' => 'fa-solid fa-book-open', 'tone' => 'emerald'],
                 ['label' => 'Tổng lớp học', 'value' => $assignedClasses->count(), 'icon' => 'fa-solid fa-chalkboard-user', 'tone' => 'blue'],
                 ['label' => 'Điểm danh', 'value' => $attendanceRate . '%', 'icon' => 'fa-solid fa-user-check', 'tone' => 'violet'],
-                ['label' => 'Chuỗi học tập', 'value' => $studyStreak . ' ngày', 'icon' => 'fa-solid fa-fire', 'tone' => 'amber'],
+                ['label' => 'Chuỗi học tập', 'value' => $studyStreak . ' buổi', 'icon' => 'fa-solid fa-fire', 'tone' => 'amber'],
                 ['label' => 'Buổi đã học', 'value' => $completedSessions . '/' . $totalSessions, 'icon' => 'fa-solid fa-list-check', 'tone' => 'emerald'],
                 ['label' => 'Hoàn thành', 'value' => $completionRate . '%', 'icon' => 'fa-solid fa-flag-checkered', 'tone' => 'blue'],
             ],
             'learning' => [
-                'courses' => $ongoingCourses->map(function ($course) {
+                'courses' => $ongoingCourses->map(function ($course) use ($classesByCourse) {
                     $status = (string) optional($course->pivot)->status;
-                    $progress = $status === 'completed' ? 100 : ($status === 'not_started' ? 0 : 64);
+                    $courseClasses = $classesByCourse->get($course->id, collect());
+                    $courseSessions = $this->sessionsFromClasses($courseClasses);
+                    $completedSessions = $courseSessions->filter(function ($session) {
+                        return $this->isCompletedSession($session);
+                    })->count();
+                    $progress = $courseSessions->isNotEmpty()
+                        ? (int) round(($completedSessions / $courseSessions->count()) * 100)
+                        : ($status === 'completed' ? 100 : 0);
+                    $instructor = optional($courseClasses->first())->instructor;
 
                     return [
                         'title' => (string) $course->title,
-                        'mentor' => optional($course->instructor)->name ?: 'Mentor',
+                        'mentor' => optional($instructor)->name ?: 'Giảng viên',
                         'progress' => $progress,
-                        'status' => $status ?: 'ongoing',
+                        'status' => $this->normalizeCourseStatus($status),
                     ];
                 })->values(),
-                'timeline' => $this->buildLearningTimeline(),
-                'recent_modules' => collect([
-                    'REST API Authentication',
-                    'Database Relationship Mapping',
-                    'Validation & Error Handling',
-                ]),
-                'upcoming_classes' => $assignedClasses->take(3)->map(function ($classItem) {
-                    return [
-                        'name' => (string) $classItem->name,
-                        'start_at' => optional($classItem->start_at)->format('d/m/Y H:i') ?: 'Đang cập nhật',
-                    ];
-                })->values(),
+                'timeline' => $this->buildLearningTimeline($assignedClasses),
+                'recent_modules' => $this->buildRecentModules($assignedClasses),
+                'upcoming_classes' => $this->buildUpcomingClasses($assignedClasses),
             ],
             'achievements' => [
                 'badges' => collect([
-                    ['name' => 'Attendance Hero', 'description' => 'Duy trì attendance trên 80%'],
-                    ['name' => 'Consistency Runner', 'description' => 'Học liên tục 7 ngày'],
-                    ['name' => 'Module Finisher', 'description' => 'Hoàn thành 3 module gần nhất'],
+                    ['name' => 'Điểm danh tốt', 'description' => 'Tỷ lệ điểm danh hiện tại ' . $attendanceRate . '%'],
+                    ['name' => 'Duy trì học tập', 'description' => 'Chuỗi học tập hiện tại ' . $studyStreak . ' buổi'],
+                    ['name' => 'Hoàn thành buổi học', 'description' => 'Đã học ' . $completedSessions . '/' . $totalSessions . ' buổi'],
                 ]),
                 'milestones' => collect([
-                    'Hoàn thành milestone Backend Core',
-                    'Đạt streak học tập 10 ngày',
-                    'Xong 60% lộ trình hiện tại',
+                    'Hoàn thành ' . $overallProgress . '% tiến độ học tập',
+                    'Đã tham gia ' . $assignedClasses->count() . ' lớp học',
+                    'Hoàn thành ' . $completionRate . '% khóa học đã đăng ký',
                 ]),
                 'completed_courses' => $learningCourses->filter(function ($course) {
                     return (string) optional($course->pivot)->status === 'completed';
@@ -119,19 +127,139 @@ class StudentProfileService
         ];
     }
 
-    /**
-     * Build timeline for learning journey tab.
-     *
-     * @return \Illuminate\Support\Collection<int, array<string, string>>
-     */
-    protected function buildLearningTimeline(): Collection
+    protected function sessionsFromClasses(Collection $classes): Collection
     {
-        return collect([
-            ['title' => 'Bắt đầu roadmap', 'date' => now()->subMonths(2)->format('d/m/Y')],
-            ['title' => 'Hoàn thành nền tảng', 'date' => now()->subMonth()->format('d/m/Y')],
-            ['title' => 'Đang ở module nâng cao', 'date' => now()->subWeek()->format('d/m/Y')],
-            ['title' => 'Mục tiêu capstone', 'date' => now()->addWeeks(3)->format('d/m/Y')],
-        ]);
+        return $classes
+            ->flatMap(function ($classItem) {
+                return $classItem->sessions instanceof Collection ? $classItem->sessions : collect();
+            })
+            ->values();
+    }
+
+    protected function completedSessionsCount(Collection $classes): int
+    {
+        return $this->sessionsFromClasses($classes)
+            ->filter(function ($session) {
+                return $this->isCompletedSession($session);
+            })
+            ->count();
+    }
+
+    protected function isCompletedSession($session): bool
+    {
+        if ((string) ($session->status ?? '') === 'completed') {
+            return true;
+        }
+
+        return $session->end_at !== null && $session->end_at->isPast();
+    }
+
+    protected function calculateAttendanceRate(Collection $classes): int
+    {
+        $records = $this->attendanceRecords($classes);
+        if ($records->isEmpty()) {
+            return 0;
+        }
+
+        $attended = $records->filter(function ($attendance) {
+            return in_array((string) $attendance->status, ['present', 'late'], true);
+        })->count();
+
+        return (int) round(($attended / $records->count()) * 100);
+    }
+
+    protected function attendanceRecords(Collection $classes): Collection
+    {
+        return $this->sessionsFromClasses($classes)
+            ->flatMap(function ($session) {
+                return $session->attendances instanceof Collection ? $session->attendances : collect();
+            })
+            ->values();
+    }
+
+    protected function calculateStudyStreak(Collection $classes): int
+    {
+        $records = $this->attendanceRecords($classes)
+            ->sortByDesc('created_at')
+            ->values();
+
+        $streak = 0;
+        foreach ($records as $attendance) {
+            if (!in_array((string) $attendance->status, ['present', 'late'], true)) {
+                break;
+            }
+
+            $streak++;
+        }
+
+        return $streak;
+    }
+
+    protected function normalizeCourseStatus(string $status): string
+    {
+        if (in_array($status, ['completed', 'not_started'], true)) {
+            return $status;
+        }
+
+        if (in_array($status, ['active', 'ongoing'], true)) {
+            return 'ongoing';
+        }
+
+        return 'not_started';
+    }
+
+    protected function buildLearningTimeline(Collection $assignedClasses): Collection
+    {
+        return $this->sessionsFromClasses($assignedClasses)
+            ->filter(function ($session) {
+                return $session->start_at !== null && $session->start_at->isPast();
+            })
+            ->sortByDesc('start_at')
+            ->take(4)
+            ->map(function ($session) {
+                return [
+                    'title' => (string) ($session->title ?: 'Buổi ' . $session->session_no),
+                    'date' => $session->start_at->format('d/m/Y'),
+                ];
+            })
+            ->values();
+    }
+
+    protected function buildRecentModules(Collection $assignedClasses): Collection
+    {
+        return $this->sessionsFromClasses($assignedClasses)
+            ->filter(function ($session) {
+                return $this->isCompletedSession($session);
+            })
+            ->sortByDesc('end_at')
+            ->take(3)
+            ->map(function ($session) {
+                return (string) ($session->title ?: 'Buổi ' . $session->session_no);
+            })
+            ->values();
+    }
+
+    protected function buildUpcomingClasses(Collection $assignedClasses): Collection
+    {
+        return $assignedClasses
+            ->map(function ($classItem) {
+                $nextSession = $classItem->sessions instanceof Collection
+                    ? $classItem->sessions
+                        ->filter(function ($session) {
+                            return $session->start_at !== null && $session->start_at->isFuture();
+                        })
+                        ->sortBy('start_at')
+                        ->first()
+                    : null;
+
+                return [
+                    'name' => (string) $classItem->name,
+                    'start_at' => optional(optional($nextSession)->start_at)->format('d/m/Y H:i')
+                        ?: optional($classItem->start_at)->format('d/m/Y H:i')
+                        ?: 'Đang cập nhật',
+                ];
+            })
+            ->take(3)
+            ->values();
     }
 }
-

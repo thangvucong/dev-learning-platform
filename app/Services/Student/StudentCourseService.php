@@ -18,24 +18,22 @@ class StudentCourseService
     public function buildList(User $user, array $filters): array
     {
         $courses = $user->enrolledCourses()
-            ->with(['instructor', 'classes'])
+            ->with(['tracks'])
             ->get();
-
-        if ($courses->isEmpty()) {
-            $courses = $this->buildMockCourses();
-        }
+        $assignedClassesByCourse = $this->assignedClassesByCourse($user);
 
         $keyword = trim((string) ($filters['q'] ?? ''));
         $statusFilter = trim((string) ($filters['status'] ?? ''));
 
-        $mappedCourses = $courses->map(function ($course) use ($user) {
-            $metrics = $this->resolveCourseMetrics($course, $user);
+        $mappedCourses = $courses->map(function ($course) use ($assignedClassesByCourse) {
+            $courseClasses = $assignedClassesByCourse->get($course->id, collect());
+            $metrics = $this->resolveCourseMetrics($course, $courseClasses);
 
             return [
                 'id' => (int) $course->id,
                 'title' => (string) $course->title,
                 'thumbnail' => $course->thumbnail_url,
-                'teacher' => optional($course->instructor)->name ?: 'Mentor',
+                'teacher' => $this->resolveCourseTeacher($courseClasses),
                 'progress' => $metrics['progress'],
                 'attendance_rate' => $metrics['attendance_rate'],
                 'completed_sessions' => $metrics['completed_sessions'],
@@ -97,17 +95,16 @@ class StudentCourseService
     {
         $course = $user->enrolledCourses()
             ->where('courses.id', $courseId)
-            ->with(['instructor', 'classes'])
+            ->with(['tracks'])
             ->first();
-
-        if (!$course) {
-            $course = $this->buildMockCourses()->firstWhere('id', $courseId);
-        }
 
         abort_if(!$course, 404);
 
-        $metrics = $this->resolveCourseMetrics($course, $user);
-        $roadmap = $this->buildRoadmapItems($metrics['status']);
+        $courseClasses = $this->assignedClassesByCourse($user)->get($course->id, collect());
+        $metrics = $this->resolveCourseMetrics($course, $courseClasses);
+        $roadmap = $this->buildRoadmapItems($course, $metrics['progress']);
+        $teacher = $this->resolveCourseTeacher($courseClasses);
+        $teacherUser = optional($courseClasses->first())->instructor;
 
         return [
             'course' => [
@@ -115,8 +112,8 @@ class StudentCourseService
                 'title' => (string) $course->title,
                 'description' => (string) ($course->description ?: 'Khóa học theo định hướng project-based learning roadmap.'),
                 'thumbnail' => $course->thumbnail_url,
-                'teacher' => optional($course->instructor)->name ?: 'Mentor',
-                'teacher_email' => optional($course->instructor)->email,
+                'teacher' => $teacher,
+                'teacher_email' => optional($teacherUser)->email,
                 'progress' => $metrics['progress'],
                 'attendance_rate' => $metrics['attendance_rate'],
                 'status' => $metrics['status'],
@@ -124,7 +121,7 @@ class StudentCourseService
                 'estimated_completion' => $metrics['estimated_completion'],
                 'modules_total' => $roadmap->count(),
                 'modules_completed' => $roadmap->where('state', 'completed')->count(),
-                'classes_total' => $course->classes->count(),
+                'classes_total' => $courseClasses->count(),
                 'sessions_completed' => $metrics['completed_sessions'],
                 'sessions_total' => $metrics['total_sessions'],
             ],
@@ -137,16 +134,16 @@ class StudentCourseService
                 ],
                 'statistics' => [
                     ['label' => 'Tiến độ tổng', 'value' => $metrics['progress'] . '%'],
-                    ['label' => 'Attendance', 'value' => $metrics['attendance_rate'] . '%'],
+                    ['label' => 'Điểm danh', 'value' => $metrics['attendance_rate'] . '%'],
                     ['label' => 'Buổi hoàn thành', 'value' => $metrics['completed_sessions'] . '/' . $metrics['total_sessions']],
-                    ['label' => 'Lớp thuộc khóa', 'value' => (string) $course->classes->count()],
+                    ['label' => 'Lớp thuộc khóa', 'value' => (string) $courseClasses->count()],
                 ],
             ],
             'roadmap' => $roadmap,
-            'classes' => $this->mapCourseClasses($course),
+            'classes' => $this->mapCourseClasses($courseClasses),
             'materials' => $this->buildMaterials(),
             'progress' => [
-                'study_streak' => $metrics['status'] === 'ongoing' ? 8 : 2,
+                'study_streak' => $this->calculateStudyStreak($courseClasses),
                 'estimated_completion' => $metrics['estimated_completion'],
                 'timeline' => $this->buildProgressTimeline($metrics['progress']),
             ],
@@ -157,24 +154,42 @@ class StudentCourseService
      * Resolve course metrics.
      *
      * @param  \App\Models\Course  $course
-     * @param  \App\Models\User  $user
+     * @param  \Illuminate\Support\Collection  $courseClasses
      * @return array<string, mixed>
      */
-    protected function resolveCourseMetrics(Course $course, User $user): array
+    protected function resolveCourseMetrics(Course $course, Collection $courseClasses): array
     {
         $pivotStatus = (string) optional($course->pivot)->status;
-        $status = in_array($pivotStatus, ['ongoing', 'completed', 'not_started'], true)
-            ? $pivotStatus
-            : 'ongoing';
+        $status = $this->normalizeCourseStatus($pivotStatus);
 
-        $progress = $status === 'completed' ? 100 : ($status === 'not_started' ? 0 : 64);
-        $attendanceRate = $status === 'completed' ? 95 : ($status === 'not_started' ? 0 : 82);
+        $sessions = $courseClasses
+            ->flatMap(function ($classItem) {
+                return $classItem->sessions instanceof Collection ? $classItem->sessions : collect();
+            })
+            ->values();
 
-        $totalSessions = max(8, ($course->classes->count() * 4));
-        $completedSessions = $status === 'completed' ? $totalSessions : (int) floor(($progress / 100) * $totalSessions);
-        $nextSession = $status === 'completed'
-            ? 'Đã hoàn thành'
-            : now()->addDays(2)->format('d/m/Y H:i');
+        $totalSessions = $sessions->count();
+        $completedSessions = $sessions->filter(function ($session) {
+            return $this->isCompletedSession($session);
+        })->count();
+
+        $progress = $totalSessions > 0
+            ? (int) round(($completedSessions / $totalSessions) * 100)
+            : ($status === 'completed' ? 100 : 0);
+
+        $attendanceRecords = $sessions
+            ->flatMap(function ($session) {
+                return $session->attendances instanceof Collection ? $session->attendances : collect();
+            })
+            ->values();
+        $attendedCount = $attendanceRecords->filter(function ($attendance) {
+            return in_array((string) $attendance->status, ['present', 'late'], true);
+        })->count();
+        $attendanceRate = $attendanceRecords->isNotEmpty()
+            ? (int) round(($attendedCount / $attendanceRecords->count()) * 100)
+            : 0;
+
+        $nextSession = $this->resolveNextSessionText($sessions, $status);
 
         return [
             'status' => $status,
@@ -183,8 +198,79 @@ class StudentCourseService
             'total_sessions' => $totalSessions,
             'completed_sessions' => $completedSessions,
             'next_session' => $nextSession,
-            'estimated_completion' => now()->addWeeks(5)->format('d/m/Y'),
+            'estimated_completion' => $this->resolveEstimatedCompletion($sessions, $status),
         ];
+    }
+
+    protected function assignedClassesByCourse(User $user): Collection
+    {
+        return $user->assignedClasses()
+            ->with(['instructor', 'sessions.attendances' => function ($query) use ($user) {
+                $query->where('student_id', $user->id);
+            }])
+            ->get()
+            ->groupBy('course_id');
+    }
+
+    protected function normalizeCourseStatus(string $status): string
+    {
+        if (in_array($status, ['completed', 'not_started'], true)) {
+            return $status;
+        }
+
+        if (in_array($status, ['active', 'ongoing'], true)) {
+            return 'ongoing';
+        }
+
+        return 'not_started';
+    }
+
+    protected function isCompletedSession($session): bool
+    {
+        if ((string) ($session->status ?? '') === 'completed') {
+            return true;
+        }
+
+        return $session->end_at !== null && $session->end_at->isPast();
+    }
+
+    protected function resolveCourseTeacher(Collection $courseClasses): string
+    {
+        $instructor = optional($courseClasses->first())->instructor;
+
+        return optional($instructor)->name ?: 'Giảng viên';
+    }
+
+    protected function resolveNextSessionText(Collection $sessions, string $status): string
+    {
+        if ($status === 'completed') {
+            return 'Đã hoàn thành';
+        }
+
+        $nextSession = $sessions
+            ->filter(function ($session) {
+                return $session->start_at !== null && $session->start_at->isFuture();
+            })
+            ->sortBy('start_at')
+            ->first();
+
+        return $nextSession ? $nextSession->start_at->format('d/m/Y H:i') : 'Đang cập nhật';
+    }
+
+    protected function resolveEstimatedCompletion(Collection $sessions, string $status): string
+    {
+        if ($status === 'completed') {
+            return 'Đã hoàn thành';
+        }
+
+        $lastSession = $sessions
+            ->filter(function ($session) {
+                return $session->end_at !== null;
+            })
+            ->sortByDesc('end_at')
+            ->first();
+
+        return $lastSession ? $lastSession->end_at->format('d/m/Y') : 'Đang cập nhật';
     }
 
     /**
@@ -193,25 +279,32 @@ class StudentCourseService
      * @param  string  $status
      * @return \Illuminate\Support\Collection<int, array<string, mixed>>
      */
-    protected function buildRoadmapItems(string $status): Collection
+    protected function buildRoadmapItems(Course $course, int $progress): Collection
     {
-        $states = $status === 'completed'
-            ? ['completed', 'completed', 'completed', 'completed']
-            : ($status === 'not_started'
-                ? ['current', 'locked', 'locked', 'locked']
-                : ['completed', 'completed', 'current', 'locked']);
+        $tracks = $course->tracks instanceof Collection
+            ? $course->tracks->sortBy('position')->values()
+            : collect();
 
-        return collect([
-            ['title' => 'Nền tảng kỹ thuật', 'subtitle' => 'HTML/CSS + Git workflow'],
-            ['title' => 'JavaScript Core', 'subtitle' => 'Logic, async flow, API integration'],
-            ['title' => 'Framework Track', 'subtitle' => 'React/Laravel feature implementation'],
-            ['title' => 'Deploy & Scale', 'subtitle' => 'Testing, deployment, CI basics'],
-        ])->map(function (array $item, int $index) use ($states) {
+        if ($tracks->isEmpty()) {
+            return collect();
+        }
+
+        $completedCount = (int) floor(($progress / 100) * $tracks->count());
+
+        return $tracks->map(function ($track, int $index) use ($completedCount, $progress, $tracks) {
+            $state = $index < $completedCount
+                ? 'completed'
+                : ($index === $completedCount && $progress < 100 ? 'current' : 'locked');
+
+            if ($progress >= 100) {
+                $state = 'completed';
+            }
+
             return [
-                'title' => $item['title'],
-                'subtitle' => $item['subtitle'],
-                'state' => $states[$index] ?? 'locked',
-                'sessions' => 4 + $index,
+                'title' => (string) $track->title,
+                'subtitle' => (string) ($track->description ?: 'Đang cập nhật'),
+                'state' => $state,
+                'sessions' => max(1, (int) ceil(12 / max(1, $tracks->count()))),
             ];
         });
     }
@@ -222,27 +315,41 @@ class StudentCourseService
      * @param  \App\Models\Course  $course
      * @return \Illuminate\Support\Collection<int, array<string, mixed>>
      */
-    protected function mapCourseClasses(Course $course): Collection
+    protected function mapCourseClasses(Collection $courseClasses): Collection
     {
-        if ($course->classes->isEmpty()) {
-            return collect([
-                [
-                    'name' => 'Cohort A - Evening',
-                    'mentor' => optional($course->instructor)->name ?: 'Mentor',
-                    'schedule' => 'Thứ 3, Thứ 5 - 19:00',
-                    'location' => 'Online - Zoom',
-                ],
-            ]);
-        }
-
-        return $course->classes->map(function ($classItem) use ($course) {
+        return $courseClasses->map(function ($classItem) {
             return [
                 'name' => (string) $classItem->name,
-                'mentor' => optional($course->instructor)->name ?: 'Mentor',
+                'mentor' => optional($classItem->instructor)->name ?: 'Giảng viên',
                 'schedule' => optional($classItem->start_at)->format('d/m/Y H:i') ?: 'Đang cập nhật',
                 'location' => (string) ($classItem->location ?: 'Online'),
             ];
         })->values();
+    }
+
+    protected function calculateStudyStreak(Collection $courseClasses): int
+    {
+        $records = $courseClasses
+            ->flatMap(function ($classItem) {
+                $sessions = $classItem->sessions instanceof Collection ? $classItem->sessions : collect();
+
+                return $sessions->flatMap(function ($session) {
+                    return $session->attendances instanceof Collection ? $session->attendances : collect();
+                });
+            })
+            ->sortByDesc('created_at')
+            ->values();
+
+        $streak = 0;
+        foreach ($records as $attendance) {
+            if (!in_array((string) $attendance->status, ['present', 'late'], true)) {
+                break;
+            }
+
+            $streak++;
+        }
+
+        return $streak;
     }
 
     /**
@@ -278,51 +385,4 @@ class StudentCourseService
         return collect($timeline);
     }
 
-    /**
-     * Build fallback mock courses.
-     *
-     * @return \Illuminate\Support\Collection<int, \App\Models\Course>
-     */
-    protected function buildMockCourses(): Collection
-    {
-        $teacher = new \stdClass();
-        $teacher->name = 'Nguyen Van Mentor';
-        $teacher->email = 'mentor@example.com';
-
-        return collect([
-            [
-                'id' => 901,
-                'title' => 'Laravel REST API Journey',
-                'description' => 'Lộ trình backend API theo mindset production.',
-                'thumbnail_url' => null,
-                'pivot_status' => 'ongoing',
-            ],
-            [
-                'id' => 902,
-                'title' => 'Frontend Roadmap Bootcamp',
-                'description' => 'Xây nền tảng frontend hiện đại từ cơ bản đến dự án.',
-                'thumbnail_url' => null,
-                'pivot_status' => 'not_started',
-            ],
-            [
-                'id' => 903,
-                'title' => 'System Design Foundation',
-                'description' => 'Tư duy thiết kế hệ thống cho sản phẩm thực tế.',
-                'thumbnail_url' => null,
-                'pivot_status' => 'completed',
-            ],
-        ])->map(function (array $item) use ($teacher) {
-            $course = new Course();
-            $course->id = $item['id'];
-            $course->title = $item['title'];
-            $course->description = $item['description'];
-            $course->thumbnail_url = $item['thumbnail_url'];
-            $course->setRelation('instructor', $teacher);
-            $course->setRelation('classes', collect());
-            $course->setRelation('pivot', (object) ['status' => $item['pivot_status']]);
-
-            return $course;
-        });
-    }
 }
-

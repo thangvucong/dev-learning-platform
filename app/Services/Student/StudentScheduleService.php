@@ -29,7 +29,7 @@ class StudentScheduleService
 
         $user->loadMissing([
             'assignedClasses' => function ($query) {
-                $query->with(['course.instructor', 'sessions'])->orderBy('start_at');
+                $query->with(['course', 'instructor', 'sessions'])->orderBy('start_at');
             },
         ]);
 
@@ -91,7 +91,7 @@ class StudentScheduleService
                             'id' => 'session-' . $session->id,
                             'class_id' => $classItem->id,
                             'class_name' => $classItem->name,
-                            'teacher' => optional(optional($classItem->course)->instructor)->name ?: 'Giảng viên',
+                            'teacher' => optional($classItem->instructor)->name ?: 'Giảng viên',
                             'course' => optional($classItem->course)->title ?: 'Khóa học',
                             'description' => $session->description ?: ('Buổi ' . $session->session_no . ' theo lộ trình lớp học.'),
                             'day_key' => $startAt->format('Y-m-d'),
@@ -118,7 +118,7 @@ class StudentScheduleService
                     'id' => 'cls-' . $classItem->id . '-' . $startAt->timestamp,
                     'class_id' => $classItem->id,
                     'class_name' => $classItem->name,
-                    'teacher' => optional(optional($classItem->course)->instructor)->name ?: 'Giảng viên',
+                    'teacher' => optional($classItem->instructor)->name ?: 'Giảng viên',
                     'course' => optional($classItem->course)->title ?: 'Khóa học',
                     'description' => 'Buổi học tập trung theo lộ trình lớp học.',
                     'day_key' => $startAt->format('Y-m-d'),
@@ -231,4 +231,3 @@ class StudentScheduleService
         })->values();
     }
 }
-

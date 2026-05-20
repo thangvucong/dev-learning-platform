@@ -18,7 +18,13 @@ class StudentClassService
     public function buildList(User $user, array $filters): array
     {
         $classes = $user->assignedClasses()
-            ->with(['course.instructor', 'sessions'])
+            ->with([
+                'course',
+                'instructor',
+                'sessions.attendances' => function ($query) use ($user) {
+                    $query->where('student_id', $user->id);
+                },
+            ])
             ->orderBy('start_at')
             ->get();
 
@@ -27,8 +33,8 @@ class StudentClassService
 
         $mapped = $classes->map(function (CourseClass $classItem) {
             $computedStatus = $this->computedClassStatus($classItem);
-            $attendanceRate = $this->estimateAttendanceRateFromPivot($classItem);
-            $progress = $this->estimateProgress($classItem);
+            $attendanceSummary = $this->buildAttendanceSummary($classItem);
+            $progress = $this->calculateProgress($classItem);
             $nextSessionAt = $this->resolveNextSessionStartAt($classItem);
 
             return [
@@ -37,11 +43,11 @@ class StudentClassService
                 'code' => $classItem->code,
                 'status' => $computedStatus,
                 'thumbnail' => optional($classItem->course)->thumbnail_url,
-                'teacher' => optional(optional($classItem->course)->instructor)->name ?: 'Giảng viên',
+                'teacher' => optional($classItem->instructor)->name ?: 'Giảng viên',
                 'course_title' => optional($classItem->course)->title ?: 'Khóa học',
                 'next_session' => optional($nextSessionAt)->format('d/m/Y H:i'),
                 'progress' => $progress,
-                'attendance_rate' => $attendanceRate,
+                'attendance_rate' => $attendanceSummary['rate'],
                 'location' => $classItem->location ?: 'Online',
             ];
         });
@@ -83,14 +89,22 @@ class StudentClassService
     {
         $courseClass = $user->assignedClasses()
             ->where('classes.id', $classId)
-            ->with(['course.instructor', 'users', 'sessions'])
+            ->with([
+                'course',
+                'instructor',
+                'users',
+                'sessions.attendances' => function ($query) use ($user) {
+                    $query->where('student_id', $user->id);
+                },
+            ])
             ->firstOrFail();
 
         $status = $this->computedClassStatus($courseClass);
-        $progress = $this->estimateProgress($courseClass);
-        $attendanceRate = $this->estimateAttendanceRateFromPivot($courseClass);
+        $progress = $this->calculateProgress($courseClass);
+        $attendanceSummary = $this->buildAttendanceSummary($courseClass);
         $sessions = $this->buildSessions($courseClass);
         $nextSessionAt = $this->resolveNextSessionStartAt($courseClass);
+        $sessionCounts = $this->countSessions($courseClass);
 
         return [
             'class' => [
@@ -100,27 +114,27 @@ class StudentClassService
                 'status' => $status,
                 'description' => optional($courseClass->course)->description ?: 'Lớp học thực hành theo lộ trình học tập.',
                 'thumbnail' => optional($courseClass->course)->thumbnail_url,
-                'teacher' => optional(optional($courseClass->course)->instructor)->name ?: 'Giảng viên',
-                'teacher_email' => optional(optional($courseClass->course)->instructor)->email,
+                'teacher' => optional($courseClass->instructor)->name ?: 'Giảng viên',
+                'teacher_email' => optional($courseClass->instructor)->email,
                 'course_title' => optional($courseClass->course)->title ?: 'Khóa học',
                 'progress' => $progress,
-                'attendance_rate' => $attendanceRate,
+                'attendance_rate' => $attendanceSummary['rate'],
                 'next_session' => optional($nextSessionAt)->format('d/m/Y H:i'),
                 'location' => $courseClass->location ?: 'Online',
             ],
             'overview' => [
                 'total_members' => $courseClass->users->count(),
-                'completed_sessions' => $status === 'completed' ? 12 : ($status === 'ongoing' ? 7 : 0),
-                'remaining_sessions' => $status === 'completed' ? 0 : ($status === 'ongoing' ? 5 : 12),
-                'study_streak_days' => $status === 'ongoing' ? 9 : 0,
+                'completed_sessions' => $sessionCounts['completed'],
+                'remaining_sessions' => $sessionCounts['remaining'],
+                'study_streak_days' => $this->calculateStudyStreak($courseClass),
             ],
             'schedules' => $sessions,
             'materials' => $this->buildMaterials($courseClass),
             'members' => [
                 'teacher' => [
-                    'name' => optional(optional($courseClass->course)->instructor)->name ?: 'Giảng viên',
-                    'email' => optional(optional($courseClass->course)->instructor)->email,
-                    'avatar' => optional(optional($courseClass->course)->instructor)->avatar_url,
+                    'name' => optional($courseClass->instructor)->name ?: 'Giảng viên',
+                    'email' => optional($courseClass->instructor)->email,
+                    'avatar' => optional($courseClass->instructor)->avatar_url,
                 ],
                 'students' => $courseClass->users->map(function ($student) {
                     return [
@@ -132,11 +146,11 @@ class StudentClassService
                 })->values(),
             ],
             'attendance' => [
-                'rate' => $attendanceRate,
-                'present' => (int) round(($attendanceRate / 100) * 20),
-                'absent' => max(0, 20 - (int) round(($attendanceRate / 100) * 20) - 1),
-                'late' => 1,
-                'timeline' => $this->buildAttendanceTimeline($attendanceRate),
+                'rate' => $attendanceSummary['rate'],
+                'present' => $attendanceSummary['present'],
+                'absent' => $attendanceSummary['absent'],
+                'late' => $attendanceSummary['late'],
+                'timeline' => $this->buildAttendanceTimeline($courseClass),
             ],
         ];
     }
@@ -183,36 +197,91 @@ class StudentClassService
     }
 
     /**
-     * Estimate progress from class status.
+     * Calculate progress from real class sessions.
      */
-    protected function estimateProgress(CourseClass $classItem): int
+    protected function calculateProgress(CourseClass $classItem): int
     {
-        $status = $this->computedClassStatus($classItem);
-        if ($status === 'completed') {
-            return 100;
-        }
-        if ($status === 'upcoming') {
-            return 5;
+        $sessions = $classItem->sessions instanceof Collection ? $classItem->sessions : collect();
+
+        if ($sessions->isEmpty()) {
+            return $this->computedClassStatus($classItem) === 'completed' ? 100 : 0;
         }
 
-        return 62;
+        $completedSessions = $sessions->filter(function ($session) {
+            return $this->isCompletedSession($session);
+        })->count();
+
+        return (int) round(($completedSessions / max(1, $sessions->count())) * 100);
     }
 
-    /**
-     * Estimate attendance from pivot.
-     */
-    protected function estimateAttendanceRateFromPivot(CourseClass $classItem): int
+    protected function countSessions(CourseClass $classItem): array
     {
-        $pivotStatus = (string) optional($classItem->pivot)->status;
-        if (in_array($pivotStatus, ['completed', 'present', 'active'], true)) {
-            return 92;
+        $sessions = $classItem->sessions instanceof Collection ? $classItem->sessions : collect();
+        $completed = $sessions->filter(function ($session) {
+            return $this->isCompletedSession($session);
+        })->count();
+
+        return [
+            'completed' => $completed,
+            'remaining' => max(0, $sessions->count() - $completed),
+        ];
+    }
+
+    protected function isCompletedSession($session): bool
+    {
+        if ((string) ($session->status ?? '') === 'completed') {
+            return true;
         }
 
-        if ($pivotStatus === 'pending') {
-            return 0;
+        return $session->end_at !== null && $session->end_at->isPast();
+    }
+
+    protected function buildAttendanceSummary(CourseClass $classItem): array
+    {
+        $records = $this->attendanceRecords($classItem);
+        $total = $records->count();
+        $present = $records->where('status', 'present')->count();
+        $late = $records->where('status', 'late')->count();
+        $absent = $records->where('status', 'absent')->count();
+        $attended = $present + $late;
+
+        return [
+            'rate' => $total > 0 ? (int) round(($attended / $total) * 100) : 0,
+            'present' => $present,
+            'absent' => $absent,
+            'late' => $late,
+        ];
+    }
+
+    protected function attendanceRecords(CourseClass $classItem): Collection
+    {
+        $sessions = $classItem->sessions instanceof Collection ? $classItem->sessions : collect();
+
+        return $sessions
+            ->flatMap(function ($session) {
+                return $session->attendances instanceof Collection ? $session->attendances : collect();
+            })
+            ->values();
+    }
+
+    protected function calculateStudyStreak(CourseClass $classItem): int
+    {
+        $records = $this->attendanceRecords($classItem)
+            ->sortByDesc(function ($attendance) {
+                return optional(optional($attendance->session)->start_at)->timestamp ?: optional($attendance->created_at)->timestamp;
+            })
+            ->values();
+
+        $streak = 0;
+        foreach ($records as $attendance) {
+            if (!in_array((string) $attendance->status, ['present', 'late'], true)) {
+                break;
+            }
+
+            $streak++;
         }
 
-        return 78;
+        return $streak;
     }
 
     /**
@@ -291,16 +360,18 @@ class StudentClassService
      *
      * @return \Illuminate\Support\Collection<int, array<string, string>>
      */
-    protected function buildAttendanceTimeline(int $rate): Collection
+    protected function buildAttendanceTimeline(CourseClass $classItem): Collection
     {
-        $statuses = ['present', 'present', 'late', 'present', 'absent', 'present', 'present', 'present'];
-
-        return collect($statuses)->map(function (string $status, int $index) {
-            return [
-                'date' => now()->subDays((7 - $index) * 2)->format('d/m/Y'),
-                'status' => $status,
-            ];
-        });
+        return $this->attendanceRecords($classItem)
+            ->sortBy(function ($attendance) {
+                return optional(optional($attendance->session)->start_at)->timestamp ?: optional($attendance->created_at)->timestamp;
+            })
+            ->values()
+            ->map(function ($attendance) {
+                return [
+                    'date' => optional(optional($attendance->session)->start_at)->format('d/m/Y') ?: optional($attendance->created_at)->format('d/m/Y'),
+                    'status' => (string) $attendance->status,
+                ];
+            });
     }
 }
-
