@@ -51,4 +51,9 @@ class ClassSession extends Model
     {
         return $this->hasMany(SessionAttendance::class, 'class_session_id');
     }
+
+    public function assignments()
+    {
+        return $this->hasMany(SessionAssignment::class, 'class_session_id');
+    }
 }
