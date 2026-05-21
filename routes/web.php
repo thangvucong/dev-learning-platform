@@ -17,11 +17,15 @@ use App\Http\Controllers\Student\ClassController as StudentClassController;
 use App\Http\Controllers\Student\CourseController as StudentCourseController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
+use App\Http\Controllers\Teacher\ClassController as TeacherClassesController;
+use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
+use App\Http\Controllers\Teacher\ScheduleController as TeacherScheduleController;
 use App\Http\Controllers\Search\GlobalSearchController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\MyPostController;
 use App\Http\Controllers\Admin\AdminPostController;
 use App\Http\Controllers\Admin\AdminUploadController;
+use App\Support\AuthRedirect;
 
 
 /*
@@ -104,10 +108,9 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/dashboard', function () {
-        return redirect()->to(\App\Support\AuthRedirect::to(auth()->user()));
+        return redirect()->to(AuthRedirect::to(auth()->user()));
     })->middleware('role.redirect')->name('dashboard');
 
-    //  Route dành cho Admin
     Route::middleware(['role:admin'])
         ->prefix('admin')
         ->name('admin.') 
@@ -160,17 +163,24 @@ Route::middleware('auth')->group(function () {
                 Route::get('/api/list', [AdminCourseController::class, 'getListData'])->name('courses.api.list');
                 Route::put('/{course}/instructor', [AdminCourseController::class, 'updateInstructor'])->name('courses.updateInstructor');
             });
-        });
+    });
 
     Route::middleware(['role:instructor'])
         ->prefix('teacher')
         ->name('teacher.')
         ->group(function () {
-        Route::get('/api/schedule', [\App\Http\Controllers\Teacher\TeacherClassController::class, 'getSchedule'])->name('api.schedule');
-            Route::get('/dashboard', [\App\Http\Controllers\Teacher\TeacherClassController::class, 'indexView'])->name('dashboard');
-
-            Route::get('/api/classes', [\App\Http\Controllers\Teacher\TeacherClassController::class, 'index'])
-            ->name('api.classes');
+            Route::get('/schedule', [TeacherScheduleController::class, 'index'])->name('schedule.index');
+            Route::get('/schedule/data', [TeacherScheduleController::class, 'data'])->name('schedule.data');
+            Route::post('/schedule/classes/{courseClass}/sessions', [TeacherScheduleController::class, 'ensureAttendanceSession'])->name('schedule.sessions.ensure');
+            Route::get('/schedule/sessions/{classSession}/attendance', [TeacherScheduleController::class, 'attendance'])->name('schedule.attendance');
+            Route::put('/schedule/sessions/{classSession}/attendance/{student}', [TeacherScheduleController::class, 'updateAttendance'])->name('schedule.attendance.update');
+            Route::put('/schedule/sessions/{classSession}/attendance', [TeacherScheduleController::class, 'bulkAttendance'])->name('schedule.attendance.bulk');
+            Route::get('/schedule/sessions/{classSession}/assignments', [TeacherScheduleController::class, 'assignments'])->name('schedule.assignments');
+            Route::post('/schedule/sessions/{classSession}/assignments', [TeacherScheduleController::class, 'storeAssignment'])->name('schedule.assignments.store');
+            Route::get('/classes', [TeacherClassesController::class, 'index'])->name('classes.index');
+            Route::get('/classes/{courseClass}', [TeacherClassesController::class, 'show'])->name('classes.show');
+            Route::get('/classes/{courseClass}/students/export', [TeacherClassesController::class, 'exportStudents'])->name('classes.students.export');
+            Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('dashboard');
     });
 
     Route::middleware(['role:student'])
@@ -180,6 +190,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
             Route::get('/schedule', [StudentScheduleController::class, 'index'])->name('schedule.index');
             Route::get('/schedule/data', [StudentScheduleController::class, 'data'])->name('schedule.data');
+            Route::get('/schedule/sessions/{classSession}/assignments', [StudentScheduleController::class, 'assignments'])->name('schedule.assignments');
+            Route::post('/schedule/assignments/{sessionAssignment}/submission', [StudentScheduleController::class, 'submitAssignment'])->name('schedule.assignments.submit');
             Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.index');
             Route::patch('/profile', [StudentProfileController::class, 'updateProfile'])->name('profile.update');
             Route::post('/profile/avatar', [StudentProfileController::class, 'updateAvatar'])->name('profile.avatar.update');

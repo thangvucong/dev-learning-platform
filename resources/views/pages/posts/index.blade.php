@@ -49,17 +49,6 @@
                                         <span class="truncate text-[13px] font-bold text-[#292929]">
                                             {{ $authorName }}
                                         </span>
-                                        @if (auth()->user()->isAdmin())
-                                            <span
-                                                class="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-[#1d9bf0] text-white">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5"
-                                                    viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                                    <path fill-rule="evenodd"
-                                                        d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.25 7.32a1 1 0 0 1-1.42.002L3.29 9.246a1 1 0 1 1 1.42-1.41l4.04 4.067 6.54-6.607a1 1 0 0 1 1.414-.006Z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                            </span>
-                                        @endif
                                     </div>
                                 </div>
 

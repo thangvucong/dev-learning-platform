@@ -49,48 +49,45 @@ return [
 
         'instructor' => [
             [
-                'section' => 'Giảng viên',
+                'section' => 'Tổng quan',
                 'items' => [
-                    // [
-                    //     'title' => 'Dashboard',
-                    //     'route' => 'teacher.dashboard',
-                    //     'icon' => 'fa-solid fa-gauge-high',
-                    //     'active' => ['teacher.dashboard'],
-                    // ],
-                    // [
-                    //     'title' => 'Lịch giảng dạy',
-                    //     'route' => 'teacher.schedule.index',
-                    //     'icon' => 'fa-solid fa-calendar-days',
-                    //     'active' => ['teacher.schedule.*'],
-                    // ],
-                    // [
-                    //     'title' => 'Lớp học của tôi',
-                    //     'route' => 'teacher.classes.index',
-                    //     'icon' => 'fa-solid fa-chalkboard',
-                    //     'active' => ['teacher.classes.*'],
-                    //     'children' => [
-                    //         // [
-                    //         //     'title' => 'Danh sách lớp',
-                    //         //     'route' => 'teacher.classes.index',
-                    //         //     'icon' => 'fa-regular fa-rectangle-list',
-                    //         //     'active' => ['teacher.classes.index'],
-                    //         // ],
-                    //         // [
-                    //         //     'title' => 'Điểm danh',
-                    //         //     'route' => 'teacher.attendance.index',
-                    //         //     'icon' => 'fa-solid fa-clipboard-check',
-                    //         //     'active' => ['teacher.attendance.*'],
-                    //         // ],
-                    //     ],
-                    // ],
-                    // [
-                    //     'title' => 'Học viên',
-                    //     'route' => 'teacher.students.index',
-                    //     'icon' => 'fa-solid fa-user-graduate',
-                    //     'active' => ['teacher.students.*'],
-                    // ],
+                    [
+                        'title' => 'Dashboard',
+                        'route' => 'teacher.dashboard',
+                        'icon' => 'fa-solid fa-gauge-high',
+                        'active' => ['teacher.dashboard'],
+                    ],
                 ],
             ],
+            [
+                'section' => 'Giảng dạy',
+                'items' => [
+                    [
+                        'title' => 'Lịch giảng dạy',
+                        'route' => 'teacher.schedule.index',
+                        'icon' => 'fa-solid fa-calendar-days',
+                        'active' => ['teacher.schedule.*'],
+                    ],
+                    [
+                        'title' => 'Lớp học của tôi',
+                        'route' => 'teacher.classes.index',
+                        'icon' => 'fa-solid fa-chalkboard',
+                        'active' => ['teacher.classes.*'],
+                    ],
+                    [
+                        'title' => 'Quản lý buổi học',
+                        'route' => 'teacher.sessions.index',
+                        'icon' => 'fa-solid fa-person-chalkboard',
+                        'active' => ['teacher.sessions.*'],
+                    ],
+                    [
+                        'title' => 'Tài liệu',
+                        'route' => 'teacher.materials.index',
+                        'icon' => 'fa-solid fa-folder-open',
+                        'active' => ['teacher.materials.*'],
+                    ],
+                ],
+            ]
         ],
 
         'student' => [

@@ -4,7 +4,17 @@
     $authUser = auth()->user();
     $sidebarSections = SidebarMenuBuilder::forUser($authUser);
     $displayName = trim((string) data_get($authUser, 'name', 'User'));
-    $displayRole = strtoupper((string) optional($authUser)->getRoleNames()->first() ?: 'student');
+    $role = (string) optional($authUser)->getRoleNames()->first() ?: 'student';
+    $displayRole = [
+        'admin' => 'QUẢN TRỊ',
+        'instructor' => 'GIẢNG VIÊN',
+        'student' => 'HỌC VIÊN',
+    ][$role] ?? strtoupper($role);
+    $brandLabel = [
+        'admin' => 'LMS Admin',
+        'instructor' => 'LMS Teacher',
+        'student' => 'LMS Student',
+    ][$role] ?? 'LMS';
     $initial = strtoupper(substr($displayName, 0, 1));
 @endphp
 <!DOCTYPE html>
@@ -32,7 +42,7 @@
             <div class="p-4 h-full flex flex-col">
                 <div class="flex items-center gap-2 mb-8">
                     <div class="w-8 h-8 bg-emerald-500 rounded-lg"></div>
-                    <span class="text-xl font-bold tracking-tight text-white">LMS Admin</span>
+                    <span class="text-xl font-bold tracking-tight text-white">{{ $brandLabel }}</span>
                 </div>
 
                 <nav class="space-y-5 flex-1 overflow-y-auto pr-1">
