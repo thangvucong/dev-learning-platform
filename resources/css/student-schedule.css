@@ -59,3 +59,40 @@
     color: #f8fafc;
 }
 
+.attendance-filter {
+    border: 1px solid #334155;
+    border-radius: 9999px;
+    color: #cbd5e1;
+    padding: 0.375rem 0.625rem;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.attendance-filter:hover,
+.attendance-filter.is-active {
+    background: rgba(16, 185, 129, 0.14);
+    border-color: rgba(16, 185, 129, 0.45);
+    color: #6ee7b7;
+}
+
+.attendance-status-dot {
+    align-items: center;
+    border: 1px solid;
+    border-radius: 9999px;
+    display: inline-flex;
+    height: 2rem;
+    justify-content: center;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    width: 2.25rem;
+}
+
+.attendance-status-dot:hover {
+    transform: translateY(-1px);
+}
+
+.attendance-list {
+    scrollbar-width: none;
+}
+
+.attendance-list::-webkit-scrollbar {
+    display: none;
+}
