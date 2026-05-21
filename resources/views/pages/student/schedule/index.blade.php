@@ -3,7 +3,11 @@
 @section('title', 'Lịch học')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ mix('assets/css/student-schedule.css') }}">
+    @php
+        $scheduleCssPath = public_path('assets/css/student-schedule.css');
+        $scheduleCssVersion = file_exists($scheduleCssPath) ? filemtime($scheduleCssPath) : time();
+    @endphp
+    <link rel="stylesheet" href="{{ mix('assets/css/student-schedule.css') }}?v={{ $scheduleCssVersion }}">
 @endpush
 
 @section('content')
@@ -91,10 +95,17 @@
 @endsection
 
 @push('scripts')
+    @php
+        $scheduleJsPath = public_path('assets/js/student-schedule.js');
+        $scheduleJsVersion = file_exists($scheduleJsPath) ? filemtime($scheduleJsPath) : time();
+    @endphp
     <script>
         window.StudentScheduleConfig = {
             dataUrl: @json(route('user.schedule.data')),
+            assignmentMode: 'student',
+            assignmentBaseUrl: @json(url('/user/schedule/sessions')),
+            assignmentSubmissionBaseUrl: @json(url('/user/schedule/assignments')),
         };
     </script>
-    <script src="{{ mix('assets/js/student-schedule.js') }}"></script>
+    <script src="{{ mix('assets/js/student-schedule.js') }}?v={{ $scheduleJsVersion }}"></script>
 @endpush

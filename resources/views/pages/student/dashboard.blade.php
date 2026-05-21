@@ -4,42 +4,6 @@
 
 @section('content')
     <div class="space-y-8">
-        <section
-            class="rounded-3xl border border-slate-700 bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#1e293b] p-4 md:p-4">
-            <div class="flex flex-wrap items-start justify-between gap-5">
-                <div class="flex items-center gap-4 min-w-0">
-                    <div class="h-14 w-14 rounded-2xl overflow-hidden bg-slate-800 border border-slate-700 shrink-0">
-                        @if (!empty($welcome['avatar']))
-                            <img src="{{ $welcome['avatar'] }}" alt="{{ $welcome['name'] }}"
-                                class="w-full h-full object-cover">
-                        @else
-                            <div class="w-full h-full flex items-center justify-center text-emerald-300 text-lg font-bold">
-                                {{ strtoupper(substr((string) ($welcome['name'] ?? 'U'), 0, 1)) }}
-                            </div>
-                        @endif
-                    </div>
-                    <div>
-                        <p class="text-sm text-slate-400">{{ $welcome['greeting'] ?? 'Xin chào' }}</p>
-                        <h1 class="text-2xl md:text-3xl font-bold text-white">{{ $welcome['name'] ?? 'Student' }}</h1>
-                        <p class="text-sm text-slate-300 mt-1">Hôm nay bạn có {{ (int) ($welcome['today_classes'] ?? 0) }}
-                            buổi học trong lịch.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            @foreach ($stats as $stat)
-                @include('components.student.stat-card', [
-                    'title' => $stat['title'],
-                    'value' => $stat['value'],
-                    'suffix' => $stat['suffix'],
-                    'icon' => $stat['icon'],
-                    'tone' => $stat['tone'],
-                ])
-            @endforeach
-        </section>
-
         <section class="grid grid-cols-1 xl:grid-cols-5 gap-6">
             <div class="xl:col-span-3">
                 <div class="flex items-center justify-between mb-4">

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClassSession;
+use App\Models\SessionAssignment;
 use App\Services\Student\StudentScheduleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -54,6 +56,30 @@ class ScheduleController extends Controller
         return response()->json($payload);
     }
 
+    public function assignments(Request $request, ClassSession $classSession): JsonResponse
+    {
+        return response()->json(
+            $this->scheduleService->buildAssignments($request->user(), $classSession)
+        );
+    }
+
+    public function submitAssignment(Request $request, SessionAssignment $sessionAssignment): JsonResponse
+    {
+        $validated = $request->validate([
+            'content' => ['nullable', 'string'],
+            'attachment' => ['nullable', 'file', 'max:20480'],
+        ]);
+
+        return response()->json(
+            $this->scheduleService->submitAssignment(
+                $request->user(),
+                $sessionAssignment,
+                $validated,
+                $request->file('attachment')
+            )
+        );
+    }
+
     /**
      * Normalize query filters for schedule state.
      *
@@ -75,4 +101,3 @@ class ScheduleController extends Controller
         ];
     }
 }
-
