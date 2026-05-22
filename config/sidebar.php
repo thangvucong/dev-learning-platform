@@ -113,6 +113,12 @@ return [
                         'active' => ['user.classes.*'],
                     ],
                     [
+                        'title' => 'Tài liệu',
+                        'route' => 'user.materials.index',
+                        'icon' => 'fa-solid fa-folder-open',
+                        'active' => ['user.materials.*'],
+                    ],
+                    [
                         'title' => 'Khóa học',
                         'route' => 'user.courses.index',
                         'icon' => 'fa-solid fa-book',

@@ -3,6 +3,7 @@
 namespace App\Services\Student;
 
 use App\Models\CourseClass;
+use App\Models\LearningMaterial;
 use App\Models\User;
 use Illuminate\Support\Collection;
 
@@ -347,12 +348,20 @@ class StudentClassService
      */
     protected function buildMaterials(CourseClass $courseClass): Collection
     {
-        return collect([
-            ['type' => 'Slide', 'name' => 'Introduction & Setup', 'url' => '#'],
-            ['type' => 'PDF', 'name' => 'Class handbook', 'url' => '#'],
-            ['type' => 'Source code', 'name' => 'Sample project repository', 'url' => '#'],
-            ['type' => 'Recording', 'name' => 'Session recordings (coming soon)', 'url' => '#'],
-        ]);
+        return LearningMaterial::query()
+            ->where('class_id', $courseClass->id)
+            ->where('status', LearningMaterial::STATUS_ACTIVE)
+            ->with('session')
+            ->latest('published_at')
+            ->latest()
+            ->get()
+            ->map(function (LearningMaterial $material) {
+                return [
+                    'type' => $material->session ? ($material->session->title ?: 'Buổi ' . $material->session->session_no) : 'Tài liệu lớp',
+                    'name' => $material->title,
+                    'url' => route('user.materials.download', $material),
+                ];
+            });
     }
 
     /**

@@ -36,4 +36,11 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', rtrim(env('APP_URL', 'http://localhost'), '/') . '/auth/google/callback'),
     ],
 
+    'google_drive' => [
+        'service_account_path' => env('GOOGLE_DRIVE_SERVICE_ACCOUNT_PATH'),
+        'refresh_token' => env('GOOGLE_DRIVE_REFRESH_TOKEN'),
+        'document_root_folder_id' => env('GOOGLE_DRIVE_DOCUMENT_ROOT_FOLDER_ID'),
+        'shared_drive_id' => env('GOOGLE_DRIVE_SHARED_DRIVE_ID'),
+    ],
+
 ];

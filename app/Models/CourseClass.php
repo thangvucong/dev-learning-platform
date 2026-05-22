@@ -91,6 +91,11 @@ class CourseClass extends Model
         return $this->hasMany(ClassSession::class, 'class_id')->orderBy('start_at');
     }
 
+    public function materials()
+    {
+        return $this->hasMany(LearningMaterial::class, 'class_id');
+    }
+
     /**
      * Get the class enrollment records.
      *

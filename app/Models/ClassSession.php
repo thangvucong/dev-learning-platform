@@ -56,4 +56,9 @@ class ClassSession extends Model
     {
         return $this->hasMany(SessionAssignment::class, 'class_session_id');
     }
+
+    public function materials()
+    {
+        return $this->hasMany(LearningMaterial::class, 'class_session_id');
+    }
 }
