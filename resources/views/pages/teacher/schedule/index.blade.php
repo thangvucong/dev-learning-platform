@@ -11,6 +11,18 @@
 @endpush
 
 @section('content')
+    @php
+        if ($errors->any()) {
+            foreach (array_slice($errors->all(), 0, 3) as $message) {
+                toastr((string) $message, 'error');
+            }
+
+            if ($errors->count() > 3) {
+                toastr('Còn lỗi khác, vui lòng kiểm tra lại dữ liệu.', 'error');
+            }
+        }
+    @endphp
+
     <div class="space-y-5">
         <section class="rounded-2xl border border-slate-700 bg-[#111827] p-4">
             <form id="schedule-filter-form" method="GET" action="{{ route('teacher.schedule.index') }}"
@@ -76,6 +88,8 @@
             dataUrl: @json(route('teacher.schedule.data')),
             attendanceBaseUrl: @json(url('/teacher/schedule/sessions')),
             assignmentBaseUrl: @json(url('/teacher/schedule/sessions')),
+            assignmentSubmissionsBaseUrl: @json(url('/teacher/schedule/assignments')),
+            assignmentGradeBaseUrl: @json(url('/teacher/schedule/submissions')),
             classSessionBaseUrl: @json(url('/teacher/schedule/classes')),
         };
     </script>

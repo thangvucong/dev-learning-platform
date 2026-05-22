@@ -26,11 +26,14 @@ class AssignmentSubmission extends Model
         'status',
         'score',
         'feedback',
+        'graded_at',
+        'graded_by',
     ];
 
     protected $casts = [
         'attachment_size' => 'integer',
         'submitted_at' => 'datetime',
+        'graded_at' => 'datetime',
         'score' => 'decimal:2',
     ];
 
@@ -42,5 +45,10 @@ class AssignmentSubmission extends Model
     public function student()
     {
         return $this->belongsTo(User::class, 'student_id');
+    }
+
+    public function grader()
+    {
+        return $this->belongsTo(User::class, 'graded_by');
     }
 }

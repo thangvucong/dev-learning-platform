@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Teacher\GradeAssignmentSubmissionRequest;
+use App\Http\Requests\Teacher\StoreSessionAssignmentRequest;
+use App\Models\AssignmentSubmission;
 use App\Models\ClassSession;
 use App\Models\CourseClass;
+use App\Models\SessionAssignment;
 use App\Services\Teacher\TeacherScheduleService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -76,25 +81,35 @@ class ScheduleController extends Controller
         );
     }
 
-    public function storeAssignment(Request $request, ClassSession $classSession): JsonResponse
+    public function storeAssignment(StoreSessionAssignmentRequest $request, ClassSession $classSession): RedirectResponse
     {
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'content' => ['nullable', 'string'],
-            'submission_type' => ['required', 'in:text,file,both'],
-            'due_at' => ['nullable', 'date'],
-            'status' => ['required', 'in:draft,published'],
-            'attachment' => ['nullable', 'file', 'max:20480'],
-        ]);
+        $this->scheduleService->createAssignment(
+            $request->user(),
+            $classSession,
+            $request->validated(),
+            $request->file('attachment')
+        );
 
+        toastr('Đã tạo bài tập thành công.', 'success');
+
+        return back();
+    }
+
+    public function assignmentSubmissions(Request $request, SessionAssignment $sessionAssignment): JsonResponse
+    {
         return response()->json(
-            $this->scheduleService->createAssignment(
+            $this->scheduleService->buildAssignmentSubmissions($request->user(), $sessionAssignment)
+        );
+    }
+
+    public function gradeSubmission(GradeAssignmentSubmissionRequest $request, AssignmentSubmission $assignmentSubmission): JsonResponse
+    {
+        return response()->json(
+            $this->scheduleService->gradeSubmission(
                 $request->user(),
-                $classSession,
-                $validated,
-                $request->file('attachment')
-            ),
-            201
+                $assignmentSubmission,
+                $request->validated()
+            )
         );
     }
 

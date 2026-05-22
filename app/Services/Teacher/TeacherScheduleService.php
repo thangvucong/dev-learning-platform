@@ -4,6 +4,7 @@ namespace App\Services\Teacher;
 
 use App\Models\ClassSession;
 use App\Models\CourseClass;
+use App\Models\AssignmentSubmission;
 use App\Models\SessionAttendance;
 use App\Models\SessionAssignment;
 use App\Models\User;
@@ -351,6 +352,11 @@ class TeacherScheduleService
         $assignments = SessionAssignment::query()
             ->where('class_session_id', $session->id)
             ->withCount('submissions')
+            ->withCount([
+                'submissions as ungraded_submissions_count' => function ($query) {
+                    $query->where('status', '!=', AssignmentSubmission::STATUS_RETURNED);
+                },
+            ])
             ->latest()
             ->get()
             ->map(function (SessionAssignment $assignment) {
@@ -407,6 +413,81 @@ class TeacherScheduleService
         return $this->buildAssignments($teacher, $session->fresh());
     }
 
+    public function buildAssignmentSubmissions(User $teacher, SessionAssignment $assignment): array
+    {
+        $assignment->load([
+            'session.courseClass.course',
+            'session.courseClass.classEnrollments.user',
+            'submissions.student',
+            'submissions.grader',
+        ]);
+
+        $session = $assignment->session;
+        $courseClass = $this->authorizeSessionTeacher($teacher, $session);
+        $enrollments = $courseClass->classEnrollments instanceof Collection
+            ? $courseClass->classEnrollments
+            : collect();
+        $records = $assignment->submissions instanceof Collection
+            ? $assignment->submissions->keyBy('student_id')
+            : collect();
+
+        $submissions = $enrollments
+            ->filter(function ($enrollment) {
+                return $enrollment->user !== null;
+            })
+            ->map(function ($enrollment) use ($records, $assignment) {
+                $student = $enrollment->user;
+                $submission = $records->get($student->id);
+
+                return $this->mapAssignmentSubmissionRow($student, $submission, $assignment);
+            })
+            ->sortBy('student_name')
+            ->values();
+
+        return [
+            'assignment' => [
+                'id' => $assignment->id,
+                'title' => $assignment->title,
+                'class_name' => $courseClass->name,
+                'course' => optional($courseClass->course)->title ?: 'Khóa học',
+            ],
+            'summary' => [
+                'total' => $submissions->count(),
+                'submitted' => $submissions->where('status', '!=', 'not_submitted')->count(),
+                'not_submitted' => $submissions->where('status', 'not_submitted')->count(),
+                'graded' => $submissions->where('status', AssignmentSubmission::STATUS_RETURNED)->count(),
+                'ungraded' => $submissions->filter(function (array $row) {
+                    return $row['submission_id'] !== null
+                        && $row['status'] !== AssignmentSubmission::STATUS_RETURNED;
+                })->count(),
+                'late' => $submissions->where('is_late', true)->count(),
+            ],
+            'submissions' => $submissions,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function gradeSubmission(User $teacher, AssignmentSubmission $submission, array $data): array
+    {
+        $submission->load(['assignment.session.courseClass.classEnrollments', 'assignment.session.courseClass.course']);
+        $assignment = $submission->assignment;
+        $session = $assignment->session;
+        $courseClass = $this->authorizeSessionTeacher($teacher, $session);
+        $this->authorizeStudentInClass($courseClass, (int) $submission->student_id);
+
+        $submission->update([
+            'score' => $data['score'] ?? null,
+            'feedback' => $data['feedback'] ?? null,
+            'status' => AssignmentSubmission::STATUS_RETURNED,
+            'graded_at' => now(),
+            'graded_by' => $teacher->id,
+        ]);
+
+        return $this->buildAssignmentSubmissions($teacher, $assignment->fresh());
+    }
+
     protected function authorizeSessionTeacher(User $teacher, ClassSession $session): CourseClass
     {
         $courseClass = $session->courseClass;
@@ -438,7 +519,32 @@ class TeacherScheduleService
             'attachment_name' => $assignment->attachment_name,
             'attachment_size' => $assignment->attachment_size,
             'submissions_count' => (int) ($assignment->submissions_count ?? 0),
+            'ungraded_submissions_count' => (int) ($assignment->ungraded_submissions_count ?? 0),
             'created_at' => optional($assignment->created_at)->format('d/m/Y H:i'),
+        ];
+    }
+
+    protected function mapAssignmentSubmissionRow(User $student, ?AssignmentSubmission $submission, SessionAssignment $assignment): array
+    {
+        $isLate = $submission
+            && $assignment->due_at
+            && $submission->submitted_at
+            && $submission->submitted_at->greaterThan($assignment->due_at);
+
+        return [
+            'student_id' => $student->id,
+            'student_name' => $student->name,
+            'student_email' => $student->email,
+            'submission_id' => optional($submission)->id,
+            'status' => optional($submission)->status ?: 'not_submitted',
+            'is_late' => (bool) ($isLate || optional($submission)->status === AssignmentSubmission::STATUS_LATE),
+            'content' => optional($submission)->content,
+            'attachment_name' => optional($submission)->attachment_name,
+            'submitted_at' => optional(optional($submission)->submitted_at)->format('d/m/Y H:i'),
+            'score' => optional($submission)->score,
+            'feedback' => optional($submission)->feedback,
+            'graded_at' => optional(optional($submission)->graded_at)->format('d/m/Y H:i'),
+            'grader_name' => optional(optional($submission)->grader)->name,
         ];
     }
 

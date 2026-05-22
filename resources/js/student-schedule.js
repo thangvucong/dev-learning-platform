@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const assignmentBaseUrl = config.assignmentBaseUrl || attendanceBaseUrl
     const assignmentMode = config.assignmentMode || 'teacher'
     const assignmentSubmissionBaseUrl = config.assignmentSubmissionBaseUrl || ''
+    const assignmentSubmissionsBaseUrl = config.assignmentSubmissionsBaseUrl || ''
+    const assignmentGradeBaseUrl = config.assignmentGradeBaseUrl || ''
     const classSessionBaseUrl = config.classSessionBaseUrl || ''
     const root = document.getElementById('student-calendar-root')
     const calendarEl = document.getElementById('student-calendar')
@@ -49,8 +51,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const assignmentListEl = assignmentsPanel ? assignmentsPanel.querySelector('[data-assignment-list]') : null
     const assignmentMessageEl = assignmentsPanel ? assignmentsPanel.querySelector('[data-assignment-message]') : null
     const assignmentRefreshBtn = assignmentsPanel ? assignmentsPanel.querySelector('[data-assignment-refresh]') : null
+    const assignmentFormShell = assignmentsPanel ? assignmentsPanel.querySelector('[data-assignment-form-shell]') : null
+    const assignmentFormToggle = assignmentsPanel ? assignmentsPanel.querySelector('[data-assignment-form-toggle]') : null
+    const assignmentFormToggleLabel = assignmentsPanel ? assignmentsPanel.querySelector('[data-assignment-form-toggle-label]') : null
+    const assignmentFormToggleIcon = assignmentsPanel ? assignmentsPanel.querySelector('[data-assignment-form-toggle-icon]') : null
     const assignmentForm = assignmentsPanel ? assignmentsPanel.querySelector('[data-assignment-form]') : null
     const assignmentSubmitBtn = assignmentsPanel ? assignmentsPanel.querySelector('[data-assignment-submit]') : null
+    const assignmentSubmissionsPanel = document.getElementById('assignment-submissions-modal')
+    const assignmentSubmissionsTitleEl = assignmentSubmissionsPanel ? assignmentSubmissionsPanel.querySelector('[data-assignment-submissions-title]') : null
+    const assignmentSubmissionsSummaryEl = assignmentSubmissionsPanel ? assignmentSubmissionsPanel.querySelector('[data-assignment-submissions-summary]') : null
+    const assignmentSubmissionsListEl = assignmentSubmissionsPanel ? assignmentSubmissionsPanel.querySelector('[data-assignment-submissions-list]') : null
+    const assignmentSubmissionsMessageEl = assignmentSubmissionsPanel ? assignmentSubmissionsPanel.querySelector('[data-assignment-submissions-message]') : null
+    const assignmentSubmissionsCloseBtn = assignmentSubmissionsPanel ? assignmentSubmissionsPanel.querySelector('[data-assignment-submissions-close]') : null
+    const assignmentSubmissionSearchEl = document.getElementById('schedule-assignment-submission-search')
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
     let attendanceState = {
         sessionId: null,
@@ -64,6 +77,14 @@ document.addEventListener('DOMContentLoaded', function () {
         sessionId: null,
         assignments: [],
         summary: null,
+        loading: false,
+    }
+    let assignmentSubmissionState = {
+        assignmentId: null,
+        submissions: [],
+        summary: null,
+        query: '',
+        filter: 'all',
         loading: false,
     }
     const ensureSessionRequests = {}
@@ -469,6 +490,106 @@ document.addEventListener('DOMContentLoaded', function () {
         assignmentMessageEl.classList.add('hidden')
     }
 
+    function showToast(type, message) {
+        if (window.flasher && typeof window.flasher[type] === 'function') {
+            window.flasher[type](message)
+            return
+        }
+
+        if (window.toastr && typeof window.toastr[type] === 'function') {
+            window.toastr[type](message)
+            return
+        }
+
+        let container = document.getElementById('schedule-toast-container')
+        if (!container) {
+            container = document.createElement('div')
+            container.id = 'schedule-toast-container'
+            container.className = 'fixed right-4 top-4 z-[9999] space-y-2'
+            document.body.appendChild(container)
+        }
+
+        const toast = document.createElement('div')
+        toast.className = `min-w-[260px] rounded-xl border px-4 py-3 text-sm font-semibold shadow-lg ${type === 'error' ? 'border-red-500/40 bg-red-950 text-red-100' : 'border-emerald-500/40 bg-emerald-950 text-emerald-100'}`
+        toast.textContent = message
+        container.appendChild(toast)
+        window.setTimeout(function () {
+            toast.remove()
+            if (container && container.childElementCount === 0) {
+                container.remove()
+            }
+        }, 3500)
+    }
+
+    function assignmentErrorMessage(payload, fallback) {
+        if (payload?.errors) {
+            const firstError = Object.values(payload.errors).flat()[0]
+            if (firstError) return firstError
+        }
+
+        return payload?.message || fallback
+    }
+
+    function setAssignmentFormVisible(visible) {
+        if (!assignmentFormShell) return
+        assignmentFormShell.classList.toggle('hidden', !visible)
+        if (visible) hideAssignmentSubmissionsPanel()
+        if (assignmentFormToggle) {
+            assignmentFormToggle.setAttribute('aria-expanded', visible ? 'true' : 'false')
+        }
+        if (assignmentFormToggleLabel) {
+            assignmentFormToggleLabel.textContent = visible ? 'Ẩn form' : 'Tạo bài'
+        }
+        if (assignmentFormToggleIcon) {
+            assignmentFormToggleIcon.classList.toggle('rotate-180', visible)
+        }
+        if (visible && assignmentForm) {
+            assignmentForm.querySelector('input[name="title"]')?.focus()
+        }
+    }
+
+    function setAssignmentSubmissionsMessage(message, tone = 'muted') {
+        if (!assignmentSubmissionsMessageEl) return
+        assignmentSubmissionsMessageEl.textContent = message
+        assignmentSubmissionsMessageEl.classList.remove('hidden', 'border-red-500/30', 'text-red-300', 'border-slate-700', 'text-slate-300')
+        assignmentSubmissionsMessageEl.classList.add(tone === 'error' ? 'border-red-500/30' : 'border-slate-700')
+        assignmentSubmissionsMessageEl.classList.add(tone === 'error' ? 'text-red-300' : 'text-slate-300')
+    }
+
+    function clearAssignmentSubmissionsMessage() {
+        if (!assignmentSubmissionsMessageEl) return
+        assignmentSubmissionsMessageEl.textContent = ''
+        assignmentSubmissionsMessageEl.classList.add('hidden')
+    }
+
+    function hideAssignmentSubmissionsPanel() {
+        if (!assignmentSubmissionsPanel) return
+        assignmentSubmissionsPanel.classList.add('hidden')
+        document.body.classList.remove('overflow-hidden')
+    }
+
+    function showAssignmentSubmissionsPanel() {
+        if (!assignmentSubmissionsPanel) return
+        assignmentSubmissionsPanel.classList.remove('hidden')
+        document.body.classList.add('overflow-hidden')
+    }
+
+    function resetAssignmentSubmissionsPanel() {
+        assignmentSubmissionState = {
+            assignmentId: null,
+            submissions: [],
+            summary: null,
+            query: assignmentSubmissionSearchEl ? assignmentSubmissionSearchEl.value.trim().toLowerCase() : '',
+            filter: assignmentSubmissionState.filter || 'all',
+            loading: false,
+        }
+        if (assignmentSubmissionsTitleEl) assignmentSubmissionsTitleEl.textContent = 'Bài nộp'
+        if (assignmentSubmissionsSummaryEl) assignmentSubmissionsSummaryEl.textContent = 'Chọn bài tập để xem bài nộp.'
+        if (assignmentSubmissionsListEl) assignmentSubmissionsListEl.innerHTML = ''
+        clearAssignmentSubmissionsMessage()
+        hideAssignmentSubmissionsPanel()
+    }
+
     function resetAssignmentsPanel() {
         assignmentState = {
             sessionId: null,
@@ -479,6 +600,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (assignmentsPanel) assignmentsPanel.setAttribute('data-session-id', '')
         if (assignmentSummaryEl) assignmentSummaryEl.textContent = 'Chọn buổi học để tải bài tập.'
         if (assignmentListEl) assignmentListEl.innerHTML = ''
+        setAssignmentFormVisible(false)
+        resetAssignmentSubmissionsPanel()
         setAssignmentMessage(`Chọn một buổi học có lịch chi tiết để ${assignmentMode === 'student' ? 'xem bài tập' : 'giao bài tập'}.`)
     }
 
@@ -497,6 +620,9 @@ document.addEventListener('DOMContentLoaded', function () {
         assignmentState.assignments = []
         assignmentState.summary = null
         assignmentsPanel.setAttribute('data-session-id', sessionId ? String(sessionId) : '')
+        if (assignmentMode === 'teacher' && assignmentForm) {
+            assignmentForm.setAttribute('action', sessionId ? assignmentUrl(sessionId) : '#')
+        }
 
         if (!sessionId) {
             resetAssignmentsPanel()
@@ -615,11 +741,320 @@ document.addEventListener('DOMContentLoaded', function () {
         row.appendChild(top)
 
         const footer = document.createElement('div')
-        footer.className = 'mt-3 text-xs text-slate-400'
-        footer.textContent = `${assignment.submissions_count || 0} bài nộp`
+        footer.className = 'mt-3 flex items-center justify-between gap-3 text-xs text-slate-400'
+
+        const count = document.createElement('span')
+        const ungraded = Number(assignment.ungraded_submissions_count || 0)
+        count.textContent = `${assignment.submissions_count || 0} bài nộp${ungraded > 0 ? ` · ${ungraded} chưa chấm` : ''}`
+
+        const submissionsBtn = document.createElement('button')
+        submissionsBtn.type = 'button'
+        submissionsBtn.className = 'inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700'
+        submissionsBtn.setAttribute('title', 'Xem bài nộp')
+        submissionsBtn.setAttribute('aria-label', `Xem bài nộp - ${assignment.title || 'Bài tập'}`)
+        submissionsBtn.dataset.assignmentSubmissions = String(assignment.id)
+        submissionsBtn.innerHTML = '<i class="fa-solid fa-clipboard-check"></i>'
+        submissionsBtn.addEventListener('click', function () {
+            loadAssignmentSubmissions(assignment)
+        })
+
+        footer.appendChild(count)
+        footer.appendChild(submissionsBtn)
         row.appendChild(footer)
 
         return row
+    }
+
+    async function loadAssignmentSubmissions(assignment) {
+        if (!assignmentSubmissionsPanel) return
+        const assignmentId = assignment.id
+        const url = teacherAssignmentSubmissionsUrl(assignmentId)
+        if (!url) {
+            setAssignmentMessage('Chưa xác định được bài tập để tải bài nộp.', 'error')
+            return
+        }
+
+        setAssignmentFormVisible(false)
+        showAssignmentSubmissionsPanel()
+        assignmentSubmissionState.assignmentId = assignmentId
+        assignmentSubmissionState.submissions = []
+        assignmentSubmissionState.summary = null
+        assignmentSubmissionState.loading = true
+        if (assignmentSubmissionsTitleEl) assignmentSubmissionsTitleEl.textContent = assignment.title || 'Bài nộp'
+        if (assignmentSubmissionsSummaryEl) assignmentSubmissionsSummaryEl.textContent = 'Đang tải bài nộp...'
+        if (assignmentSubmissionsListEl) assignmentSubmissionsListEl.innerHTML = ''
+        clearAssignmentSubmissionsMessage()
+
+        try {
+            const response = await fetch(url, {
+                headers: { Accept: 'application/json' },
+            })
+            const payload = await response.json().catch(() => ({}))
+            if (!response.ok) {
+                throw new Error(assignmentErrorMessage(payload, 'Không tải được bài nộp.'))
+            }
+            applyAssignmentSubmissionsPayload(payload)
+        } catch (error) {
+            console.error(error)
+            if (assignmentSubmissionsSummaryEl) assignmentSubmissionsSummaryEl.textContent = 'Không tải được bài nộp.'
+            setAssignmentSubmissionsMessage(error.message || 'Không tải được bài nộp. Vui lòng thử lại.', 'error')
+        } finally {
+            assignmentSubmissionState.loading = false
+        }
+    }
+
+    function applyAssignmentSubmissionsPayload(payload) {
+        assignmentSubmissionState.assignmentId = payload.assignment?.id || assignmentSubmissionState.assignmentId
+        assignmentSubmissionState.submissions = payload.submissions || []
+        assignmentSubmissionState.summary = payload.summary || null
+        assignmentSubmissionState.query = assignmentSubmissionSearchEl ? assignmentSubmissionSearchEl.value.trim().toLowerCase() : ''
+        if (assignmentSubmissionsTitleEl) assignmentSubmissionsTitleEl.textContent = payload.assignment?.title || 'Bài nộp'
+        updateAssignmentSubmissionsSummary()
+        renderAssignmentSubmissionsList()
+        clearAssignmentSubmissionsMessage()
+    }
+
+    function updateAssignmentSubmissionsSummary() {
+        if (!assignmentSubmissionsSummaryEl) return
+        const summary = assignmentSubmissionState.summary
+        if (!summary) {
+            assignmentSubmissionsSummaryEl.textContent = 'Chưa có dữ liệu bài nộp.'
+            return
+        }
+        assignmentSubmissionsSummaryEl.textContent = `${summary.submitted}/${summary.total} đã nộp · ${summary.ungraded} chưa chấm · ${summary.graded} đã chấm`
+    }
+
+    function currentAssignmentSubmissions() {
+        const query = assignmentSubmissionState.query
+        const filter = assignmentSubmissionState.filter
+
+        return assignmentSubmissionState.submissions.filter((row) => {
+            const status = row.status || 'not_submitted'
+            const matchesFilter = filter === 'all'
+                || (filter === 'submitted' && status !== 'not_submitted')
+                || (filter === 'ungraded' && row.submission_id && status !== 'returned')
+                || (filter === 'late' && row.is_late)
+                || status === filter
+            const haystack = `${row.student_name || ''} ${row.student_email || ''}`.toLowerCase()
+            const matchesQuery = !query || haystack.includes(query)
+
+            return matchesFilter && matchesQuery
+        })
+    }
+
+    function renderAssignmentSubmissionsList() {
+        if (!assignmentSubmissionsListEl) return
+        assignmentSubmissionsListEl.innerHTML = ''
+
+        const rows = currentAssignmentSubmissions()
+        if (rows.length === 0) {
+            setAssignmentSubmissionsMessage(assignmentSubmissionState.submissions.length === 0 ? 'Lớp chưa có học viên.' : 'Không tìm thấy bài nộp phù hợp.')
+            return
+        }
+
+        clearAssignmentSubmissionsMessage()
+        rows.forEach((row) => {
+            assignmentSubmissionsListEl.appendChild(createAssignmentSubmissionRow(row))
+        })
+    }
+
+    function createAssignmentSubmissionRow(row) {
+        const item = document.createElement('div')
+        item.className = 'rounded-xl border border-slate-700 bg-slate-950/35 p-3'
+
+        const header = document.createElement('div')
+        header.className = 'flex items-start justify-between gap-3'
+
+        const info = document.createElement('div')
+        info.className = 'min-w-0'
+
+        const name = document.createElement('p')
+        name.className = 'truncate text-sm font-semibold text-white'
+        name.textContent = row.student_name || 'Học viên'
+
+        const email = document.createElement('p')
+        email.className = 'mt-1 truncate text-xs text-slate-400'
+        email.textContent = row.student_email || ''
+
+        info.appendChild(name)
+        if (row.student_email) info.appendChild(email)
+        header.appendChild(info)
+
+        const status = document.createElement('span')
+        status.className = assignmentSubmissionStatusClass(row.status)
+        status.textContent = assignmentSubmissionStatusLabel(row.status)
+        header.appendChild(status)
+        item.appendChild(header)
+
+        const meta = document.createElement('p')
+        meta.className = 'mt-2 text-xs text-slate-400'
+        meta.textContent = row.submitted_at ? `Nộp lúc ${row.submitted_at}${row.is_late ? ' · Nộp trễ' : ''}` : 'Chưa có bài nộp'
+        item.appendChild(meta)
+
+        if (row.content) {
+            const content = document.createElement('p')
+            content.className = 'mt-2 rounded-lg border border-slate-700 bg-slate-900/60 p-2 text-xs leading-relaxed text-slate-300'
+            content.textContent = row.content
+            item.appendChild(content)
+        }
+
+        if (row.attachment_name) {
+            const file = document.createElement('p')
+            file.className = 'mt-2 text-xs text-emerald-300'
+            file.innerHTML = '<i class="fa-solid fa-paperclip mr-1"></i>'
+            file.append(document.createTextNode(row.attachment_name))
+            item.appendChild(file)
+        }
+
+        if (row.score !== null || row.feedback || row.graded_at) {
+            item.appendChild(createAssignmentGradePreview(row))
+        }
+
+        if (row.submission_id) {
+            item.appendChild(createAssignmentGradeForm(row))
+        }
+
+        return item
+    }
+
+    function createAssignmentGradePreview(row) {
+        const preview = document.createElement('div')
+        preview.className = 'mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2 text-xs text-slate-200'
+        const scoreText = row.score !== null && row.score !== undefined && row.score !== '' ? `Điểm ${row.score}/10` : 'Chưa nhập điểm'
+        const gradedText = row.graded_at ? ` · ${row.graded_at}` : ''
+        const score = document.createElement('p')
+        score.className = 'font-semibold text-emerald-200'
+        score.textContent = `${scoreText}${gradedText}`
+        preview.appendChild(score)
+
+        if (row.feedback) {
+            const feedback = document.createElement('p')
+            feedback.className = 'mt-1 leading-relaxed'
+            feedback.textContent = row.feedback
+            preview.appendChild(feedback)
+        }
+
+        return preview
+    }
+
+    function createAssignmentGradeForm(row) {
+        const wrapper = document.createElement('div')
+        wrapper.className = 'mt-3'
+
+        const toggle = document.createElement('button')
+        toggle.type = 'button'
+        toggle.className = 'inline-flex h-8 items-center gap-2 rounded-lg border border-slate-600 px-3 text-xs font-semibold text-slate-200 hover:bg-slate-800'
+        toggle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i><span>Chấm bài</span>'
+        wrapper.appendChild(toggle)
+
+        const form = document.createElement('form')
+        form.className = 'mt-3 hidden space-y-2'
+        form.setAttribute('data-assignment-grade-form', '')
+        form.setAttribute('data-submission-id', row.submission_id)
+
+        const score = document.createElement('input')
+        score.type = 'number'
+        score.name = 'score'
+        score.min = '0'
+        score.max = '10'
+        score.step = '0.25'
+        score.placeholder = 'Điểm /10'
+        score.value = row.score ?? ''
+        score.className = 'w-full h-9 rounded-lg border border-slate-700 bg-slate-950/60 px-3 text-sm text-white outline-none focus:border-emerald-500'
+        form.appendChild(score)
+
+        const feedback = document.createElement('textarea')
+        feedback.name = 'feedback'
+        feedback.rows = 3
+        feedback.placeholder = 'Nhận xét cho học viên...'
+        feedback.value = row.feedback || ''
+        feedback.className = 'w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-500'
+        form.appendChild(feedback)
+
+        const submit = document.createElement('button')
+        submit.type = 'submit'
+        submit.className = 'inline-flex h-9 items-center justify-center rounded-lg bg-emerald-500 px-4 text-sm font-semibold text-white hover:bg-emerald-600'
+        submit.textContent = 'Lưu đánh giá'
+        form.appendChild(submit)
+
+        toggle.addEventListener('click', function () {
+            form.classList.toggle('hidden')
+            if (!form.classList.contains('hidden')) {
+                score.focus()
+            }
+        })
+
+        wrapper.appendChild(form)
+        return wrapper
+    }
+
+    function assignmentSubmissionStatusLabel(status) {
+        if (status === 'returned') return 'Đã chấm'
+        if (status === 'late') return 'Nộp trễ'
+        if (status === 'submitted') return 'Đã nộp'
+        return 'Chưa nộp'
+    }
+
+    function assignmentSubmissionStatusClass(status) {
+        const base = 'shrink-0 rounded-full border px-2 py-1 text-[11px] font-semibold'
+        if (status === 'returned') return `${base} border-emerald-500/40 bg-emerald-500/10 text-emerald-300`
+        if (status === 'late') return `${base} border-amber-500/40 bg-amber-500/10 text-amber-300`
+        if (status === 'submitted') return `${base} border-sky-500/40 bg-sky-500/10 text-sky-300`
+        return `${base} border-slate-600 bg-slate-800/50 text-slate-400`
+    }
+
+    async function submitAssignmentGradeForm(form) {
+        const submissionId = form.getAttribute('data-submission-id')
+        const url = teacherAssignmentGradeUrl(submissionId)
+        if (!url) {
+            setAssignmentSubmissionsMessage('Chưa xác định được bài nộp để chấm.', 'error')
+            return
+        }
+
+        const submit = form.querySelector('button[type="submit"]')
+        if (submit) {
+            submit.disabled = true
+            submit.classList.add('opacity-60', 'cursor-not-allowed')
+        }
+
+        const formData = new FormData(form)
+        const body = {
+            score: String(formData.get('score') || ''),
+            feedback: String(formData.get('feedback') || ''),
+        }
+
+        setAssignmentSubmissionsMessage('Đang lưu đánh giá...')
+
+        try {
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify(body),
+            })
+            const payload = await response.json().catch(() => ({}))
+            if (!response.ok) {
+                throw new Error(assignmentErrorMessage(payload, 'Không lưu được đánh giá.'))
+            }
+            applyAssignmentSubmissionsPayload(payload)
+            showToast('success', 'Đã lưu đánh giá.')
+            if (assignmentState.sessionId) {
+                loadAssignmentsForSession({ session_id: assignmentState.sessionId })
+            }
+        } catch (error) {
+            console.error(error)
+            const message = error.message || 'Không lưu được đánh giá. Vui lòng thử lại.'
+            setAssignmentSubmissionsMessage(message, 'error')
+            showToast('error', message)
+        } finally {
+            if (submit) {
+                submit.disabled = false
+                submit.classList.remove('opacity-60', 'cursor-not-allowed')
+            }
+        }
     }
 
     function submissionTypeLabel(type) {
@@ -637,6 +1072,16 @@ document.addEventListener('DOMContentLoaded', function () {
     function assignmentSubmissionUrl(assignmentId) {
         if (!assignmentSubmissionBaseUrl || !assignmentId) return ''
         return `${assignmentSubmissionBaseUrl}/${assignmentId}/submission`
+    }
+
+    function teacherAssignmentSubmissionsUrl(assignmentId) {
+        if (!assignmentSubmissionsBaseUrl || !assignmentId) return ''
+        return `${assignmentSubmissionsBaseUrl}/${assignmentId}/submissions`
+    }
+
+    function teacherAssignmentGradeUrl(submissionId) {
+        if (!assignmentGradeBaseUrl || !submissionId) return ''
+        return `${assignmentGradeBaseUrl}/${submissionId}/grade`
     }
 
     function createStudentAssignmentRow(assignment) {
@@ -701,6 +1146,15 @@ document.addEventListener('DOMContentLoaded', function () {
         submittedAt.className = 'font-semibold text-emerald-200'
         submittedAt.textContent = submission.submitted_at ? `Đã nộp lúc ${submission.submitted_at}` : 'Đã nộp bài'
         preview.appendChild(submittedAt)
+
+        if (submission.status === 'returned') {
+            const grade = document.createElement('p')
+            grade.className = 'mt-2 font-semibold text-white'
+            const scoreText = submission.score !== null && submission.score !== undefined && submission.score !== '' ? `Điểm ${submission.score}/10` : 'Đã có đánh giá'
+            const gradedText = submission.graded_at ? ` · ${submission.graded_at}` : ''
+            grade.textContent = `${scoreText}${gradedText}`
+            preview.appendChild(grade)
+        }
 
         if (submission.content) {
             const content = document.createElement('p')
@@ -841,13 +1295,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: formData,
             })
-            if (!response.ok) throw new Error('Không tạo được bài tập.')
-            const payload = await response.json()
+            const payload = await response.json().catch(() => ({}))
+            if (!response.ok) {
+                throw new Error(assignmentErrorMessage(payload, 'Không tạo được bài tập.'))
+            }
             assignmentForm.reset()
             applyAssignmentPayload(payload)
+            setAssignmentFormVisible(false)
+            showToast('success', payload.message || 'Đã tạo bài tập thành công.')
         } catch (error) {
             console.error(error)
-            setAssignmentMessage('Không tạo được bài tập. Vui lòng kiểm tra dữ liệu và thử lại.', 'error')
+            const message = error.message || 'Không tạo được bài tập. Vui lòng kiểm tra dữ liệu và thử lại.'
+            setAssignmentMessage(message, 'error')
+            showToast('error', message)
         } finally {
             if (assignmentSubmitBtn) {
                 assignmentSubmitBtn.disabled = false
@@ -1133,14 +1593,59 @@ document.addEventListener('DOMContentLoaded', function () {
         })
     }
 
-    if (assignmentForm) {
+    if (assignmentSubmissionsCloseBtn) {
+        assignmentSubmissionsCloseBtn.addEventListener('click', function () {
+            resetAssignmentSubmissionsPanel()
+        })
+    }
+
+    if (assignmentSubmissionsPanel) {
+        assignmentSubmissionsPanel.addEventListener('click', function (event) {
+            if (event.target === assignmentSubmissionsPanel) {
+                resetAssignmentSubmissionsPanel()
+            }
+        })
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && assignmentSubmissionsPanel && !assignmentSubmissionsPanel.classList.contains('hidden')) {
+            resetAssignmentSubmissionsPanel()
+        }
+    })
+
+    if (assignmentSubmissionSearchEl) {
+        assignmentSubmissionSearchEl.addEventListener('input', function () {
+            assignmentSubmissionState.query = assignmentSubmissionSearchEl.value.trim().toLowerCase()
+            renderAssignmentSubmissionsList()
+        })
+    }
+
+    document.querySelectorAll('[data-assignment-submission-filter]').forEach((btn) => {
+        btn.addEventListener('click', function () {
+            assignmentSubmissionState.filter = btn.getAttribute('data-assignment-submission-filter') || 'all'
+            document.querySelectorAll('[data-assignment-submission-filter]').forEach((filterBtn) => {
+                const active = filterBtn.getAttribute('data-assignment-submission-filter') === assignmentSubmissionState.filter
+                filterBtn.classList.toggle('is-active', active)
+            })
+            renderAssignmentSubmissionsList()
+        })
+    })
+
+    if (assignmentFormToggle) {
+        assignmentFormToggle.addEventListener('click', function () {
+            const isHidden = assignmentFormShell ? assignmentFormShell.classList.contains('hidden') : true
+            setAssignmentFormVisible(isHidden)
+        })
+    }
+
+    if (assignmentForm && assignmentMode !== 'teacher') {
         assignmentForm.addEventListener('submit', function (event) {
             event.preventDefault()
             submitAssignmentForm()
         })
     }
 
-    if (assignmentSubmitBtn) {
+    if (assignmentSubmitBtn && assignmentMode !== 'teacher') {
         assignmentSubmitBtn.addEventListener('click', function (event) {
             event.preventDefault()
             submitAssignmentForm()
@@ -1150,7 +1655,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener(
         'submit',
         function (event) {
-            if (event.target && event.target.matches('[data-assignment-form]')) {
+            if (assignmentMode !== 'teacher' && event.target && event.target.matches('[data-assignment-form]')) {
                 event.preventDefault()
                 submitAssignmentForm()
                 return
@@ -1159,6 +1664,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (event.target && event.target.matches('[data-student-assignment-form]')) {
                 event.preventDefault()
                 submitStudentAssignmentForm(event.target)
+                return
+            }
+
+            if (event.target && event.target.matches('[data-assignment-grade-form]')) {
+                event.preventDefault()
+                submitAssignmentGradeForm(event.target)
             }
         },
         true

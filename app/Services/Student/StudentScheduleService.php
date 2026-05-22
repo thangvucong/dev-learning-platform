@@ -312,6 +312,10 @@ class StudentScheduleService
                 'content' => $data['content'] ?? null,
                 'submitted_at' => now(),
                 'status' => $status,
+                'score' => null,
+                'feedback' => null,
+                'graded_at' => null,
+                'graded_by' => null,
             ]
         );
 
@@ -366,6 +370,7 @@ class StudentScheduleService
                 'status' => $submission->status,
                 'score' => $submission->score,
                 'feedback' => $submission->feedback,
+                'graded_at' => optional($submission->graded_at)->format('d/m/Y H:i'),
             ] : null,
         ];
     }

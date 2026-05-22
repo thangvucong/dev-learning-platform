@@ -102,60 +102,114 @@
                     <p class="text-sm font-semibold text-white">Bài tập buổi học</p>
                     <p class="mt-1 text-xs text-slate-400" data-assignment-summary>Chọn buổi học để tải bài tập.</p>
                 </div>
-                <button type="button" data-assignment-refresh
-                    class="h-9 w-9 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700"
-                    title="Làm mới bài tập" aria-label="Làm mới bài tập">
-                    <i class="fa-solid fa-rotate-right"></i>
-                </button>
-            </div>
-
-            <form data-assignment-form method="POST" action="#" class="mt-4 rounded-xl border border-slate-700 bg-slate-900/45 p-4 space-y-3">
-                <div>
-                    <label for="assignment-title" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">Tiêu đề</label>
-                    <input id="assignment-title" name="title" type="text" maxlength="255" required
-                        class="w-full h-10 rounded-xl bg-slate-950/60 border border-slate-700 text-slate-100 px-3 text-sm focus:outline-none focus:border-emerald-500">
-                </div>
-                <div>
-                    <label for="assignment-content" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">Nội dung</label>
-                    <textarea id="assignment-content" name="content" rows="3"
-                        class="w-full rounded-xl bg-slate-950/60 border border-slate-700 text-slate-100 px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"></textarea>
-                </div>
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                        <label for="assignment-submission-type" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">Kiểu nộp</label>
-                        <select id="assignment-submission-type" name="submission_type"
-                            class="w-full h-10 rounded-xl bg-slate-950/60 border border-slate-700 text-slate-100 px-3 text-sm focus:outline-none focus:border-emerald-500">
-                            <option value="both">Text hoặc file</option>
-                            <option value="text">Chỉ text</option>
-                            <option value="file">Chỉ file</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="assignment-due-at" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">Hạn nộp</label>
-                        <input id="assignment-due-at" name="due_at" type="datetime-local"
-                            class="w-full h-10 rounded-xl bg-slate-950/60 border border-slate-700 text-slate-100 px-3 text-sm focus:outline-none focus:border-emerald-500">
-                    </div>
-                </div>
-                <div>
-                    <label for="assignment-attachment" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">File đính kèm</label>
-                    <input id="assignment-attachment" name="attachment" type="file"
-                        class="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-slate-100 hover:file:bg-slate-600">
-                </div>
-                <div class="flex items-center justify-between gap-2">
-                    <select name="status"
-                        class="h-10 rounded-xl bg-slate-950/60 border border-slate-700 text-slate-100 px-3 text-sm focus:outline-none focus:border-emerald-500">
-                        <option value="published">Giao ngay</option>
-                        <option value="draft">Lưu nháp</option>
-                    </select>
-                    <button type="button" data-assignment-submit
-                        class="h-10 rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-white hover:bg-emerald-600">
-                        Giao bài
+                <div class="flex shrink-0 items-center gap-2">
+                    <button type="button" data-assignment-form-toggle
+                        class="inline-flex h-9 items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/20"
+                        aria-expanded="false">
+                        <span data-assignment-form-toggle-label>Tạo bài</span>
+                        <i data-assignment-form-toggle-icon class="fa-solid fa-chevron-down text-xs transition-transform"></i>
+                    </button>
+                    <button type="button" data-assignment-refresh
+                        class="h-9 w-9 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700"
+                        title="Làm mới bài tập" aria-label="Làm mới bài tập">
+                        <i class="fa-solid fa-rotate-right"></i>
                     </button>
                 </div>
-            </form>
+            </div>
+
+            <div data-assignment-form-shell class="hidden">
+                <form data-assignment-form method="POST"
+                    action="{{ data_get($session, 'session_id') ? route('teacher.schedule.assignments.store', data_get($session, 'session_id')) : '#' }}"
+                    enctype="multipart/form-data"
+                    class="mt-4 rounded-xl border border-slate-700 bg-slate-900/45 p-4 space-y-3">
+                    @csrf
+                    <div>
+                        <label for="assignment-title" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">Tiêu đề</label>
+                        <input id="assignment-title" name="title" type="text" maxlength="255" required
+                            class="w-full h-10 rounded-xl bg-slate-950/60 border border-slate-700 text-slate-100 px-3 text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label for="assignment-content" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">Nội dung</label>
+                        <textarea id="assignment-content" name="content" rows="3"
+                            class="w-full rounded-xl bg-slate-950/60 border border-slate-700 text-slate-100 px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <label for="assignment-submission-type" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">Kiểu nộp</label>
+                            <select id="assignment-submission-type" name="submission_type"
+                                class="w-full h-10 rounded-xl bg-slate-950/60 border border-slate-700 text-slate-100 px-3 text-sm focus:outline-none focus:border-emerald-500">
+                                <option value="both">Text hoặc file</option>
+                                <option value="text">Chỉ text</option>
+                                <option value="file">Chỉ file</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="assignment-due-at" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">Hạn nộp</label>
+                            <input id="assignment-due-at" name="due_at" type="datetime-local"
+                                class="w-full h-10 rounded-xl bg-slate-950/60 border border-slate-700 text-slate-100 px-3 text-sm focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="assignment-attachment" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">File đính kèm</label>
+                        <input id="assignment-attachment" name="attachment" type="file"
+                            class="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-slate-100 hover:file:bg-slate-600">
+                    </div>
+                    <div class="flex items-center justify-between gap-2">
+                        <select name="status"
+                            class="h-10 rounded-xl bg-slate-950/60 border border-slate-700 text-slate-100 px-3 text-sm focus:outline-none focus:border-emerald-500">
+                            <option value="published">Giao ngay</option>
+                            <option value="draft">Lưu nháp</option>
+                        </select>
+                        <button type="submit" data-assignment-submit
+                            class="h-10 rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-white hover:bg-emerald-600">
+                            Giao bài
+                        </button>
+                    </div>
+                </form>
+            </div>
 
             <div data-assignment-message class="mt-4 hidden rounded-xl border border-slate-700 bg-slate-900/50 p-3 text-sm text-slate-300"></div>
             <div data-assignment-list class="attendance-list mt-4 max-h-[360px] space-y-2 overflow-y-auto"></div>
+        </div>
+    </div>
+</div>
+
+<div id="assignment-submissions-modal" data-assignment-submissions-panel
+    class="hidden fixed inset-0 z-[100] bg-slate-950/80 p-4 backdrop-blur-sm">
+    <div class="mx-auto flex h-full max-w-4xl flex-col rounded-2xl border border-slate-700 bg-[#111827] shadow-2xl">
+        <div class="flex items-start justify-between gap-3 border-b border-slate-700 p-4">
+            <div>
+                <p class="text-base font-semibold text-white" data-assignment-submissions-title>Bài nộp</p>
+                <p class="mt-1 text-xs text-slate-400" data-assignment-submissions-summary>Chọn bài tập để xem bài nộp.</p>
+            </div>
+            <button type="button" data-assignment-submissions-close
+                class="h-9 w-9 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700"
+                title="Đóng danh sách bài nộp" aria-label="Đóng danh sách bài nộp">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="border-b border-slate-700 p-4">
+            <label for="schedule-assignment-submission-search" class="sr-only">Tìm học viên</label>
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                <input id="schedule-assignment-submission-search" type="search" placeholder="Tìm học viên..."
+                    class="w-full h-10 rounded-xl bg-slate-950/60 border border-slate-700 text-slate-100 pl-9 pr-3 text-sm focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <div class="mt-3 flex flex-wrap gap-2 text-xs" data-assignment-submission-filters>
+                <button type="button" data-assignment-submission-filter="all" class="attendance-filter is-active">Tất cả</button>
+                <button type="button" data-assignment-submission-filter="submitted" class="attendance-filter">Đã nộp</button>
+                <button type="button" data-assignment-submission-filter="not_submitted" class="attendance-filter">Chưa nộp</button>
+                <button type="button" data-assignment-submission-filter="ungraded" class="attendance-filter">Chưa chấm</button>
+                <button type="button" data-assignment-submission-filter="returned" class="attendance-filter">Đã chấm</button>
+                <button type="button" data-assignment-submission-filter="late" class="attendance-filter">Nộp trễ</button>
+            </div>
+        </div>
+
+        <div class="min-h-0 flex-1 overflow-y-auto p-4">
+            <div data-assignment-submissions-message class="hidden rounded-xl border border-slate-700 bg-slate-950/40 p-3 text-sm text-slate-300"></div>
+            <div data-assignment-submissions-list class="space-y-2"></div>
         </div>
     </div>
 </div>

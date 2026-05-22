@@ -177,6 +177,8 @@ Route::middleware('auth')->group(function () {
             Route::put('/schedule/sessions/{classSession}/attendance', [TeacherScheduleController::class, 'bulkAttendance'])->name('schedule.attendance.bulk');
             Route::get('/schedule/sessions/{classSession}/assignments', [TeacherScheduleController::class, 'assignments'])->name('schedule.assignments');
             Route::post('/schedule/sessions/{classSession}/assignments', [TeacherScheduleController::class, 'storeAssignment'])->name('schedule.assignments.store');
+            Route::get('/schedule/assignments/{sessionAssignment}/submissions', [TeacherScheduleController::class, 'assignmentSubmissions'])->name('schedule.assignments.submissions');
+            Route::put('/schedule/submissions/{assignmentSubmission}/grade', [TeacherScheduleController::class, 'gradeSubmission'])->name('schedule.submissions.grade');
             Route::get('/classes', [TeacherClassesController::class, 'index'])->name('classes.index');
             Route::get('/classes/{courseClass}', [TeacherClassesController::class, 'show'])->name('classes.show');
             Route::get('/classes/{courseClass}/students/export', [TeacherClassesController::class, 'exportStudents'])->name('classes.students.export');
