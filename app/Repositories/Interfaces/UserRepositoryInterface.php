@@ -30,7 +30,7 @@ interface UserRepositoryInterface {
     public function getAdminUserStats(): array;
 
     /**
-     * Giảng viên cho form quản lý khóa học (theo cột users.role).
+     * Giảng viên cho form quản lý khóa học (theo Spatie role).
      */
     public function findTeachersForSelect(): Collection;
 }

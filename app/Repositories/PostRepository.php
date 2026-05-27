@@ -145,8 +145,33 @@ class PostRepository implements PostRepositoryInterface
 
         $query = Post::query()
             ->where('user_id', $userId)
-            ->where('status', $status)
-            ->select(['id', 'user_id', 'title', 'slug', 'content', 'description', 'thumbnail', 'image', 'views_count', 'status', 'reject_reason', 'created_at', 'updated_at']);
+            ->when($status === Post::STATUS_PENDING_HUMAN_REVIEW, function ($query) {
+                $query->whereIn('status', [Post::STATUS_PENDING_HUMAN_REVIEW, Post::STATUS_PENDING]);
+            }, function ($query) use ($status) {
+                $query->where('status', $status);
+            })
+            ->select([
+                'id',
+                'user_id',
+                'title',
+                'slug',
+                'content',
+                'description',
+                'thumbnail',
+                'image',
+                'views_count',
+                'status',
+                'reject_reason',
+                'ai_review_status',
+                'ai_decision',
+                'ai_confidence',
+                'ai_severity',
+                'ai_flags',
+                'ai_summary',
+                'ai_escalation_reason',
+                'created_at',
+                'updated_at',
+            ]);
 
         if ($keyword !== '') {
             $query->where('title', 'like', '%' . $keyword . '%');
@@ -180,7 +205,8 @@ class PostRepository implements PostRepositoryInterface
         return [
             Post::STATUS_PUBLISHED => (int) ($rows[Post::STATUS_PUBLISHED] ?? 0),
             Post::STATUS_DRAFT => (int) ($rows[Post::STATUS_DRAFT] ?? 0),
-            Post::STATUS_PENDING => (int) ($rows[Post::STATUS_PENDING] ?? 0),
+            Post::STATUS_PENDING_AI_REVIEW => (int) ($rows[Post::STATUS_PENDING_AI_REVIEW] ?? 0),
+            Post::STATUS_PENDING_HUMAN_REVIEW => (int) ($rows[Post::STATUS_PENDING_HUMAN_REVIEW] ?? 0) + (int) ($rows[Post::STATUS_PENDING] ?? 0),
             Post::STATUS_REJECTED => (int) ($rows[Post::STATUS_REJECTED] ?? 0),
             'total' => array_sum(array_map('intval', $rows)),
         ];

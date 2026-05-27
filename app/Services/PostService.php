@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\ReviewPostJob;
 use App\Models\Post;
 use App\Repositories\PostRepository;
 use App\Services\Interfaces\PostServiceInterface;
@@ -33,7 +34,7 @@ class PostService implements PostServiceInterface
         $slug = $this->generateUniqueSlug($title);
         $description = $this->generateDescription($content, 180);
 
-        $status = $action === 'pending' ? Post::STATUS_PENDING : Post::STATUS_DRAFT;
+        $status = $action === 'pending' ? Post::STATUS_PENDING_AI_REVIEW : Post::STATUS_DRAFT;
 
         $thumbnailPath = null;
         /** @var \Illuminate\Http\UploadedFile|null $thumbnail */
@@ -49,7 +50,7 @@ class PostService implements PostServiceInterface
             $imagePath = $image->store('posts', 'public');
         }
 
-        return $this->postRepository->create([
+        $post = $this->postRepository->create([
             'user_id' => $userId,
             'title' => $title,
             'slug' => $slug,
@@ -60,7 +61,11 @@ class PostService implements PostServiceInterface
             'views_count' => 0,
             'status' => $status,
             'reject_reason' => null,
-        ])->fresh(['user']);
+        ] + $this->freshAiReviewAttributes($status))->fresh(['user']);
+
+        $this->dispatchAiReviewIfNeeded($post);
+
+        return $post;
     }
 
     /**
@@ -72,16 +77,16 @@ class PostService implements PostServiceInterface
         $content = (string) Arr::get($payload, 'content', '');
         $description = $this->generateDescription($content, 180);
 
-        $status = $action === 'pending' ? Post::STATUS_PENDING : Post::STATUS_DRAFT;
+        $status = $action === 'pending' ? Post::STATUS_PENDING_AI_REVIEW : Post::STATUS_DRAFT;
 
         $attributes = [
             'title' => $title,
             'content' => $content,
             'description' => $description,
             'status' => $status,
-        ];
+        ] + $this->freshAiReviewAttributes($status);
 
-        if ($status === Post::STATUS_PENDING) {
+        if ($status === Post::STATUS_PENDING_AI_REVIEW) {
             $attributes['reject_reason'] = null;
         }
 
@@ -99,7 +104,10 @@ class PostService implements PostServiceInterface
 
         $this->postRepository->update((int) $post->id, $attributes);
 
-        return $post->fresh(['user']);
+        $post = $post->fresh(['user']);
+        $this->dispatchAiReviewIfNeeded($post);
+
+        return $post;
     }
 
     /**
@@ -157,5 +165,38 @@ class PostService implements PostServiceInterface
 
         return Str::limit($text, $targetLength, '…');
     }
-}
 
+    /**
+     * @param  string  $status
+     * @return array<string, mixed>
+     */
+    protected function freshAiReviewAttributes(string $status): array
+    {
+        $isSubmitted = $status === Post::STATUS_PENDING_AI_REVIEW;
+
+        return [
+            'ai_review_status' => $isSubmitted ? Post::AI_STATUS_PENDING : null,
+            'ai_decision' => null,
+            'ai_confidence' => null,
+            'ai_severity' => null,
+            'ai_flags' => null,
+            'ai_summary' => null,
+            'ai_explanation' => null,
+            'ai_escalation_reason' => null,
+            'ai_review_attempts' => 0,
+            'ai_reviewed_at' => null,
+            'ai_model' => null,
+            'ai_error_code' => null,
+            'ai_error_message' => null,
+            'reviewed_by' => null,
+            'human_reviewed_at' => null,
+        ];
+    }
+
+    protected function dispatchAiReviewIfNeeded(Post $post): void
+    {
+        if ($post->status === Post::STATUS_PENDING_AI_REVIEW) {
+            ReviewPostJob::dispatch((int) $post->id);
+        }
+    }
+}

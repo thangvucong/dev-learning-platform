@@ -85,7 +85,7 @@
                 Quay lại
             </a>
 
-            @if ($post->status === \App\Models\Post::STATUS_PENDING)
+            @if (in_array($post->status, [\App\Models\Post::STATUS_PENDING, \App\Models\Post::STATUS_PENDING_HUMAN_REVIEW], true))
                 <form method="POST" action="{{ route('admin.posts.approve', $post->id) }}">
                     @csrf
                     <button type="submit"
@@ -120,6 +120,79 @@
                 </div>
             @endif
 
+            @if (!empty($post->ai_review_status) || !empty($post->ai_summary))
+                <div class="mt-5 rounded-2xl border border-sky-500/20 bg-sky-500/10 p-4">
+                    <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                            <p class="text-sm font-bold text-sky-100">AI moderation</p>
+                            <p class="mt-1 text-sm text-sky-50/90 leading-relaxed">
+                                {{ $post->ai_summary ?: 'Chưa có tóm tắt AI.' }}
+                            </p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-xs font-semibold">
+                            @if (!empty($post->ai_decision))
+                                <span class="rounded-full border border-slate-500/40 bg-slate-900/30 px-2 py-1 text-slate-100">
+                                    {{ $post->ai_decision }}
+                                </span>
+                            @endif
+                            @if (!empty($post->ai_severity))
+                                <span class="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-amber-100">
+                                    {{ strtoupper($post->ai_severity) }}
+                                </span>
+                            @endif
+                            @if ($post->ai_confidence !== null)
+                                <span class="rounded-full border border-sky-400/30 bg-sky-400/10 px-2 py-1 text-sky-100">
+                                    {{ number_format(((float) $post->ai_confidence) * 100, 0) }}%
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    @if (!empty($post->ai_explanation))
+                        <p class="mt-3 text-sm text-sky-50/80 leading-relaxed">{{ $post->ai_explanation }}</p>
+                    @endif
+
+                    @if (!empty($post->ai_escalation_reason))
+                        <div class="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+                            {{ $post->ai_escalation_reason }}
+                        </div>
+                    @endif
+
+                    @if (!empty($post->ai_flags))
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            @foreach ((array) $post->ai_flags as $flag)
+                                <span class="rounded-full border border-slate-500/30 bg-slate-900/30 px-2.5 py-1 text-xs font-semibold text-slate-100">
+                                    {{ data_get($flag, 'category', 'flag') }}
+                                    @if (data_get($flag, 'confidence') !== null)
+                                        · {{ number_format(((float) data_get($flag, 'confidence')) * 100, 0) }}%
+                                    @endif
+                                </span>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @endif
+
+            @if (in_array($post->status, [\App\Models\Post::STATUS_PENDING, \App\Models\Post::STATUS_PENDING_HUMAN_REVIEW], true))
+                <form method="POST" action="{{ route('admin.posts.reject', $post->id) }}"
+                    class="mt-5 rounded-2xl border border-red-500/20 bg-red-500/10 p-4">
+                    @csrf
+                    <label class="block text-sm font-bold text-red-100">Từ chối bài viết</label>
+                    <textarea name="reject_reason" rows="3" required
+                        class="mt-2 w-full rounded-xl border border-red-500/20 bg-slate-950/30 px-3 py-2 text-sm text-white placeholder-red-100/50 focus:border-red-400 focus:ring-0"
+                        placeholder="Nêu rõ lý do để tác giả chỉnh sửa và gửi lại...">{{ old('reject_reason', $post->ai_explanation ?: $post->ai_escalation_reason) }}</textarea>
+                    @error('reject_reason')
+                        <p class="mt-1 text-xs text-red-200">{{ $message }}</p>
+                    @enderror
+                    <div class="mt-3 flex justify-end">
+                        <button type="submit"
+                            class="rounded-xl bg-red-500 px-4 py-2 text-sm font-bold text-white hover:bg-red-600 transition-all">
+                            Từ chối
+                        </button>
+                    </div>
+                </form>
+            @endif
+
             <div class="mt-6 rounded-xl border border-slate-700 bg-slate-900/30">
                 <div class="p-3 text-xs font-semibold text-slate-400 border-b border-slate-700">Nội dung (Markdown render)</div>
                 <div class="p-4">
@@ -148,4 +221,3 @@
         }, { once: true });
     </script>
 @endpush
-

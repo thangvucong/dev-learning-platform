@@ -33,7 +33,7 @@ services:
 
   worker:
     <<: *laravel-base
-    command: php /var/www/artisan queue:work --sleep=3 --tries=3 --timeout=90 --max-time=3600
+    command: php /var/www/artisan queue:work redis --queue=ai-moderation,default --sleep=3 --tries=3 --timeout=90 --max-time=3600
     depends_on:
       db:
         condition: service_healthy

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\ReviewPostJob;
 use App\Models\Post;
 use App\Repositories\Interfaces\PostRepositoryInterface;
 use App\Services\Interfaces\MyPostServiceInterface;
@@ -29,7 +30,8 @@ class MyPostService implements MyPostServiceInterface
         $allowed = [
             Post::STATUS_PUBLISHED,
             Post::STATUS_DRAFT,
-            Post::STATUS_PENDING,
+            Post::STATUS_PENDING_AI_REVIEW,
+            Post::STATUS_PENDING_HUMAN_REVIEW,
             Post::STATUS_REJECTED,
         ];
         if (!in_array($status, $allowed, true)) {
@@ -82,7 +84,8 @@ class MyPostService implements MyPostServiceInterface
             'tabs' => [
                 Post::STATUS_PUBLISHED => 'Đã xuất bản',
                 Post::STATUS_DRAFT => 'Bản nháp',
-                Post::STATUS_PENDING => 'Chờ duyệt',
+                Post::STATUS_PENDING_AI_REVIEW => 'AI đang duyệt',
+                Post::STATUS_PENDING_HUMAN_REVIEW => 'Chờ admin duyệt',
                 Post::STATUS_REJECTED => 'Từ chối',
             ],
         ];
@@ -115,10 +118,31 @@ class MyPostService implements MyPostServiceInterface
             return false;
         }
 
-        return $this->postRepository->update($postId, [
-            'status' => Post::STATUS_PENDING,
+        $updated = $this->postRepository->update($postId, [
+            'status' => Post::STATUS_PENDING_AI_REVIEW,
             'reject_reason' => null,
+            'ai_review_status' => Post::AI_STATUS_PENDING,
+            'ai_decision' => null,
+            'ai_confidence' => null,
+            'ai_severity' => null,
+            'ai_flags' => null,
+            'ai_summary' => null,
+            'ai_explanation' => null,
+            'ai_escalation_reason' => null,
+            'ai_review_attempts' => 0,
+            'ai_reviewed_at' => null,
+            'ai_model' => null,
+            'ai_error_code' => null,
+            'ai_error_message' => null,
+            'reviewed_by' => null,
+            'human_reviewed_at' => null,
         ]);
+
+        if ($updated) {
+            ReviewPostJob::dispatch($postId);
+        }
+
+        return $updated;
     }
 
     /**
@@ -151,4 +175,3 @@ class MyPostService implements MyPostServiceInterface
         return count($parts);
     }
 }
-

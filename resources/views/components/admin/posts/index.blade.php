@@ -22,8 +22,8 @@
             <p class="mt-2 text-3xl font-black text-white">{{ (int) data_get($stats, 'total', 0) }}</p>
         </div>
         <div class="rounded-2xl border border-slate-700 bg-[#1e293b] p-4">
-            <p class="text-xs uppercase tracking-widest text-slate-400">Chờ duyệt</p>
-            <p class="mt-2 text-3xl font-black text-amber-300">{{ (int) data_get($stats, \App\Models\Post::STATUS_PENDING, 0) }}</p>
+            <p class="text-xs uppercase tracking-widest text-slate-400">Cần admin duyệt</p>
+            <p class="mt-2 text-3xl font-black text-amber-300">{{ (int) data_get($stats, \App\Models\Post::STATUS_PENDING_HUMAN_REVIEW, 0) }}</p>
         </div>
         <div class="rounded-2xl border border-slate-700 bg-[#1e293b] p-4">
             <p class="text-xs uppercase tracking-widest text-slate-400">Đã xuất bản</p>
@@ -126,6 +126,32 @@
                                                     <i class="fa-solid fa-circle-exclamation mr-1"></i>{{ $post['reject_reason'] }}
                                                 </p>
                                             @endif
+                                            @if (!empty($post['ai_decision']) || !empty($post['ai_escalation_reason']))
+                                                <div class="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+                                                    @if (!empty($post['ai_severity']))
+                                                        <span class="rounded-full border border-slate-600 bg-slate-900/40 px-2 py-0.5 font-semibold text-slate-300">
+                                                            AI: {{ strtoupper($post['ai_severity']) }}
+                                                        </span>
+                                                    @endif
+                                                    @if ($post['ai_confidence'] !== null)
+                                                        <span class="rounded-full border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 font-semibold text-sky-200">
+                                                            {{ number_format(((float) $post['ai_confidence']) * 100, 0) }}%
+                                                        </span>
+                                                    @endif
+                                                    @foreach (array_slice((array) ($post['ai_flags'] ?? []), 0, 2) as $flag)
+                                                        <span class="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 font-semibold text-amber-200">
+                                                            {{ data_get($flag, 'category', 'flag') }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                                @if (!empty($post['ai_escalation_reason']))
+                                                    <p class="mt-1 text-[11px] text-amber-200 line-clamp-1">
+                                                        <i class="fa-solid fa-triangle-exclamation mr-1"></i>{{ $post['ai_escalation_reason'] }}
+                                                    </p>
+                                                @elseif (!empty($post['ai_summary']))
+                                                    <p class="mt-1 text-[11px] text-slate-400 line-clamp-1">{{ $post['ai_summary'] }}</p>
+                                                @endif
+                                            @endif
                                             <p class="mt-1 text-[11px] text-slate-500">
                                                 {{ (int) $post['reading_time'] }} phút đọc
                                             </p>
@@ -153,7 +179,7 @@
                                             <i class="fa-regular fa-eye"></i>
                                         </a>
 
-                                        @if ($post['status'] === \App\Models\Post::STATUS_PENDING)
+                                        @if (in_array($post['status'], [\App\Models\Post::STATUS_PENDING, \App\Models\Post::STATUS_PENDING_HUMAN_REVIEW], true))
                                             <form method="POST" action="{{ route('admin.posts.approve', $post['id']) }}" class="inline">
                                                 @csrf
                                                 <button type="submit"
@@ -277,4 +303,3 @@
         })();
     </script>
 @endpush
-

@@ -27,10 +27,16 @@ class AdminPostService
      */
     public function buildIndexViewData(array $filters = []): array
     {
-        $status = (string) Arr::get($filters, 'status', Post::STATUS_PENDING);
-        $allowed = [Post::STATUS_PENDING, Post::STATUS_PUBLISHED, Post::STATUS_DRAFT, Post::STATUS_REJECTED];
+        $status = (string) Arr::get($filters, 'status', Post::STATUS_PENDING_HUMAN_REVIEW);
+        $allowed = [
+            Post::STATUS_PENDING_HUMAN_REVIEW,
+            Post::STATUS_PENDING_AI_REVIEW,
+            Post::STATUS_PUBLISHED,
+            Post::STATUS_DRAFT,
+            Post::STATUS_REJECTED,
+        ];
         if (!in_array($status, $allowed, true)) {
-            $status = Post::STATUS_PENDING;
+            $status = Post::STATUS_PENDING_HUMAN_REVIEW;
         }
 
         $q = trim((string) Arr::get($filters, 'q', ''));
@@ -56,6 +62,13 @@ class AdminPostService
                 'views_count' => (int) ($post->views_count ?? 0),
                 'created_at' => $post->created_at,
                 'reject_reason' => (string) ($post->reject_reason ?? ''),
+                'ai_decision' => (string) ($post->ai_decision ?? ''),
+                'ai_confidence' => $post->ai_confidence,
+                'ai_severity' => (string) ($post->ai_severity ?? ''),
+                'ai_flags' => $post->ai_flags ?: [],
+                'ai_summary' => (string) ($post->ai_summary ?? ''),
+                'ai_escalation_reason' => (string) ($post->ai_escalation_reason ?? ''),
+                'ai_reviewed_at' => $post->ai_reviewed_at,
                 'author' => [
                     'name' => (string) data_get($post->user, 'name', 'Unknown'),
                     'email' => (string) data_get($post->user, 'email', ''),
@@ -76,7 +89,8 @@ class AdminPostService
             'stats' => $stats,
             'posts' => $posts,
             'tabs' => [
-                Post::STATUS_PENDING => 'Chờ duyệt',
+                Post::STATUS_PENDING_HUMAN_REVIEW => 'Cần admin duyệt',
+                Post::STATUS_PENDING_AI_REVIEW => 'AI đang duyệt',
                 Post::STATUS_PUBLISHED => 'Đã xuất bản',
                 Post::STATUS_DRAFT => 'Bản nháp',
                 Post::STATUS_REJECTED => 'Đã từ chối',
@@ -93,13 +107,15 @@ class AdminPostService
     public function approve(int $postId): bool
     {
         $post = $this->repository->findById($postId);
-        if (!$post || $post->status !== Post::STATUS_PENDING) {
+        if (!$post || !$post->isPendingHumanReview()) {
             return false;
         }
 
         return $this->repository->update($postId, [
             'status' => Post::STATUS_PUBLISHED,
             'reject_reason' => null,
+            'reviewed_by' => auth()->id(),
+            'human_reviewed_at' => now(),
         ]);
     }
 
@@ -113,7 +129,7 @@ class AdminPostService
     public function reject(int $postId, string $reason): bool
     {
         $post = $this->repository->findById($postId);
-        if (!$post || $post->status !== Post::STATUS_PENDING) {
+        if (!$post || !$post->isPendingHumanReview()) {
             return false;
         }
 
@@ -125,6 +141,8 @@ class AdminPostService
         return $this->repository->update($postId, [
             'status' => Post::STATUS_REJECTED,
             'reject_reason' => $reason,
+            'reviewed_by' => auth()->id(),
+            'human_reviewed_at' => now(),
         ]);
     }
 
@@ -199,4 +217,3 @@ class AdminPostService
         return $text;
     }
 }
-

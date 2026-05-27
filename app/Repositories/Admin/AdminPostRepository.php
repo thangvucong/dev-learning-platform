@@ -18,8 +18,12 @@ class AdminPostRepository implements AdminPostRepositoryInterface
         $sort = in_array($sort, ['newest', 'oldest'], true) ? $sort : 'newest';
 
         $query = Post::query()
-            ->with('user:id,name,email,avatar_url,role')
-            ->where('status', $status)
+            ->with('user:id,name,email,avatar_url')
+            ->when($status === Post::STATUS_PENDING_HUMAN_REVIEW, function ($query) {
+                $query->whereIn('status', [Post::STATUS_PENDING_HUMAN_REVIEW, Post::STATUS_PENDING]);
+            }, function ($query) use ($status) {
+                $query->where('status', $status);
+            })
             ->select([
                 'id',
                 'user_id',
@@ -32,6 +36,14 @@ class AdminPostRepository implements AdminPostRepositoryInterface
                 'views_count',
                 'status',
                 'reject_reason',
+                'ai_review_status',
+                'ai_decision',
+                'ai_confidence',
+                'ai_severity',
+                'ai_flags',
+                'ai_summary',
+                'ai_escalation_reason',
+                'ai_reviewed_at',
                 'created_at',
                 'updated_at',
             ]);
@@ -75,7 +87,8 @@ class AdminPostRepository implements AdminPostRepositoryInterface
 
         return [
             'total' => (int) $total,
-            Post::STATUS_PENDING => (int) ($counts[Post::STATUS_PENDING] ?? 0),
+            Post::STATUS_PENDING_AI_REVIEW => (int) ($counts[Post::STATUS_PENDING_AI_REVIEW] ?? 0),
+            Post::STATUS_PENDING_HUMAN_REVIEW => (int) ($counts[Post::STATUS_PENDING_HUMAN_REVIEW] ?? 0) + (int) ($counts[Post::STATUS_PENDING] ?? 0),
             Post::STATUS_PUBLISHED => (int) ($counts[Post::STATUS_PUBLISHED] ?? 0),
             Post::STATUS_DRAFT => (int) ($counts[Post::STATUS_DRAFT] ?? 0),
             Post::STATUS_REJECTED => (int) ($counts[Post::STATUS_REJECTED] ?? 0),
@@ -89,7 +102,7 @@ class AdminPostRepository implements AdminPostRepositoryInterface
     public function findById(int $id): ?Post
     {
         return Post::query()
-            ->with('user:id,name,email,avatar_url,role')
+            ->with('user:id,name,email,avatar_url')
             ->whereKey($id)
             ->first();
     }
@@ -120,4 +133,3 @@ class AdminPostRepository implements AdminPostRepositoryInterface
         return (bool) $post->delete();
     }
 }
-
