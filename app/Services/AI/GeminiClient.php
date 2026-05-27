@@ -4,6 +4,7 @@ namespace App\Services\AI;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
 use RuntimeException;
 
 class GeminiClient
@@ -23,6 +24,25 @@ class GeminiClient
      */
     public function generateJson(string $prompt): string
     {
+        return $this->generateContent($prompt, true);
+    }
+
+    /**
+     * @param  string  $prompt
+     * @return string
+     */
+    public function generateText(string $prompt): string
+    {
+        return $this->generateContent($prompt, false);
+    }
+
+    /**
+     * @param  string  $prompt
+     * @param  bool  $jsonResponse
+     * @return string
+     */
+    protected function generateContent(string $prompt, bool $jsonResponse): string
+    {
         $apiKey = (string) config('ai.gemini.api_key');
         if ($apiKey === '') {
             throw new RuntimeException('Gemini API key is not configured.');
@@ -35,6 +55,15 @@ class GeminiClient
         }
 
         $endpoint = rtrim($baseUri, '/') . '/models/' . rawurlencode($model) . ':generateContent';
+
+        $generationConfig = [
+            'temperature' => $jsonResponse ? 0.1 : 0.3,
+            'topP' => $jsonResponse ? 0.1 : 0.8,
+        ];
+
+        if ($jsonResponse) {
+            $generationConfig['responseMimeType'] = 'application/json';
+        }
 
         try {
             $response = $this->client->post($endpoint, [
@@ -49,15 +78,11 @@ class GeminiClient
                             ],
                         ],
                     ],
-                    'generationConfig' => [
-                        'temperature' => 0.1,
-                        'topP' => 0.1,
-                        'responseMimeType' => 'application/json',
-                    ],
+                    'generationConfig' => $generationConfig,
                 ],
             ]);
         } catch (GuzzleException $e) {
-            throw new RuntimeException('Gemini request failed: ' . $e->getMessage(), 0, $e);
+            throw new RuntimeException($this->sanitizeExceptionMessage($e), 0, $e);
         }
 
         $body = json_decode((string) $response->getBody(), true);
@@ -67,5 +92,14 @@ class GeminiClient
         }
 
         return trim($text);
+    }
+
+    protected function sanitizeExceptionMessage(GuzzleException $e): string
+    {
+        if ($e instanceof RequestException && $e->hasResponse()) {
+            return 'Gemini request failed with HTTP status ' . $e->getResponse()->getStatusCode() . '.';
+        }
+
+        return 'Gemini request failed before receiving a valid response.';
     }
 }

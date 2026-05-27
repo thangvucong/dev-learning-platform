@@ -27,6 +27,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\MyPostController;
 use App\Http\Controllers\Admin\AdminPostController;
 use App\Http\Controllers\Admin\AdminUploadController;
+use App\Http\Controllers\ChatbotController;
 use App\Support\AuthRedirect;
 
 
@@ -44,6 +45,9 @@ use App\Support\AuthRedirect;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/search', [GlobalSearchController::class, 'index'])->name('search');
+Route::post('/chatbot/message', [ChatbotController::class, 'message'])
+    ->middleware('throttle:20,1')
+    ->name('chatbot.message');
 Route::get('/courses/{slug}', [CourseController::class, 'show'])->name('courses.show');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 

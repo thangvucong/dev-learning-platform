@@ -42,10 +42,11 @@ class ModerationPolicyEngine
             ];
         }
 
+        $attributes['ai_escalation_reason'] = $result->escalationReason ?: $this->buildEscalationReason($result);
+
         return $attributes + [
             'status' => Post::STATUS_PENDING_HUMAN_REVIEW,
             'reject_reason' => null,
-            'ai_escalation_reason' => $result->escalationReason ?: $this->buildEscalationReason($result),
         ];
     }
 

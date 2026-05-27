@@ -22,6 +22,7 @@
         @include('components.sidebar')
         @yield('content')
     </div>
+    @include('components.chatbot.widget')
     @include('components.footer')
     <script src="{{ mix('js/app.js') }}" defer></script>
     @stack('scripts')

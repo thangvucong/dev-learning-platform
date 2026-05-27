@@ -77,4 +77,21 @@ class ModerationPolicyEngineTest extends TestCase
         $this->assertSame(Post::STATUS_PENDING_HUMAN_REVIEW, $attributes['status']);
         $this->assertSame('Security education content needs human review.', $attributes['ai_escalation_reason']);
     }
+
+    public function test_it_preserves_fallback_escalation_reason_when_model_does_not_provide_one(): void
+    {
+        $attributes = (new ModerationPolicyEngine())->decide(new ModerationResult(
+            Post::AI_DECISION_APPROVE,
+            0.70,
+            'low',
+            [],
+            'Có thể an toàn nhưng confidence thấp.',
+            'AI không đủ chắc chắn để tự duyệt.',
+            null,
+            true
+        ));
+
+        $this->assertSame(Post::STATUS_PENDING_HUMAN_REVIEW, $attributes['status']);
+        $this->assertSame('AI confidence thấp hoặc nội dung có dấu hiệu cần admin kiểm tra.', $attributes['ai_escalation_reason']);
+    }
 }
