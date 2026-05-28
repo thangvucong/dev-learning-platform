@@ -17,6 +17,10 @@ class Track extends Model
         'position',
     ];
 
+    protected $casts = [
+        'position' => 'integer',
+    ];
+
     public function course()
     {
         return $this->belongsTo(Course::class);

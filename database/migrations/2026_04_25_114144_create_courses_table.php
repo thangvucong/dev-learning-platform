@@ -15,18 +15,20 @@ class CreateCoursesTable extends Migration
     {
         Schema::create('courses', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('level_id')->constrained()->cascadeOnDelete();
             $table->string('title');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
             $table->string('thumbnail_url')->nullable();
             $table->string('intro_video_url')->nullable();
-            $table->integer('duration')->default(0);
             $table->tinyInteger('status')->default(0);
-            $table->boolean('is_free')->default(false);
+            $table->unsignedBigInteger('original_price')->default(0);
+            $table->decimal('rating_avg', 3, 1)->default(0);
+            $table->unsignedInteger('rating_count')->default(0);
             $table->timestamp('published_at')->nullable();
             $table->softDeletes();
             $table->timestamps();
+            $table->index(['status', 'published_at']);
+            $table->index('deleted_at');
         });
     }
 

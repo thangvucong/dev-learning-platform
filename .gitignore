@@ -14,3 +14,7 @@ yarn-error.log
 /.idea
 /.vscode
 /.cursor
+/.agents
+/.codex
+AGENTS.md
+/docs

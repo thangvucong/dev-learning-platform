@@ -10,21 +10,45 @@ class TrackSeeder extends Seeder
 {
     public function run()
     {
+        Track::query()->whereNotNull('parent_id')->delete();
         Track::query()->delete();
 
-        Course::query()->each(function (Course $course) {
+        $courses = Course::query()
+            ->select(['id'])
+            ->orderBy('id')
+            ->get();
+
+        if ($courses->isEmpty()) {
+            throw new \RuntimeException(
+                'TrackSeeder: không có khóa học nào. Chạy CourseSeeder trước khi seed tracks.'
+            );
+        }
+
+        $courses->each(function (Course $course) {
             $parents = Track::factory()
                 ->count(3)
+                ->parent()
                 ->state(function () use ($course) {
                     return [
                         'course_id' => $course->id,
-                        'parent_id' => null,
                     ];
                 })
                 ->sequence(
-                    ['title' => 'Getting Started', 'position' => 1],
-                    ['title' => 'Core Concepts', 'position' => 2],
-                    ['title' => 'Project & Practice', 'position' => 3]
+                    [
+                        'title' => 'Getting Started',
+                        'description' => 'Chuẩn bị môi trường, công cụ và cách tiếp cận khóa học.',
+                        'position' => 1,
+                    ],
+                    [
+                        'title' => 'Core Concepts',
+                        'description' => 'Nắm các khái niệm chính và thực hành qua ví dụ nhỏ.',
+                        'position' => 2,
+                    ],
+                    [
+                        'title' => 'Project & Practice',
+                        'description' => 'Áp dụng kiến thức vào bài tập tổng hợp và dự án thực tế.',
+                        'position' => 3,
+                    ]
                 )
                 ->create();
 
@@ -35,12 +59,19 @@ class TrackSeeder extends Seeder
                     ->state(function () use ($course, $parent) {
                         return [
                             'course_id' => $course->id,
-                            'position' => ($parent->position * 10) + random_int(1, 9),
                         ];
                     })
                     ->sequence(
-                        ['title' => $parent->title . ' - Part A'],
-                        ['title' => $parent->title . ' - Part B']
+                        [
+                            'title' => $parent->title . ' - Part A',
+                            'description' => 'Bài học nền tảng trong phần ' . $parent->title . '.',
+                            'position' => ((int) $parent->position * 10) + 1,
+                        ],
+                        [
+                            'title' => $parent->title . ' - Part B',
+                            'description' => 'Bài thực hành mở rộng trong phần ' . $parent->title . '.',
+                            'position' => ((int) $parent->position * 10) + 2,
+                        ]
                     )
                     ->create();
             });

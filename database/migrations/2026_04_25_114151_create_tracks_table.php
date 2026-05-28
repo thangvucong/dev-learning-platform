@@ -21,6 +21,7 @@ class CreateTracksTable extends Migration
             $table->text('description')->nullable();
             $table->integer('position')->default(0);
             $table->timestamps();
+            $table->index(['course_id', 'position']);
         });
     }
 

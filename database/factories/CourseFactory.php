@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Course;
-use App\Models\Level;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -13,7 +12,7 @@ class CourseFactory extends Factory
 
     public function definition()
     {
-        $title = $this->faker->unique()->randomElement([
+        $title = $this->faker->randomElement([
             'JavaScript Fundamentals for Beginners',
             'Modern PHP from Zero to Hero',
             'Laravel 8 REST API in Practice',
@@ -26,17 +25,19 @@ class CourseFactory extends Factory
             'Secure Laravel Authentication and Authorization',
         ]);
 
+        $status = $this->faker->randomElement([Course::STATUS_DRAFT, Course::STATUS_PUBLISHED]);
+
         return [
-            'level_id' => Level::factory(),
             'title' => $title,
             'slug' => Str::slug($title) . '-' . Str::lower(Str::random(6)),
             'description' => $this->faker->paragraph(4),
-            'thumbnail_url' => $this->faker->imageUrl(640, 360, 'education', true),
-            'intro_video_url' => 'https://cdn.example.com/videos/' . Str::slug($title) . '.mp4',
-            'duration' => $this->faker->numberBetween(90, 1800),
-            'status' => $this->faker->randomElement([0, 1]),
-            'is_free' => false,
-            'published_at' => $this->faker->dateTimeBetween('-6 months', 'now'),
+            'status' => $status,
+            'original_price' => $this->faker->numberBetween(149, 2999) * 1000,
+            'rating_avg' => $this->faker->randomFloat(1, 3.5, 5),
+            'rating_count' => $this->faker->numberBetween(0, 500),
+            'published_at' => $status === Course::STATUS_PUBLISHED
+                ? $this->faker->dateTimeBetween('-6 months', 'now')
+                : null,
         ];
     }
 
@@ -44,8 +45,18 @@ class CourseFactory extends Factory
     {
         return $this->state(function () {
             return [
-                'status' => 1,
+                'status' => Course::STATUS_PUBLISHED,
                 'published_at' => now()->subDays($this->faker->numberBetween(3, 120)),
+            ];
+        });
+    }
+
+    public function draft()
+    {
+        return $this->state(function () {
+            return [
+                'status' => Course::STATUS_DRAFT,
+                'published_at' => null,
             ];
         });
     }
@@ -54,7 +65,7 @@ class CourseFactory extends Factory
     {
         return $this->state(function () {
             return [
-                'is_free' => true,
+                'original_price' => 0,
             ];
         });
     }
